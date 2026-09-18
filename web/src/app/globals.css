@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   AVEN design tokens
+   Palette and type taken from the UI Design mockups: deep forest green on
+   cream, with a tea-gold accent pulled from the logo and the lit bridge.
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Brand greens */
+  --color-forest-50: #f1f6f3;
+  --color-forest-100: #dceae2;
+  --color-forest-200: #b9d5c6;
+  --color-forest-300: #8bb8a3;
+  --color-forest-400: #5a9479;
+  --color-forest-500: #38765c;
+  --color-forest-600: #0e4d38;
+  --color-forest-700: #0b4332;
+  --color-forest-800: #073527;
+  --color-forest-900: #062a1f;
+  --color-forest-950: #041a14;
+
+  /* Cream / paper */
+  --color-cream-50: #fdfcf8;
+  --color-cream-100: #faf8f2;
+  --color-cream-200: #f4f0e4;
+  --color-cream-300: #e9e3d2;
+  --color-cream-400: #d8cfb8;
+
+  /* Tea gold */
+  --color-gold-300: #e8cf87;
+  --color-gold-400: #d9b455;
+  --color-gold-500: #c9a227;
+  --color-gold-600: #a8851c;
+
+  /* Leaf */
+  --color-leaf-400: #9dc16a;
+  --color-leaf-500: #7fa650;
+  --color-leaf-600: #628440;
+
+  /* Water */
+  --color-water-400: #4d9db3;
+  --color-water-500: #2e7d93;
+
+  --font-display: var(--font-display), "Georgia", serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+:root {
+  --header-height: 4.75rem;
+  color-scheme: light;
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in oklab, var(--color-forest-600) 12%, transparent);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-cream-100);
+    color: var(--color-forest-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Lenis smooth scroll */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-forest-600);
+    color: var(--color-cream-50);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  /* Display type: the serif voice from the mockups */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .text-eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Fluid display sizes */
+  .text-display-xl {
+    font-size: clamp(2.75rem, 7vw, 6rem);
+    line-height: 0.98;
+  }
+  .text-display-lg {
+    font-size: clamp(2.25rem, 5.2vw, 4.25rem);
+    line-height: 1.02;
+  }
+  .text-display-md {
+    font-size: clamp(1.875rem, 3.6vw, 3rem);
+    line-height: 1.08;
+  }
+  .text-display-sm {
+    font-size: clamp(1.5rem, 2.4vw, 2.125rem);
+    line-height: 1.15;
+  }
+
+  /* 3D helpers used by tilt cards and the layered hero */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .perspective-near {
+    perspective: 900px;
+  }
+  .perspective-far {
+    perspective: 1800px;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  /* Glass surface, echoing the mockups' floating cards */
+  .surface-glass {
+    background-color: color-mix(in oklab, white 72%, transparent);
+    backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid color-mix(in oklab, white 60%, transparent);
+  }
+  .surface-glass-dark {
+    background-color: color-mix(in oklab, var(--color-forest-950) 55%, transparent);
+    backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid color-mix(in oklab, white 14%, transparent);
+  }
+
+  /* Elevation tuned warm rather than neutral-grey */
+  .shadow-lift {
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--color-forest-950) 6%, transparent),
+      0 8px 24px -8px color-mix(in oklab, var(--color-forest-950) 14%, transparent);
+  }
+  .shadow-lift-lg {
+    box-shadow:
+      0 2px 4px color-mix(in oklab, var(--color-forest-950) 6%, transparent),
+      0 24px 60px -16px color-mix(in oklab, var(--color-forest-950) 24%, transparent);
+  }
+  .shadow-float {
+    box-shadow:
+      0 30px 80px -24px color-mix(in oklab, var(--color-forest-950) 38%, transparent),
+      0 6px 16px -8px color-mix(in oklab, var(--color-forest-950) 20%, transparent);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Hides scrollbars on horizontal rails */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+  .mask-fade-r {
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  }
+}
+
+@keyframes aven-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes aven-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: aven-float 7s var(--ease-in-out-quint) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float {
+    animation: none;
+  }
+}
