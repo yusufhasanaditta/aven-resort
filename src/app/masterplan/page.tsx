@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { MasterplanExplorer } from "@/components/sections/MasterplanExplorer";
 import { LandUsage } from "@/components/sections/LandUsage";
+import { ZoneFunctionsGrid } from "@/components/sections/ZoneFunctionsGrid";
+import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { zoneCategories, zones } from "@/data/zones";
@@ -9,7 +11,7 @@ import { zoneCategories, zones } from "@/data/zones";
 export const metadata: Metadata = {
   title: "Interactive Masterplan",
   description:
-    "Explore all 17 zones of Aven Tea Empire in 3D — five tea hills, 10.80 acres, with land allocation and zone type for every parcel.",
+    "Explore all 17 zones and 26 named functions of Aven Tea Empire in 3D — five tea hills, 10.80 acres, with land allocation and zone type for every parcel.",
 };
 
 export default function MasterplanPage() {
@@ -51,7 +53,7 @@ export default function MasterplanPage() {
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-display text-sm text-forest-600/50">
+                      <span className="font-numeral text-sm text-forest-600/50">
                         Zone {String(zone.number).padStart(2, "0")}
                       </span>
                       <span
@@ -129,7 +131,18 @@ export default function MasterplanPage() {
         </Container>
       </Section>
 
+      <ZoneFunctionsGrid />
+
       <LandUsage />
+
+      {/* Master Membership Plan — deliberately last: every zone and every
+          decimal above is what a membership plan actually buys into. */}
+      <MembershipCarousel
+        tone="forest"
+        eyebrow="Master Membership Plan"
+        title="Everything above, held in four categories."
+        lede="Every zone, every hill, every function on this page sits inside the same four ownership categories. This is the master plan — the deck that ties the estate to the share."
+      />
     </>
   );
 }

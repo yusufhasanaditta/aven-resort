@@ -1,0 +1,151 @@
+// Aven Tea Empire — shareholder & content database.
+//
+// Provider is SQLite for local development: zero setup, a real file, real
+// persistence, real constraints. To go to production on Vercel, change the
+// datasource below to `provider = "postgresql"` and point DATABASE_URL at a
+// hosted Postgres (Vercel Postgres, Neon, Supabase all work unchanged with
+// this schema) — Vercel's serverless filesystem is read-only at runtime, so
+// SQLite's on-disk file cannot be the production database there.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SHAREHOLDER
+  ADMIN
+}
+
+enum PaymentPlan {
+  FULL
+  INSTALLMENT
+}
+
+enum HoldingStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String
+  location     String
+  passwordHash String
+  role         Role     @default(SHAREHOLDER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  holdings ShareHolding[]
+
+  @@map("users")
+}
+
+/// A purchasable ownership tier. Seeded from the four categories in the
+/// masterplan document (Executive / Premium / Platinum / Royal) but editable
+/// from the admin panel from here on — the marketing pages should read these
+/// via the API rather than the static data file once seeded.
+model MembershipPlan {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  subtitle        String
+  minUnits        Int
+  maxUnits        Int?
+  unitPriceBDT    Int
+  freeStayNights  Int
+  discountPercent Int
+  accentColor     String
+  featured        Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  holdings ShareHolding[]
+
+  @@map("membership_plans")
+}
+
+/// One shareholder's position in one plan — created the moment they commit to
+/// a unit count and payment schedule, `ACTIVE` once the opening payment (or
+/// full amount) clears.
+model ShareHolding {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId            String
+  plan              MembershipPlan @relation(fields: [planId], references: [id])
+  units             Int
+  totalAmountBDT    Int
+  paymentPlan       PaymentPlan   @default(FULL)
+  installmentMonths Int?
+  status            HoldingStatus @default(PENDING_PAYMENT)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  payments Payment[]
+
+  @@map("share_holdings")
+}
+
+/// One SSLCommerz transaction — either the single full payment, or one
+/// instalment of a scheduled plan.
+model Payment {
+  id              String        @id @default(cuid())
+  holdingId       String
+  holding         ShareHolding  @relation(fields: [holdingId], references: [id], onDelete: Cascade)
+  amountBDT       Int
+  method          String        @default("SSLCOMMERZ")
+  tranId          String        @unique
+  valId           String?
+  installmentNo   Int           @default(1)
+  status          PaymentStatus @default(PENDING)
+  gatewayResponse String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+/// Contact / enquiry form submissions — replaces the console.log stub with
+/// real persistence the admin panel can read.
+model Inquiry {
+  id        String   @id @default(cuid())
+  type      String
+  name      String
+  email     String
+  phone     String
+  subject   String?
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("inquiries")
+}
+
+/// A named, admin-replaceable asset — lets the admin panel swap a hero image
+/// or render without a code deploy. `key` is the stable identifier a page
+/// looks up (e.g. "home.hero", "wellness.hammam"); `url` starts as the
+/// original /renders path and can be replaced with an uploaded file's URL.
+model SiteAsset {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  url       String
+  label     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_assets")
+}

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 /**
  * Enquiry endpoint.
  *
- * Deliberately a stub: the site ships frontend-only, so this validates the
- * payload and logs it. Swap the `deliver` call for a CRM push or transactional
- * email when the team is ready — nothing in the UI needs to change.
+ * Validates the payload and persists it to the database, where the admin
+ * panel's Inquiries tab reads it. Swap or add to the `deliver` call for a CRM
+ * push or transactional email when the team is ready — the persistence and
+ * the UI don't need to change.
  */
 
 export type InquiryPayload = {
@@ -32,13 +34,18 @@ function validate(body: Partial<InquiryPayload>) {
 }
 
 async function deliver(payload: InquiryPayload) {
-  // Replace with your CRM or email provider.
-  console.info("[aven] enquiry received", {
-    type: payload.type,
-    subject: payload.subject,
-    email: payload.email,
-    at: new Date().toISOString(),
+  await prisma.inquiry.create({
+    data: {
+      type: payload.type,
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      subject: payload.subject || null,
+      message: payload.message,
+    },
   });
+  // Add a CRM push or transactional email here when the team is ready —
+  // persistence above already makes every enquiry visible in /admin.
 }
 
 export async function POST(request: Request) {

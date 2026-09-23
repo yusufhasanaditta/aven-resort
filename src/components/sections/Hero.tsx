@@ -6,6 +6,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { HeroLeaves } from "@/components/three/HeroLeaves";
 import { Container } from "@/components/ui/Section";
+import { Num } from "@/components/ui/Number";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -186,9 +187,9 @@ export function Hero({
             >
               {facts.map((f) => (
                 <div key={f.label} className="bg-forest-950/35 px-5 py-5">
-                  <dt className="font-display text-3xl text-cream-50">
+                  <Num as="dt" size="lg" className="text-cream-50">
                     {f.value}
-                  </dt>
+                  </Num>
                   <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.16em] text-cream-200/60">
                     {f.label}
                   </dd>

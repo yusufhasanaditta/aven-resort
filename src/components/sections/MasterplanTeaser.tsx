@@ -4,6 +4,7 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { EstatePreview } from "@/components/three/EstatePreview";
+import { Num } from "@/components/ui/Number";
 import { estateFacts } from "@/data/zones";
 import { tillas } from "@/lib/terrain";
 
@@ -36,12 +37,12 @@ export function MasterplanTeaser() {
             <RevealGroup className="mt-10 grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-4 lg:grid-cols-2">
               {estateFacts.map((f) => (
                 <RevealItem key={f.label}>
-                  <p className="font-display text-4xl text-forest-700">
+                  <Num as="p" size="xl" className="text-forest-700">
                     {f.value}
-                    <span className="ml-1.5 text-base text-forest-600/60">
+                    <span className="ml-1.5 text-base font-normal text-forest-600/60">
                       {f.unit}
                     </span>
-                  </p>
+                  </Num>
                   <p className="mt-1.5 text-[0.8125rem] font-medium text-forest-900/75">
                     {f.label}
                   </p>

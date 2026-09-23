@@ -44,9 +44,24 @@ export type NavItem = {
 export const navigation: NavItem[] = [
   { label: "Home", href: "/", description: "The vision, at a glance" },
   {
+    label: "Membership",
+    href: "/membership",
+    description: "Four ownership tiers, side by side",
+  },
+  {
+    label: "Wellness",
+    href: "/wellness",
+    description: "Eleven services across the spa hill",
+  },
+  {
+    label: "Ownership",
+    href: "/ownership",
+    description: "Share calculator & payment plans",
+  },
+  {
     label: "Masterplan",
     href: "/masterplan",
-    description: "17 zones across 14 acres, in 3D",
+    description: "20+ zones across 14 acres, in 3D",
   },
   {
     label: "Accommodations",
@@ -56,12 +71,7 @@ export const navigation: NavItem[] = [
   {
     label: "Experiences",
     href: "/experiences",
-    description: "Wellness, water, culture and events",
-  },
-  {
-    label: "Ownership",
-    href: "/ownership",
-    description: "Four categories of fractional ownership",
+    description: "Water, culture and events",
   },
   { label: "Gallery", href: "/gallery", description: "Every render" },
   { label: "About", href: "/about", description: "Who AVEN is" },

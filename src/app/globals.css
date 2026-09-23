@@ -110,6 +110,21 @@
     font-weight: 600;
   }
 
+  /*
+   * Numerals. Cormorant Garamond's bold figures are old-style (varied
+   * baseline, uneven weight) — striking for a headline, illegible as a stat.
+   * Every number the site states as data (facts, prices, counts, indices)
+   * uses this instead: the sans face, lining tabular figures, and a weight
+   * tuned for numerals rather than for prose.
+   */
+  .font-numeral {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+
   /* Fluid display sizes */
   .text-display-xl {
     font-size: clamp(2.75rem, 7vw, 6rem);

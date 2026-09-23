@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import { Hero } from "@/components/sections/Hero";
+import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
+import { ShareCalculator } from "@/components/sections/ShareCalculator";
+import { InquiryForm } from "@/components/sections/InquiryForm";
 import { MasterplanTeaser } from "@/components/sections/MasterplanTeaser";
 import { LandUsage } from "@/components/sections/LandUsage";
 import { CardRail } from "@/components/sections/CardRail";
@@ -7,9 +11,11 @@ import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
 import { VisionStatement } from "@/components/sections/VisionStatement";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
+import { Num } from "@/components/ui/Number";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { accommodations } from "@/data/accommodations";
 import { experiences } from "@/data/experiences";
+import { wellnessServices } from "@/data/wellness";
 import { zoneCategories, zones } from "@/data/zones";
 import { about, positioning } from "@/data/about";
 import { investmentCase } from "@/data/ownership";
@@ -40,13 +46,72 @@ export default function HomePage() {
         ]}
       />
 
+      {/* 1. Membership plan — the rotating 3D deck */}
+      <MembershipCarousel />
+
+      {/* 2. Wellness */}
+      <CardRail
+        eyebrow="Wellness"
+        title={
+          <>
+            Eleven services,{" "}
+            <span className="italic text-forest-600">one hillside sanctuary.</span>
+          </>
+        }
+        lede="Turkish hammam, Thai spa, Ayurveda, sauna & steam, yoga and more — the wellness circuit that occupies Hill 2 alongside the hotel."
+        items={wellnessServices.slice(0, 8).map((w) => ({
+          id: w.id,
+          image: w.image,
+          title: w.name,
+          eyebrow: w.hill,
+          description: w.tagline,
+        }))}
+        cta={{ label: "All 11 wellness services", href: "/wellness" }}
+        ratio="landscape"
+      />
+
+      {/* 3. Ownership / Share calculator + booking form */}
+      <Section tone="cream" id="calculator">
+        <Suspense
+          fallback={
+            <Container>
+              <p className="text-sm text-forest-900/50">Loading calculator…</p>
+            </Container>
+          }
+        >
+          <ShareCalculator />
+        </Suspense>
+      </Section>
+
+      <Section tone="white" className="py-16 sm:py-24">
+        <Container>
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            <Reveal>
+              <Eyebrow>Speak to the team</Eyebrow>
+              <h2 className="mt-4 font-display text-display-sm text-balance text-forest-900">
+                Prefer to talk it through first?
+              </h2>
+              <p className="mt-4 max-w-md text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
+                Send a message and the AVEN team will call you back with
+                current pricing, availability and a site-visit date.
+              </p>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <InquiryForm />
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
+
       {/* Positioning band */}
-      <Section tone="white" className="py-16 sm:py-20">
+      <Section tone="cream" className="py-16 sm:py-20">
         <Container>
           <RevealGroup className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {positioning.map((p) => (
               <RevealItem key={p.label}>
-                <p className="font-display text-5xl text-forest-700">{p.stat}</p>
+                <Num as="p" size="2xl" className="text-forest-700">
+                  {p.stat}
+                </Num>
                 <p className="mt-2 text-sm font-semibold text-forest-900">
                   {p.label}
                 </p>
@@ -60,7 +125,7 @@ export default function HomePage() {
       </Section>
 
       {/* The project, in prose */}
-      <Section tone="cream">
+      <Section tone="white">
         <Container>
           <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
             <Reveal>
@@ -113,7 +178,7 @@ export default function HomePage() {
       <MasterplanTeaser />
 
       {/* Zone categories */}
-      <Section tone="white">
+      <Section tone="cream">
         <Container>
           <Reveal className="max-w-2xl">
             <Eyebrow>Zoning</Eyebrow>
@@ -121,8 +186,9 @@ export default function HomePage() {
               Every acre classified.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              The masterplan divides the estate into four zone families. Each is
-              allocated, costed and mapped — investment grade throughout.
+              The masterplan divides the estate into four zone families, with
+              26 named functions across them. Each is allocated, costed and
+              mapped — investment grade throughout.
             </p>
           </Reveal>
 
@@ -136,7 +202,7 @@ export default function HomePage() {
               const count = zones.filter((z) => z.category === key).length;
               return (
                 <RevealItem key={key}>
-                  <div className="group h-full rounded-2xl border border-forest-600/10 bg-cream-100 p-6 transition-colors duration-500 hover:border-forest-600/25">
+                  <div className="group h-full rounded-2xl border border-forest-600/10 bg-cream-50 p-6 transition-colors duration-500 hover:border-forest-600/25">
                     <span
                       className="block h-1 w-10 rounded-full"
                       style={{ background: cat.color }}
@@ -197,7 +263,7 @@ export default function HomePage() {
             <span className="italic text-gold-300">every season.</span>
           </>
         }
-        lede="Rooms are one revenue stream of five. Wellness, water, culture, dining and events carry the asset through the year."
+        lede="Rooms are one revenue stream of five. Water, culture, dining and events carry the asset through the year."
         tone="forest"
         ratio="landscape"
         items={experiences.slice(0, 9).map((e) => ({
@@ -246,9 +312,13 @@ export default function HomePage() {
               {investmentCase.reasons.map((r, i) => (
                 <RevealItem key={r.title}>
                   <div className="flex gap-5 border-b border-forest-600/10 pb-8">
-                    <span className="font-display text-3xl leading-none text-forest-600/30">
+                    <Num
+                      as="span"
+                      size="lg"
+                      className="leading-none text-forest-600/30"
+                    >
                       0{i + 1}
-                    </span>
+                    </Num>
                     <div>
                       <h3 className="font-display text-2xl text-forest-900">
                         {r.title}

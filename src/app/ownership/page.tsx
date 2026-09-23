@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Image from "next/image";
 import { Hero } from "@/components/sections/Hero";
 import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
+import { ShareCalculator } from "@/components/sections/ShareCalculator";
 import { LandUsage } from "@/components/sections/LandUsage";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
+import { Num } from "@/components/ui/Number";
 import {
   demandDrivers,
   investmentCase,
@@ -40,6 +43,12 @@ export default function OwnershipPage() {
       />
 
       <OwnershipTeaser />
+
+      <Section tone="cream" id="calculator">
+        <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
+          <ShareCalculator />
+        </Suspense>
+      </Section>
 
       {/* Category comparison table */}
       <Section tone="white">
@@ -186,9 +195,13 @@ export default function OwnershipPage() {
                 {investmentCase.reasons.map((r, i) => (
                   <RevealItem key={r.title}>
                     <div className="flex gap-5 border-b border-forest-600/10 pb-8">
-                      <span className="font-display text-3xl leading-none text-forest-600/30">
+                      <Num
+                        as="span"
+                        size="lg"
+                        className="leading-none text-forest-600/30"
+                      >
                         0{i + 1}
-                      </span>
+                      </Num>
                       <div>
                         <h3 className="font-display text-2xl text-forest-900">
                           {r.title}

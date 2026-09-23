@@ -6,6 +6,7 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { TiltCard, Depth } from "@/components/ui/TiltCard";
+import { Num } from "@/components/ui/Number";
 import { about, positioning } from "@/data/about";
 import { estateFacts } from "@/data/zones";
 import { site } from "@/data/site";
@@ -56,7 +57,9 @@ export default function AboutPage() {
           <RevealGroup className="mt-16 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {positioning.map((p) => (
               <RevealItem key={p.label}>
-                <p className="font-display text-5xl text-forest-700">{p.stat}</p>
+                <Num as="p" size="2xl" className="text-forest-700">
+                  {p.stat}
+                </Num>
                 <p className="mt-2 text-sm font-semibold text-forest-900">
                   {p.label}
                 </p>
@@ -149,12 +152,12 @@ export default function AboutPage() {
             {estateFacts.map((f) => (
               <RevealItem key={f.label}>
                 <div className="h-full bg-forest-950 p-7">
-                  <p className="font-display text-5xl text-cream-50">
+                  <Num as="p" size="2xl" className="text-cream-50">
                     {f.value}
-                    <span className="ml-2 text-lg text-cream-200/50">
+                    <span className="ml-2 text-lg font-normal text-cream-200/50">
                       {f.unit}
                     </span>
-                  </p>
+                  </Num>
                   <p className="mt-3 text-[0.8125rem] font-medium text-cream-100/80">
                     {f.label}
                   </p>

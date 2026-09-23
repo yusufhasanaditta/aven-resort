@@ -4,6 +4,7 @@ import { Hero } from "@/components/sections/Hero";
 import { InquiryForm } from "@/components/sections/InquiryForm";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
+import { Num } from "@/components/ui/Number";
 import { site } from "@/data/site";
 import { positioning } from "@/data/about";
 
@@ -133,7 +134,9 @@ export default function ContactPage() {
           <RevealGroup className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
             {positioning.map((p) => (
               <RevealItem key={p.label}>
-                <p className="font-display text-4xl text-forest-700">{p.stat}</p>
+                <Num as="p" size="xl" className="text-forest-700">
+                  {p.stat}
+                </Num>
                 <p className="mt-2 text-sm font-semibold text-forest-900">
                   {p.label}
                 </p>

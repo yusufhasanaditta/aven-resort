@@ -14,10 +14,13 @@ import { easeOutExpo } from "@/lib/motion";
  * Transparent over the hero, then condenses into a cream bar once scrolled —
  * matching the floating navigation in the UI mockups.
  */
+type SessionState = { name: string; role: "SHAREHOLDER" | "ADMIN" } | null;
+
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [session, setSession] = useState<SessionState>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -25,6 +28,13 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    fetch("/api/account/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => setSession(json?.user ? { name: json.user.name, role: json.user.role } : null))
+      .catch(() => setSession(null));
+  }, [pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -89,15 +99,27 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button
-              href={primaryCta.href}
-              variant={light ? "light" : "primary"}
-              size="sm"
-              className="hidden sm:inline-flex"
-            >
-              {primaryCta.label}
-              <ArrowRight />
-            </Button>
+            {session ? (
+              <Button
+                href={session.role === "ADMIN" ? "/admin" : "/account"}
+                variant={light ? "light" : "primary"}
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
+                {session.role === "ADMIN" ? "Admin panel" : `Hi, ${session.name.split(" ")[0]}`}
+                <ArrowRight />
+              </Button>
+            ) : (
+              <Button
+                href={primaryCta.href}
+                variant={light ? "light" : "primary"}
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
+                {primaryCta.label}
+                <ArrowRight />
+              </Button>
+            )}
 
             <button
               type="button"
@@ -178,7 +200,22 @@ export function Header() {
                 ))}
               </nav>
 
-              <div className="mt-auto pt-10">
+              <div className="mt-auto space-y-3 pt-10">
+                {session ? (
+                  <Button
+                    href={session.role === "ADMIN" ? "/admin" : "/account"}
+                    variant="light"
+                    size="lg"
+                    className="w-full"
+                  >
+                    {session.role === "ADMIN" ? "Admin panel" : "My account"}
+                    <ArrowRight />
+                  </Button>
+                ) : (
+                  <Button href="/login" variant="outline-light" size="lg" className="w-full">
+                    Sign in
+                  </Button>
+                )}
                 <Button href={primaryCta.href} variant="light" size="lg" className="w-full">
                   {primaryCta.label}
                   <ArrowRight />
