@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ButtonAction } from "@/components/ui/Button";
 
-export function LogoutButton() {
+export function LogoutButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   return (
     <ButtonAction
-      variant="ghost"
+      variant={tone === "light" ? "ghost-light" : "ghost"}
       size="sm"
       disabled={busy}
       onClick={async () => {

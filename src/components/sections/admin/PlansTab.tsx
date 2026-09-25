@@ -60,7 +60,7 @@ export function PlansTab() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="rounded-2xl border border-forest-600/10 bg-cream-100 p-5"
+            className="rounded-2xl border border-forest-600/10 bg-cream-50 p-5"
             style={{ borderLeftWidth: 4, borderLeftColor: plan.accentColor }}
           >
             <div className="flex items-baseline justify-between">

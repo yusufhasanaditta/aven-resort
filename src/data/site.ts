@@ -44,19 +44,14 @@ export type NavItem = {
 export const navigation: NavItem[] = [
   { label: "Home", href: "/", description: "The vision, at a glance" },
   {
-    label: "Membership",
-    href: "/membership",
-    description: "Four ownership tiers, side by side",
+    label: "Ownership",
+    href: "/ownership",
+    description: "Membership deck, share calculator & payment plans",
   },
   {
     label: "Wellness",
     href: "/wellness",
     description: "Eleven services across the spa hill",
-  },
-  {
-    label: "Ownership",
-    href: "/ownership",
-    description: "Share calculator & payment plans",
   },
   {
     label: "Masterplan",

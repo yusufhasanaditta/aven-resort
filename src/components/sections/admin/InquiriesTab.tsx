@@ -23,7 +23,7 @@ export function InquiriesTab() {
   return (
     <div className="space-y-4">
       {inquiries.map((i) => (
-        <article key={i.id} className="rounded-2xl border border-forest-600/10 bg-cream-100 p-5">
+        <article key={i.id} className="rounded-2xl border border-forest-600/10 bg-cream-50 p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
               <span className="rounded-full bg-forest-600/8 px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-wider text-forest-700">

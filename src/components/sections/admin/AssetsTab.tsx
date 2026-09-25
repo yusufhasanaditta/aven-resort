@@ -71,7 +71,7 @@ export function AssetsTab() {
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {assets.map((asset) => (
-          <div key={asset.key} className="overflow-hidden rounded-2xl border border-forest-600/10 bg-cream-100">
+          <div key={asset.key} className="overflow-hidden rounded-2xl border border-forest-600/10 bg-cream-50">
             <div className="relative aspect-video">
               <Image src={asset.url} alt={asset.label} fill className="object-cover" sizes="24rem" />
             </div>

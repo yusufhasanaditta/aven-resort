@@ -3,148 +3,62 @@
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { TiltCard, Depth } from "@/components/ui/TiltCard";
-import { ownershipTiers, ownershipBenefits } from "@/data/ownership";
-import { cn } from "@/lib/utils";
+import { BenefitIcon } from "@/components/ui/BenefitIcon";
+import { ownershipBenefits } from "@/data/ownership";
 
 /**
- * The ownership pitch, condensed for the homepage: the four categories as
- * tilting cards, with the universal benefits listed alongside.
+ * The universal ownership benefits — every share carries these regardless of
+ * category, so they sit once, beneath the membership deck and the calculator
+ * rather than repeated on every tier card.
  */
 export function OwnershipTeaser() {
   return (
     <Section tone="forest" className="overflow-hidden">
       <Container>
         <Reveal className="max-w-3xl">
-          <Eyebrow tone="light">Fractional ownership</Eyebrow>
+          <Eyebrow tone="light">Every share carries</Eyebrow>
           <h2 className="mt-4 font-display text-display-md text-balance text-cream-50">
-            Four categories.{" "}
-            <span className="italic text-gold-300">One registered title.</span>
+            One registered title.{" "}
+            <span className="italic text-gold-300">Eight standing benefits.</span>
           </h2>
           <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-cream-200/65">
             Ownership is structured as unit shares in the hotel establishment
-            itself, backed by Saf-Kabla registered land documents. Category is
-            determined by the number of shares held, and carries its own stay
-            allowance and year-round discount.
+            itself, backed by Saf-Kabla registered land documents. Whichever
+            category your holding falls into, every one of the following
+            comes with it.
           </p>
         </Reveal>
 
         <RevealGroup
-          amount={0.09}
-          className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          amount={0.08}
+          className="mt-14 grid gap-px overflow-hidden rounded-3xl border border-cream-50/12 bg-cream-50/8 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {ownershipTiers.map((tier) => (
-            <RevealItem key={tier.id} preset="riseIn">
-              <TiltCard
-                className="group h-full"
-                innerClassName={cn(
-                  "h-full rounded-2xl p-6 ring-1 transition-all duration-500",
-                  tier.featured
-                    ? "bg-cream-50 ring-transparent shadow-float"
-                    : "bg-cream-50/8 ring-cream-50/15 backdrop-blur-sm hover:bg-cream-50/12",
-                )}
-              >
-                <Depth z={26} className="flex h-full flex-col">
-                  {tier.featured && (
-                    <span className="mb-4 inline-flex w-fit rounded-full bg-forest-600 px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-cream-50">
-                      Most selected
-                    </span>
-                  )}
-
-                  <span
-                    className="h-1 w-10 rounded-full"
-                    style={{ background: tier.accent }}
-                  />
-
-                  <h3
-                    className={cn(
-                      "mt-4 font-display text-3xl",
-                      tier.featured ? "text-forest-900" : "text-cream-50",
-                    )}
-                  >
-                    {tier.name}
-                  </h3>
-                  <p
-                    className={cn(
-                      "mt-1 text-[0.8125rem]",
-                      tier.featured ? "text-forest-900/55" : "text-cream-200/55",
-                    )}
-                  >
-                    {tier.subtitle}
-                  </p>
-
-                  <dl className="mt-6 space-y-4 text-[0.8125rem]">
-                    {[
-                      { k: "Unit share", v: tier.unitShare },
-                      { k: "Free stay", v: tier.freeStay },
-                      { k: "Discount", v: tier.discount },
-                    ].map((row) => (
-                      <div key={row.k}>
-                        <dt
-                          className={cn(
-                            "text-[0.625rem] uppercase tracking-[0.14em]",
-                            tier.featured
-                              ? "text-forest-900/40"
-                              : "text-cream-200/40",
-                          )}
-                        >
-                          {row.k}
-                        </dt>
-                        <dd
-                          className={cn(
-                            "mt-1 font-medium",
-                            tier.featured
-                              ? "text-forest-900"
-                              : "text-cream-100",
-                          )}
-                        >
-                          {row.v}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-
-                  <div className="mt-auto pt-7">
-                    <Button
-                      href="/contact"
-                      variant={tier.featured ? "primary" : "outline-light"}
-                      size="sm"
-                      className="w-full"
-                    >
-                      Contact for {tier.name}
-                    </Button>
-                  </div>
-                </Depth>
-              </TiltCard>
+          {ownershipBenefits.map((b) => (
+            <RevealItem key={b.id}>
+              <div className="group h-full bg-forest-950/40 p-6 transition-colors duration-500 hover:bg-forest-950/10">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-500/15 text-gold-300 transition-colors duration-500 group-hover:bg-gold-500/25">
+                  <BenefitIcon icon={b.icon} />
+                </span>
+                <p className="mt-4 text-[0.8125rem] font-semibold text-cream-50">
+                  {b.title}
+                </p>
+                <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-cream-200/55">
+                  {b.description}
+                </p>
+              </div>
             </RevealItem>
           ))}
         </RevealGroup>
 
-        {/* Universal benefits */}
         <Reveal delay={0.1}>
-          <div className="mt-16 rounded-2xl border border-cream-50/12 bg-cream-50/5 p-8 backdrop-blur-sm sm:p-10">
-            <h3 className="font-display text-2xl text-cream-50">
-              Every share carries
-            </h3>
-            <ul className="mt-7 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-              {ownershipBenefits.map((b) => (
-                <li key={b.id}>
-                  <p className="text-[0.8125rem] font-semibold text-gold-300">
-                    {b.title}
-                  </p>
-                  <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-cream-200/60">
-                    {b.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-9">
-              <Button href="/ownership" variant="light" size="lg">
-                Full ownership structure
-                <ArrowRight />
-              </Button>
-            </div>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Button href="/ownership#compare" variant="light" size="lg">
+              Compare the four categories
+              <ArrowRight />
+            </Button>
+            <Button href="/ownership#calculator" variant="outline-light" size="lg">
+              Open the calculator
+            </Button>
           </div>
         </Reveal>
       </Container>

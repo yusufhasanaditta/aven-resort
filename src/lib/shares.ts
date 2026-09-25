@@ -1,10 +1,23 @@
-import type { MembershipPlan } from "@prisma/client";
-
 /**
  * Pure share-calculator math, shared by the interactive calculator (client)
  * and the order-creation route (server) so the number a shareholder sees
  * before paying is exactly the number they're charged.
+ *
+ * Deliberately structural rather than importing Prisma's `MembershipPlan`
+ * type: the calculator also has to run against the static fallback plan data
+ * (see `src/data/planFallback.ts`) when the database is unavailable, and both
+ * shapes satisfy this interface.
  */
+
+export type PlanLike = {
+  id: string;
+  slug: string;
+  minUnits: number;
+  maxUnits: number | null;
+  unitPriceBDT: number;
+  freeStayNights: number;
+  discountPercent: number;
+};
 
 export type InstallmentLine = {
   index: number;
@@ -13,8 +26,8 @@ export type InstallmentLine = {
   dueLabel: string;
 };
 
-export type CalculatorResult = {
-  plan: MembershipPlan;
+export type CalculatorResult<T extends PlanLike = PlanLike> = {
+  plan: T;
   units: number;
   totalBDT: number;
   freeStayNights: number;
@@ -29,10 +42,7 @@ export type CalculatorResult = {
  * range contains `units`; below the lowest range, the lowest tier applies —
  * above the highest (unbounded) range, the highest tier applies.
  */
-export function planForUnits(
-  plans: MembershipPlan[],
-  units: number,
-): MembershipPlan {
+export function planForUnits<T extends PlanLike>(plans: T[], units: number): T {
   const sorted = [...plans].sort((a, b) => a.minUnits - b.minUnits);
   const inRange = sorted.find(
     (plan) => units >= plan.minUnits && (plan.maxUnits === null || units <= plan.maxUnits),
@@ -63,12 +73,12 @@ export function buildInstallmentSchedule(
   });
 }
 
-export function calculate(
-  plans: MembershipPlan[],
+export function calculate<T extends PlanLike>(
+  plans: T[],
   units: number,
   paymentPlan: "FULL" | "INSTALLMENT",
   installmentMonths?: number,
-): CalculatorResult {
+): CalculatorResult<T> {
   const safeUnits = Math.max(1, Math.round(units));
   const plan = planForUnits(plans, safeUnits);
   const totalBDT = plan.unitPriceBDT * safeUnits;

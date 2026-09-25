@@ -9,11 +9,14 @@ import { Reveal } from "@/components/ui/Reveal";
 import { ButtonAction, Button, ArrowRight } from "@/components/ui/Button";
 import { MembershipBadge } from "@/components/ui/MembershipCard";
 import { calculate, buildInstallmentSchedule, formatBDT } from "@/lib/shares";
+import { fallbackPlans, type FallbackPlan } from "@/data/planFallback";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { MembershipPlan } from "@prisma/client";
 
 type Session = { name: string } | null;
+type PlanRow = MembershipPlan | FallbackPlan;
+type PlansStatus = "loading" | "live" | "fallback";
 
 const INSTALLMENT_OPTIONS = [3, 6, 9, 12, 18, 24];
 
@@ -23,12 +26,19 @@ const INSTALLMENT_OPTIONS = [3, 6, 9, 12, 18, 24];
  * and total automatically from the unit count, and either starts a real
  * SSLCommerz payment (order route) or, for a visitor who isn't signed in,
  * routes them to create an account first.
+ *
+ * The calculator must never be left with nothing to render: if `/api/plans`
+ * is slow, empty or failing (a fresh deploy with no database yet is exactly
+ * this), it falls back to the static category data instead of hanging on a
+ * loading state forever — a stuck loading state is what actually makes every
+ * button in this section look broken.
  */
 export function ShareCalculator() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [plans, setPlans] = useState<PlanRow[]>(fallbackPlans);
+  const [plansStatus, setPlansStatus] = useState<PlansStatus>("loading");
   const [units, setUnits] = useState(1);
   const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("FULL");
   const [months, setMonths] = useState(6);
@@ -37,20 +47,38 @@ export function ShareCalculator() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadPlans() {
+    setPlansStatus("loading");
     const requestedSlug = params.get("plan");
+    const timeout = setTimeout(() => {
+      // /api/plans is taking too long — don't leave the calculator blank.
+      setPlansStatus((s) => (s === "loading" ? "fallback" : s));
+    }, 4000);
 
     fetch("/api/plans")
       .then((r) => r.json())
       .then((json) => {
+        clearTimeout(timeout);
         const loaded: MembershipPlan[] = json.plans ?? [];
+        if (loaded.length === 0) {
+          setPlansStatus("fallback");
+          return;
+        }
         setPlans(loaded);
+        setPlansStatus("live");
         // Preselect the plan named in ?plan=, if any, in the same update as
         // the plans themselves land — avoids a second, cascading render.
         const requested = requestedSlug && loaded.find((p) => p.slug === requestedSlug);
         if (requested) setUnits(requested.minUnits);
       })
-      .catch(() => setError("Could not load current pricing. Please refresh."));
+      .catch(() => {
+        clearTimeout(timeout);
+        setPlansStatus("fallback");
+      });
+  }
+
+  useEffect(() => {
+    loadPlans();
 
     fetch("/api/account/me")
       .then((r) => (r.ok ? r.json() : null))
@@ -61,10 +89,10 @@ export function ShareCalculator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const result = useMemo(() => {
-    if (plans.length === 0) return null;
-    return calculate(plans, units, paymentPlan, paymentPlan === "INSTALLMENT" ? months : undefined);
-  }, [plans, units, paymentPlan, months]);
+  const result = useMemo(
+    () => calculate(plans, units, paymentPlan, paymentPlan === "INSTALLMENT" ? months : undefined),
+    [plans, units, paymentPlan, months],
+  );
 
   const schedule = useMemo(() => {
     if (!result || paymentPlan !== "INSTALLMENT") return null;
@@ -110,14 +138,6 @@ export function ShareCalculator() {
     }
   }
 
-  if (plans.length === 0) {
-    return (
-      <Container>
-        <p className="text-sm text-forest-900/50">Loading current pricing…</p>
-      </Container>
-    );
-  }
-
   const maxUnitInput = 200;
 
   return (
@@ -133,6 +153,20 @@ export function ShareCalculator() {
           exactly what&rsquo;s due and when. Pricing shown is indicative until AVEN
           confirms a final unit price.
         </p>
+
+        {plansStatus === "fallback" && (
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold-500/12 px-3.5 py-1.5 text-xs text-gold-600">
+            <button
+              type="button"
+              onClick={loadPlans}
+              className="font-semibold underline decoration-dotted underline-offset-2"
+            >
+              Retry
+            </button>
+            — showing standard categories; live pricing is temporarily
+            unavailable.
+          </p>
+        )}
       </Reveal>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_1fr]">

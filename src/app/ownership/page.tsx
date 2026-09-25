@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Image from "next/image";
 import { Hero } from "@/components/sections/Hero";
+import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
 import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
 import { ShareCalculator } from "@/components/sections/ShareCalculator";
 import { LandUsage } from "@/components/sections/LandUsage";
@@ -9,6 +10,7 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { Num } from "@/components/ui/Number";
+import { TierIcon } from "@/components/ui/TierIcon";
 import {
   demandDrivers,
   investmentCase,
@@ -17,32 +19,40 @@ import {
 import { about } from "@/data/about";
 
 export const metadata: Metadata = {
-  title: "Ownership & Investment",
+  title: "Ownership & Membership",
   description:
-    "Four categories of fractional ownership in Aven Tea Empire — Saf-Kabla registered land title, direct ownership in the hotel establishment, annual dividends and flexible resale.",
+    "Four membership categories of fractional ownership in Aven Tea Empire — Saf-Kabla registered land title, direct ownership in the hotel establishment, an interactive share calculator, annual dividends and flexible resale.",
 };
 
 export default function OwnershipPage() {
   return (
     <>
       <Hero
-        eyebrow="Investment opportunity"
+        eyebrow="Ownership & membership"
         title="Own a Share of"
         titleAccent="the Whole Establishment"
-        lede="Aven Tea Empire is structured for fractional ownership and unit sales — high-yield hospitality returns, capital appreciation and lifestyle privileges, backed by registered land title."
+        lede="Aven Tea Empire is structured for fractional ownership and unit sales — four membership categories, an interactive calculator, and a registered title behind every unit."
         image="/renders/eco-villa-sunrise.jpg"
         imageAlt="An eco-luxury villa with infinity pool at sunrise, surrounded by tea hills"
         height="tall"
         facts={[
-          { value: "4", label: "Ownership categories" },
+          { value: "4", label: "Membership categories" },
           { value: "Saf-Kabla", label: "Registered title" },
           { value: "40–50%", label: "Year-round discount" },
           { value: "Halal", label: "Lifetime income" },
         ]}
-        actions={[{ label: "Request details", href: "/contact" }]}
+        actions={[
+          { label: "Calculate my share", href: "#calculator" },
+          { label: "Request details", href: "/contact", variant: "outline-light" },
+        ]}
       />
 
-      <OwnershipTeaser />
+      <MembershipCarousel
+        tone="forest"
+        eyebrow="Membership plans"
+        title="Four categories. One rotating deck."
+        lede="Drag, click a side card, or just wait — the deck advances on its own. Each plan pulls its terms live from AVEN's membership records."
+      />
 
       <Section tone="cream" id="calculator">
         <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
@@ -51,7 +61,7 @@ export default function OwnershipPage() {
       </Section>
 
       {/* Category comparison table */}
-      <Section tone="white">
+      <Section tone="white" id="compare">
         <Container>
           <Reveal className="max-w-2xl">
             <Eyebrow>Compare categories</Eyebrow>
@@ -109,11 +119,8 @@ export default function OwnershipPage() {
                       className="border-b border-forest-600/8 transition-colors hover:bg-forest-600/4"
                     >
                       <th scope="row" className="py-5 pr-6">
-                        <span className="flex items-center gap-2.5">
-                          <span
-                            className="h-6 w-1 rounded-full"
-                            style={{ background: tier.accent }}
-                          />
+                        <span className="flex items-center gap-3">
+                          <TierIcon tierId={tier.id} color={tier.accent} size="sm" />
                           <span>
                             <span className="block font-display text-xl text-forest-900">
                               {tier.name}
@@ -134,8 +141,8 @@ export default function OwnershipPage() {
                         {tier.discount}
                       </td>
                       <td className="py-5 text-right">
-                        <Button href="/contact" variant="secondary" size="sm">
-                          Contact
+                        <Button href={`/ownership?plan=${tier.id}#calculator`} variant="secondary" size="sm">
+                          Calculate
                           <ArrowRight />
                         </Button>
                       </td>
@@ -156,6 +163,8 @@ export default function OwnershipPage() {
           </Reveal>
         </Container>
       </Section>
+
+      <OwnershipTeaser />
 
       {/* Why invest now */}
       <Section tone="cream">

@@ -130,7 +130,7 @@ export default function WellnessPage() {
               that includes the wellness programme.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button href="/membership" size="lg">
+              <Button href="/ownership" size="lg">
                 See membership categories
                 <ArrowRight />
               </Button>

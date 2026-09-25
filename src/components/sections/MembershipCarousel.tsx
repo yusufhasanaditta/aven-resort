@@ -6,23 +6,7 @@ import { MembershipCard, type MembershipCardData } from "@/components/ui/Members
 import { Container, Eyebrow } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { ownershipTiers } from "@/data/ownership";
-
-/** Static fallback, shown until the live (admin-editable) plans load. */
-const fallbackPlans: MembershipCardData[] = ownershipTiers.map((t) => ({
-  slug: t.id,
-  name: t.name,
-  subtitle: t.subtitle,
-  minUnits: Number(t.unitShare.match(/\d+/)?.[0] ?? 1),
-  maxUnits: t.unitShare.includes("&")
-    ? null
-    : Number(t.unitShare.match(/\d+\s*[-–]\s*(\d+)/)?.[1] ?? null) || null,
-  unitPriceBDT: 500_000,
-  freeStayNights: Number(t.freeStay.match(/\d+/)?.[0] ?? 0),
-  discountPercent: Number(t.discount.match(/\d+/)?.[0] ?? 0),
-  accentColor: t.accent,
-  featured: t.featured,
-}));
+import { fallbackPlans } from "@/data/planFallback";
 
 /**
  * The homepage / membership-page 3D card carousel. Loads live plan data from
@@ -74,8 +58,8 @@ export function MembershipCarousel({
     <section
       className={
         light
-          ? "relative overflow-hidden bg-forest-950 py-20 sm:py-28"
-          : "relative overflow-hidden bg-cream-100 py-20 sm:py-28"
+          ? "relative isolate overflow-hidden bg-forest-950 py-20 sm:py-28"
+          : "relative isolate overflow-hidden bg-cream-100 py-20 sm:py-28"
       }
     >
       <Container>
@@ -112,7 +96,7 @@ export function MembershipCarousel({
 
       <Container>
         <div className="mt-10 flex justify-center">
-          <Button href="/membership" variant={light ? "light" : "primary"} size="lg">
+          <Button href="/ownership#compare" variant={light ? "light" : "primary"} size="lg">
             Compare all categories
             <ArrowRight />
           </Button>

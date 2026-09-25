@@ -58,7 +58,11 @@ export function CardCarousel3D<T>({
 
   return (
     <div
-      className={cn("relative", className)}
+      // `isolate` pins z-index resolution to this subtree — the 3D cards use
+      // large translateZ/rotateY values whose axis-aligned hit-test box can
+      // otherwise extend well past what's visible, which was intercepting
+      // clicks on unrelated content below this component on the page.
+      className={cn("relative isolate", className)}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}

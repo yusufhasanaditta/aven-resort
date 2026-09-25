@@ -3,10 +3,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatBDT } from "@/lib/shares";
+import { formatBDT, buildInstallmentSchedule } from "@/lib/shares";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Num } from "@/components/ui/Number";
 import { Button, ArrowRight } from "@/components/ui/Button";
+import { IconTile } from "@/components/ui/IconTile";
+import { AdminIcon } from "@/components/ui/AdminIcon";
+import { TierIcon } from "@/components/ui/TierIcon";
+import { MembershipCard } from "@/components/ui/MembershipCard";
+import { PaymentProgress, type ProgressStep } from "@/components/ui/PaymentProgress";
 import { LogoutButton, PayNextButton } from "@/components/sections/AccountActions";
 import { cn } from "@/lib/utils";
 
@@ -16,13 +21,6 @@ const statusStyle: Record<string, string> = {
   ACTIVE: "bg-forest-600/10 text-forest-700",
   PENDING_PAYMENT: "bg-gold-500/12 text-gold-600",
   CANCELLED: "bg-forest-900/8 text-forest-900/50",
-};
-
-const paymentStatusStyle: Record<string, string> = {
-  SUCCESS: "text-forest-700",
-  PENDING: "text-gold-600",
-  FAILED: "text-red-600",
-  CANCELLED: "text-forest-900/40",
 };
 
 export default async function AccountPage({
@@ -41,16 +39,18 @@ export default async function AccountPage({
     include: { plan: true, payments: { orderBy: { installmentNo: "asc" } } },
   });
 
-  const totalUnits = holdings
-    .filter((h) => h.status === "ACTIVE")
-    .reduce((sum, h) => sum + h.units, 0);
-  const totalInvested = holdings
-    .filter((h) => h.status === "ACTIVE")
-    .reduce((sum, h) => sum + h.totalAmountBDT, 0);
+  const activeHoldings = holdings.filter((h) => h.status === "ACTIVE");
+  const totalUnits = activeHoldings.reduce((sum, h) => sum + h.units, 0);
+  const totalInvested = activeHoldings.reduce((sum, h) => sum + h.totalAmountBDT, 0);
+
+  // The card shown up top: the largest active holding, or the most recent
+  // holding of any status if nothing's active yet.
+  const featuredHolding =
+    [...activeHoldings].sort((a, b) => b.totalAmountBDT - a.totalAmountBDT)[0] ?? holdings[0];
 
   return (
     <div className="pt-[var(--header-height)]">
-      <Section tone="forest" className="py-14 sm:py-16">
+      <Section tone="forest" className="overflow-hidden py-14 sm:py-16">
         <Container>
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
@@ -62,35 +62,45 @@ export default async function AccountPage({
                 {user.email} · {user.location}
               </p>
             </div>
-            <LogoutButton />
+            <LogoutButton tone="light" />
           </div>
 
-          <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-cream-50/12 bg-cream-50/10 sm:grid-cols-3">
-            <div className="bg-forest-950/40 p-6">
-              <Num as="dt" size="xl" className="text-cream-50">
-                {totalUnits}
-              </Num>
-              <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.14em] text-cream-200/50">
-                Active unit shares
-              </dd>
-            </div>
-            <div className="bg-forest-950/40 p-6">
-              <Num as="dt" size="xl" className="text-cream-50">
-                {holdings.length}
-              </Num>
-              <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.14em] text-cream-200/50">
-                Holdings on record
-              </dd>
-            </div>
-            <div className="col-span-2 bg-forest-950/40 p-6 sm:col-span-1">
-              <p className="font-numeral text-2xl text-cream-50">
-                {formatBDT(totalInvested)}
-              </p>
-              <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.14em] text-cream-200/50">
-                Active investment
-              </dd>
-            </div>
-          </dl>
+          <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {[
+                { icon: "tag", label: "Active unit shares", value: totalUnits, color: "#0F8A5F" },
+                { icon: "wallet", label: "Holdings on record", value: holdings.length, color: "#1D93BC" },
+                { icon: "overview", label: "Active investment", value: formatBDT(totalInvested), color: "#D9A441", isText: true },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="col-span-1 rounded-2xl border border-cream-50/12 bg-cream-50/5 p-5 sm:col-span-1"
+                >
+                  <IconTile color={stat.color} size="sm">
+                    <AdminIcon icon={stat.icon} className="h-4.5 w-4.5" />
+                  </IconTile>
+                  {stat.isText ? (
+                    <p className="mt-3 font-numeral text-xl text-cream-50">{stat.value}</p>
+                  ) : (
+                    <Num as="p" size="lg" className="mt-3 text-cream-50">
+                      {stat.value}
+                    </Num>
+                  )}
+                  <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.14em] text-cream-200/50">
+                    {stat.label}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            {featuredHolding && (
+              <div className="justify-self-center [perspective:1400px] lg:justify-self-end">
+                <div className="scale-[0.82] sm:scale-90 lg:scale-[0.78] [transform:rotateY(-8deg)_rotateX(2deg)]">
+                  <MembershipCard plan={featuredHolding.plan} className="shadow-float" />
+                </div>
+              </div>
+            )}
+          </div>
         </Container>
       </Section>
 
@@ -145,10 +155,30 @@ export default async function AccountPage({
                 const fullyPaid = paidCount >= totalDue;
                 const hasPending = holding.payments.some((p) => p.status === "PENDING");
 
+                const schedule =
+                  holding.paymentPlan === "INSTALLMENT" && holding.installmentMonths
+                    ? buildInstallmentSchedule(holding.totalAmountBDT, holding.installmentMonths)
+                    : null;
+
+                const steps: ProgressStep[] = schedule
+                  ? schedule.map((line, i) => {
+                      const linePayment = holding.payments.find((p) => p.installmentNo === i + 1);
+                      return {
+                        label: line.label,
+                        status: linePayment?.status ?? "UPCOMING",
+                      };
+                    })
+                  : [
+                      {
+                        label: "Full payment",
+                        status: holding.payments[0]?.status ?? "UPCOMING",
+                      },
+                    ];
+
                 return (
                   <article
                     key={holding.id}
-                    className="overflow-hidden rounded-2xl border border-forest-600/10 bg-cream-100"
+                    className="overflow-hidden rounded-2xl border border-forest-600/10 bg-cream-50"
                   >
                     <div
                       className="flex flex-wrap items-center justify-between gap-4 p-6"
@@ -156,14 +186,17 @@ export default async function AccountPage({
                         borderBottom: `3px solid ${holding.plan.accentColor}`,
                       }}
                     >
-                      <div>
-                        <p className="text-eyebrow text-forest-600/60">
-                          {holding.plan.name} Category
-                        </p>
-                        <h3 className="mt-1 font-display text-2xl text-forest-900">
-                          <Num as="span" size="md">{holding.units}</Num> unit
-                          share{holding.units > 1 ? "s" : ""}
-                        </h3>
+                      <div className="flex items-center gap-3.5">
+                        <TierIcon tierId={holding.plan.slug} color={holding.plan.accentColor} />
+                        <div>
+                          <p className="text-eyebrow text-forest-600/60">
+                            {holding.plan.name} Category
+                          </p>
+                          <h3 className="mt-1 font-display text-2xl text-forest-900">
+                            <Num as="span" size="md">{holding.units}</Num> unit
+                            share{holding.units > 1 ? "s" : ""}
+                          </h3>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
@@ -186,12 +219,21 @@ export default async function AccountPage({
 
                     <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto]">
                       <div>
-                        <p className="text-[0.6875rem] uppercase tracking-[0.14em] text-forest-900/40">
-                          {holding.paymentPlan === "INSTALLMENT"
-                            ? `Instalment plan · ${holding.installmentMonths} months`
-                            : "Full payment"}
-                        </p>
-                        <ul className="mt-3 space-y-2">
+                        <div className="flex items-baseline justify-between">
+                          <p className="text-[0.6875rem] uppercase tracking-[0.14em] text-forest-900/40">
+                            {holding.paymentPlan === "INSTALLMENT"
+                              ? `Instalment plan · ${holding.installmentMonths} months`
+                              : "Full payment"}
+                          </p>
+                          <p className="text-[0.6875rem] font-medium text-forest-900/50">
+                            {paidCount}/{totalDue} paid
+                          </p>
+                        </div>
+                        <div className="mt-2.5">
+                          <PaymentProgress steps={steps} />
+                        </div>
+
+                        <ul className="mt-4 space-y-2">
                           {holding.payments.map((p) => (
                             <li
                               key={p.id}
@@ -209,7 +251,10 @@ export default async function AccountPage({
                                 <span
                                   className={cn(
                                     "text-xs font-semibold uppercase tracking-wide",
-                                    paymentStatusStyle[p.status],
+                                    p.status === "SUCCESS" && "text-forest-700",
+                                    p.status === "PENDING" && "text-gold-600",
+                                    p.status === "FAILED" && "text-red-600",
+                                    p.status === "CANCELLED" && "text-forest-900/40",
                                   )}
                                 >
                                   {p.status}

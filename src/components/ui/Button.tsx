@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "ghost" | "light" | "outline-light";
+type Variant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "ghost-light"
+  | "light"
+  | "outline-light";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -13,6 +19,8 @@ const variants: Record<Variant, string> = {
   secondary:
     "bg-cream-50 text-forest-700 ring-1 ring-forest-600/15 shadow-lift hover:bg-white hover:ring-forest-600/30 hover:-translate-y-0.5",
   ghost: "text-forest-700 hover:bg-forest-600/8",
+  // Same treatment as `ghost`, for use on dark surfaces — the sidebar, dark hero bands.
+  "ghost-light": "text-cream-100/80 hover:bg-cream-50/10 hover:text-cream-50",
   light:
     "bg-cream-50/95 text-forest-700 backdrop-blur hover:bg-white hover:-translate-y-0.5 shadow-lift",
   "outline-light":

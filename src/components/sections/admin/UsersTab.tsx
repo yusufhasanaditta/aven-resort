@@ -2,7 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { formatBDT } from "@/lib/shares";
+import { IconTile } from "@/components/ui/IconTile";
 import type { AdminUser } from "@/lib/admin-types";
+
+const AVATAR_COLORS = ["#0F8A5F", "#1D93BC", "#D9A441", "#8FBF4D"];
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 export function UsersTab() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
@@ -36,14 +48,19 @@ export function UsersTab() {
         {filtered.length === 0 && (
           <p className="text-sm text-forest-900/45">No shareholders match.</p>
         )}
-        {filtered.map((u) => (
-          <div key={u.id} className="rounded-2xl border border-forest-600/10 bg-cream-100 p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <div>
-                <p className="font-display text-xl text-forest-900">{u.name}</p>
-                <p className="text-xs text-forest-900/50">
-                  {u.email} · {u.phone} · {u.location}
-                </p>
+        {filtered.map((u, i) => (
+          <div key={u.id} className="rounded-2xl border border-forest-600/10 bg-cream-50 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-center gap-3.5">
+                <IconTile color={AVATAR_COLORS[i % AVATAR_COLORS.length]} size="md">
+                  <span className="text-sm font-semibold">{initials(u.name)}</span>
+                </IconTile>
+                <div>
+                  <p className="font-display text-xl text-forest-900">{u.name}</p>
+                  <p className="text-xs text-forest-900/50">
+                    {u.email} · {u.phone} · {u.location}
+                  </p>
+                </div>
               </div>
               <p className="text-xs text-forest-900/40">
                 Joined {new Date(u.createdAt).toLocaleDateString("en-GB")}
