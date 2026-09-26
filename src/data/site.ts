@@ -40,9 +40,11 @@ export const site = {
 
 /** Headline project facts, from the brochure's Bengali fact sheet. */
 export const projectFacts = {
-  landBigha: "10.90",
-  landSqft: "1,56,816",
-  totalShares: 2000,
+  /** Total project land: 5 acres = 500 decimal ≈ 15.15 bigha (33 decimal per bigha). */
+  landAcres: "5",
+  landBigha: "15.15",
+  landSqft: "2,17,800",
+  totalShares: 2700,
   timelineMonths: 30,
   amenities: 20,
   hotelSuites: 100,

@@ -26,7 +26,7 @@ export function OverviewPanel({
 
   const kpis = [
     { icon: "layers", label: "Shares held", value: String(summary.activeUnits), sub: summary.reservedUnits ? `+${summary.reservedUnits} reserved` : "Active unit shares" },
-    { icon: "pie", label: "Of the resort", value: `${summary.ownershipPct.toFixed(2)}%`, sub: "of 2,000 unit shares" },
+    { icon: "pie", label: "Of the resort", value: `${summary.ownershipPct.toFixed(2)}%`, sub: "of 2,700 unit shares" },
     { icon: "wallet", label: "Paid to date", value: formatBDTCompact(summary.paidBDT), sub: `of ${formatBDTCompact(summary.committedBDT)} committed` },
     { icon: "bell", label: "Outstanding", value: formatBDTCompact(summary.outstandingBDT), sub: summary.outstandingBDT ? "Across open plans" : "Nothing owed" },
     { icon: "sun", label: "Free stay", value: `${summary.stayDaysPerYear} days`, sub: "Per year, at the resort" },

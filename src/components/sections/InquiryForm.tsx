@@ -17,8 +17,10 @@ const field =
  * tabs — retargeted to what this site actually does: ownership, general and
  * partnership enquiries.
  */
-export function InquiryForm() {
-  const [type, setType] = useState<string>(inquiryTypes[0].id);
+export function InquiryForm({ initialType }: { initialType?: string }) {
+  const [type, setType] = useState<string>(
+    inquiryTypes.some((t) => t.id === initialType) ? initialType! : "ownership",
+  );
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [note, setNote] = useState<string>("");
@@ -186,8 +188,8 @@ export function InquiryForm() {
         </AnimatePresence>
 
         <p className="text-xs leading-relaxed text-forest-900/40">
-          Enquiries are handled by the AVEN team directly. This site does not
-          take bookings or payments.
+          Enquiries are handled by the AVEN team directly — booking and
+          site-visit dates are confirmed with you by phone.
         </p>
       </form>
     </div>

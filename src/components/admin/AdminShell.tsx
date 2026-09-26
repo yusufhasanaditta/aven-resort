@@ -184,7 +184,7 @@ function Sidebar({
       </nav>
       <div className="m-3 rounded-xl bg-gradient-to-br from-forest-800 to-forest-950 p-4 text-white">
         <p className="text-xs font-semibold">Aven Eco Luxury Resort</p>
-        <p className="mt-0.5 text-[0.6875rem] text-white/60">2,000 shares · 6 packages</p>
+        <p className="mt-0.5 text-[0.6875rem] text-white/60">2,700 shares · 6 packages</p>
         <Link href="/" target="_blank" className="mt-3 inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-gold-300 hover:underline">
           Open website ↗
         </Link>

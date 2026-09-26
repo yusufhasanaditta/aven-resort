@@ -58,7 +58,7 @@ export const leadSchema = z.object({
   phone,
   location: optionalText(160),
   packageSlug: optionalText(40),
-  units: z.coerce.number().int().min(1).max(2000).optional().catch(undefined),
+  units: z.coerce.number().int().min(1).max(2700).optional().catch(undefined),
   investmentBDT: z.coerce.number().int().min(0).max(10_000_000_000).optional().catch(undefined),
   paymentPref: z.enum(["FULL", "INSTALLMENT", "UNDECIDED"]).optional().catch(undefined),
   message: optionalText(2000),
@@ -76,7 +76,7 @@ export const leadUpdateSchema = z.object({
   phone: phone.optional(),
   location: z.string().trim().max(160).nullable().optional(),
   packageSlug: z.string().trim().max(40).nullable().optional(),
-  units: z.coerce.number().int().min(1).max(2000).nullable().optional(),
+  units: z.coerce.number().int().min(1).max(2700).nullable().optional(),
   investmentBDT: z.coerce.number().int().min(0).nullable().optional(),
 });
 

@@ -85,7 +85,6 @@ export function MembershipCard({
   className?: string;
 }) {
   const t = themeFor(plan);
-  const discount = plan.discountPercent > 0 ? `${plan.discountPercent}% Discount` : "Regular Price";
 
   return (
     <div
@@ -112,7 +111,7 @@ export function MembershipCard({
         <span className="mt-2 h-px w-4/5 opacity-50" style={{ background: t.ink }} />
 
         <p className="mt-3 text-[0.6875rem] font-medium sm:text-xs">
-          {sharesLabel(plan)} <span className="opacity-50">|</span> {discount}
+          {sharesLabel(plan)}
         </p>
         {t.perk && <p className="text-[0.6875rem] font-medium sm:text-xs">{t.perk}</p>}
 

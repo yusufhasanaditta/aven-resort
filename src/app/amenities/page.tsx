@@ -152,8 +152,8 @@ export default async function AmenitiesPage() {
               single room.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button href="/ownership" variant="light" size="lg">
-                Choose a membership
+              <Button href="/own-your-share" variant="light" size="lg">
+                Own Your Share
                 <ArrowRight />
               </Button>
               <Button href="/masterplan" variant="outline-light" size="lg">

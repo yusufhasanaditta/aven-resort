@@ -144,7 +144,7 @@ export default function AboutPage() {
           <Reveal className="max-w-2xl">
             <Eyebrow tone="light">The land</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-cream-50">
-              Ten and a half acres above the tea capital.
+              Five acres above the tea capital.
             </h2>
           </Reveal>
 

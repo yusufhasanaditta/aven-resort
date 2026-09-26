@@ -22,8 +22,8 @@ const planSchema = z
     unitPriceBDT: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
     freeStayNights: z.coerce.number().int().min(0).max(365).optional(),
     discountPercent: z.coerce.number().int().min(0).max(90).optional(),
-    minUnits: z.coerce.number().int().min(1).max(2000).optional(),
-    maxUnits: z.coerce.number().int().min(1).max(2000).nullable().optional(),
+    minUnits: z.coerce.number().int().min(1).max(2700).optional(),
+    maxUnits: z.coerce.number().int().min(1).max(2700).nullable().optional(),
     accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #0E4D38.").optional(),
     featured: z.boolean().optional(),
   })

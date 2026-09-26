@@ -40,12 +40,12 @@ export const about = {
 /** Positioning claims used across the site. */
 export const positioning = [
   {
-    stat: "10.90",
-    label: "Bigha of land",
-    detail: "1,56,816 sq ft in the Radhanagar tea hills.",
+    stat: "5",
+    label: "Acres of land",
+    detail: "2,17,800 sq ft in the Radhanagar tea hills.",
   },
   {
-    stat: "2000",
+    stat: "2700",
     label: "Unit shares",
     detail: "Six membership plans, Executive to Royal.",
   },
@@ -64,6 +64,11 @@ export const positioning = [
 /** Contact-page enquiry types. Mirrors the tabbed form in the UI mockups. */
 export const inquiryTypes = [
   {
+    id: "booking",
+    label: "Booking & Site Visit",
+    blurb: "Reserve a pre-opening stay or book a guided site visit to the Sreemangal hills.",
+  },
+  {
     id: "ownership",
     label: "Ownership Interest",
     blurb: "Unit shares, categories and the ownership structure.",
@@ -81,6 +86,7 @@ export const inquiryTypes = [
 ] as const;
 
 export const inquirySubjects = [
+  "Room / villa booking",
   "Unit share pricing",
   "Ownership categories",
   "Masterplan & land allocation",

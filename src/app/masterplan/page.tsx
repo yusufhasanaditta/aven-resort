@@ -10,7 +10,7 @@ import { zoneCategories, zones } from "@/data/zones";
 export const metadata: Metadata = {
   title: "Interactive Masterplan",
   description:
-    "Explore all 17 zones and 26 named functions of Aven Eco Luxury Resort in 3D — five tea hills, 10.90 bigha of development land, with land allocation and zone type for every parcel.",
+    "Explore all 17 zones and 26 named functions of Aven Eco Luxury Resort in 3D — five tea hills on 5 acres of land, with land allocation and zone type for every parcel.",
 };
 
 export default function MasterplanPage() {
@@ -145,8 +145,8 @@ export default function MasterplanPage() {
             <Button href="/amenities" variant="outline-light" size="lg">
               Tour the 20 amenities
             </Button>
-            <Button href="/ownership" variant="light" size="lg">
-              Choose a membership
+            <Button href="/own-your-share" variant="light" size="lg">
+              Own Your Share
               <ArrowRight />
             </Button>
           </Reveal>

@@ -409,9 +409,9 @@ export const zones: Zone[] = [
     hill: "Across the estate",
     category: "nature",
     zoneType: "Open / Eco",
-    tagline: "Seven-plus acres kept open",
+    tagline: "Open land between the zones",
     description:
-      "Walking trails thread the estate between zones, past the bird sanctuary and out onto the open playground and turf. This is the larger half of the land — 7.20 acres deliberately left as playground and open area.",
+      "Walking trails thread the estate between zones, past the bird sanctuary and out onto the open playground and turf. Outside the development area, 1.40 acres are deliberately left as playground and open land.",
     highlights: [
       "Bird sanctuary",
       "Walking & jogging trails",
@@ -473,10 +473,10 @@ export const landUsage = {
 /** Headline estate figures from the "About the Project" page. */
 export const estateFacts = [
   {
-    value: "10.80",
+    value: "5.00",
     unit: "Acres",
     label: "Total land area",
-    detail: "1,080 decimal",
+    detail: "500 decimal · 15.15 bigha · 2,17,800 sq ft",
   },
   {
     value: "3.60",
@@ -485,10 +485,10 @@ export const estateFacts = [
     detail: "360 decimal · 10.90 bigha · 1,56,816 sq ft",
   },
   {
-    value: "7.20",
+    value: "1.40",
     unit: "Acres",
     label: "Playground & open area",
-    detail: "720 decimal",
+    detail: "140 decimal",
   },
   {
     value: "5",

@@ -41,7 +41,7 @@ export type CalculatorResult<T extends PlanLike = PlanLike> = {
 };
 
 /** Total unit shares issued for the project, per the brochure fact sheet. */
-export const TOTAL_SHARES = 2000;
+export const TOTAL_SHARES = 2700;
 
 /**
  * Which tier a given unit count falls into.

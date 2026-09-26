@@ -202,8 +202,8 @@ export default async function OwnershipPage() {
 
           <RevealGroup className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landBigha} bigha`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "১০.৯০ বিঘা" },
-              { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২০০০" },
+              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} acres`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর" },
+              { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২৭০০" },
               { bn: "প্রকল্প সময়সীমা", en: "Timeline", value: `${projectFacts.timelineMonths} months`, sub: "Project delivery", bnValue: "৩০ মাস" },
               { bn: "সুবিধা", en: "Amenities", value: String(projectFacts.amenities), sub: "Features, all shareholder-owned", bnValue: "২০" },
             ].map((f) => (

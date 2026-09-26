@@ -81,10 +81,10 @@ export const cmsDefaults: CmsContent = {
     titleAccent: "Towards Self",
     lede: "Own a piece of the hills. Aven is an eco-luxury wellness resort rising in the tea gardens of Sreemangal — offered as fractional shares with Saf-Kabla registered land.",
     image: "/renders/hanging-bridge-dusk.jpg",
-    primaryLabel: "Choose a membership",
-    primaryHref: "/ownership",
-    secondaryLabel: "See the 20 amenities",
-    secondaryHref: "/amenities",
+    primaryLabel: "Book Now",
+    primaryHref: "/contact?type=booking#enquiry",
+    secondaryLabel: "Own Your Share",
+    secondaryHref: "/own-your-share",
   },
   resort: {
     headline:

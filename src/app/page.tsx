@@ -35,7 +35,7 @@ export default async function HomePage() {
           { label: hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
         ].filter((a) => a.label && a.href)}
         facts={[
-          { value: projectFacts.landBigha, label: "Bigha of land" },
+          { value: projectFacts.landAcres, label: "Acres of land" },
           { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
           { value: String(projectFacts.amenities), label: "Amenities" },
           { value: String(projectFacts.timelineMonths), label: "Month build" },

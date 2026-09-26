@@ -15,7 +15,8 @@ export const metadata: Metadata = {
     "Speak to the AVEN team about unit shares, ownership categories, the masterplan and site visits at Aven Eco Luxury Resort, Sreemangal.",
 };
 
-export default async function ContactPage() {
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
+  const { type } = await searchParams;
   const contact = await getContent("contact");
   const contactRows = [
     {
@@ -117,9 +118,11 @@ export default async function ContactPage() {
             </div>
 
             {/* Form */}
-            <Reveal>
-              <InquiryForm />
-            </Reveal>
+            <div id="enquiry" className="scroll-mt-28">
+              <Reveal>
+                <InquiryForm key={type ?? "default"} initialType={type} />
+              </Reveal>
+            </div>
           </div>
         </Container>
       </Section>
