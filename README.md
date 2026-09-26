@@ -1,5 +1,7 @@
 # Aven Tea Empire
 
+**Live Demo:** [https://aven-resort-1.vercel.app/](https://aven-resort-1.vercel.app/)
+
 Investor website for a 5-star eco-luxury resort across five tea hills in Srimangal, Bangladesh. Next.js 16 (App Router), Tailwind v4, React Three Fiber, Prisma.
 
 ## Run locally
