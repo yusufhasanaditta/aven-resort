@@ -1,168 +1,163 @@
 /**
- * Fractional ownership: the four categories and what each share carries.
+ * Fractional ownership: the six membership plans and what every share carries.
  *
- * Transcribed from the "Your Ownership" and "4 Categories of Ownership" pages
- * of `Aven_Tea_Empire Hill (1).pdf`. The deck prints "Contact for <category>"
- * in place of a price, so no figures are shown here — enquiry is the CTA.
+ * Transcribed from the "Membership Plans", "Why Own With Us?" and Bengali
+ * fact-sheet pages of the AVEN brochure (`new ui design/`). The brochure
+ * states share counts, discounts and free-stay days per plan but no unit
+ * price — pricing is confirmed with the Aven team, and the calculator marks
+ * its figures as indicative for that reason.
  */
 
 export type OwnershipTier = {
   id: string;
   name: string;
   subtitle: string;
-  unitShare: string;
-  freeStay: string;
-  discount: string;
+  minUnits: number;
+  maxUnits: number | null;
+  /** Free stay per year, in days, as the brochure prints it. */
+  freeStayDays: number;
+  /** Discount on the share price; 0 means regular price. */
+  discountPercent: number;
   featured: boolean;
   accent: string;
+  perk?: string;
 };
 
 export const ownershipTiers: OwnershipTier[] = [
   {
     id: "executive",
     name: "Executive",
-    subtitle: "Enter the community",
-    unitShare: "1 – 2 unit shares",
-    freeStay: "2 nights / 3 days",
-    discount: "Regular price",
+    subtitle: "Enter the Aven community",
+    minUnits: 1,
+    maxUnits: 2,
+    freeStayDays: 3,
+    discountPercent: 0,
     featured: false,
-    accent: "#6B7B74",
+    accent: "#2E5A3F",
   },
   {
-    id: "premium",
-    name: "Premium",
-    subtitle: "Greater returns, more benefits",
-    unitShare: "3 – 4 unit shares",
-    freeStay: "5 nights / 6 days",
-    discount: "15% discount",
+    id: "silver",
+    name: "Silver",
+    subtitle: "A stronger stake, a longer stay",
+    minUnits: 3,
+    maxUnits: 4,
+    freeStayDays: 6,
+    discountPercent: 5,
+    featured: false,
+    accent: "#8C8D90",
+  },
+  {
+    id: "gold",
+    name: "Gold",
+    subtitle: "The most chosen plan",
+    minUnits: 5,
+    maxUnits: 9,
+    freeStayDays: 10,
+    discountPercent: 10,
     featured: true,
-    accent: "#0E4D38",
+    accent: "#A57A4B",
   },
   {
     id: "platinum",
     name: "Platinum",
     subtitle: "Premium lifestyle, higher returns",
-    unitShare: "5 – 9 unit shares",
-    freeStay: "9 nights / 10 days",
-    discount: "20% discount",
+    minUnits: 10,
+    maxUnits: 19,
+    freeStayDays: 18,
+    discountPercent: 15,
     featured: false,
-    accent: "#8A8F98",
+    accent: "#2B2B2B",
+  },
+  {
+    id: "diamond",
+    name: "Diamond",
+    subtitle: "A month in the hills, every year",
+    minUnits: 20,
+    maxUnits: 29,
+    freeStayDays: 30,
+    discountPercent: 20,
+    featured: false,
+    accent: "#A33D3A",
   },
   {
     id: "royal",
     name: "Royal",
-    subtitle: "Maximum returns, exclusive perks",
-    unitShare: "10 & above unit shares",
-    freeStay: "18 nights / 19 days",
-    discount: "30% discount",
+    subtitle: "100% villa ownership",
+    minUnits: 30,
+    maxUnits: null,
+    freeStayDays: 30,
+    discountPercent: 28,
     featured: false,
-    accent: "#C9A227",
+    accent: "#1F1C3D",
+    perk: "100% Villa Ownership",
   },
 ];
 
-/** What every owner receives, regardless of category. */
+/** "Why Own With Us?" — what every share carries, regardless of plan. */
 export const ownershipBenefits = [
   {
     id: "land",
     title: "Saf-Kabla Land",
-    description:
-      "Registered land ownership documents, for complete legal peace of mind.",
+    description: "Registered land ownership.",
     icon: "document",
   },
   {
     id: "hotel",
     title: "Hotel Ownership",
-    description:
-      "Direct fractional ownership in the entire hotel establishment — not a room, the business.",
+    description: "Fractional ownership in the entire hotel & resort.",
     icon: "building",
   },
   {
-    id: "dividends",
-    title: "Annual Dividends",
-    description:
-      "Your share of profits from room stays, dining and resort activities.",
+    id: "profits",
+    title: "Annual Profits",
+    description: "Earn your share of profits from room stays, dining, and activities.",
     icon: "chart",
   },
   {
     id: "resale",
     title: "Flexible Resale",
-    description:
-      "Transfer or sell your shares at any time, with projected capital gains.",
+    description: "Transfer or sell your shares at any time with projected capital gains.",
     icon: "exchange",
   },
   {
     id: "lifetime",
     title: "Lifetime Investment",
-    description: "A lifetime halal income source, structured for generations.",
+    description: "A lifetime halal income source.",
     icon: "infinity",
   },
   {
     id: "community",
-    title: "Elite Community",
-    description:
-      "Entry into a business community of successful investors behind the project.",
+    title: "Community",
+    description: "Entry into an elite business community of successful investors.",
     icon: "users",
   },
   {
     id: "stay",
     title: "Free Stay",
-    description:
-      "Two days per unit, every year — scaling with the size of your holding.",
+    description: "Yearly 3 days per unit.",
     icon: "key",
   },
   {
     id: "discount",
-    title: "Year-Round Discount",
-    description:
-      "40% to 50% off accommodation across the year, on top of your category discount.",
+    title: "Discount",
+    description: "40% to 50% off accommodation all over the year.",
     icon: "tag",
   },
 ];
 
-/** The investment case, from "Why Invest Now". */
-export const investmentCase = {
-  headline: "Own a Share of Bangladesh's Next Iconic Tea Resort",
-  body: "Aven Tea Empire is structured for fractional ownership and unit sales — designed for high-yield hospitality returns, capital appreciation and lifestyle privileges. Dual road access, island hotel USP and eco-tourism positioning ensure year-round demand from weddings, MICE, wellness and domestic luxury travel.",
-  reasons: [
-    {
-      title: "No true eco-luxury competition",
-      detail:
-        "Srimangal draws the country's tea tourism, but nothing in the region is positioned as 5-star eco-luxury.",
-    },
-    {
-      title: "Scarcity paired with scale",
-      detail:
-        "10–12 limited villas alongside 60 keys — enough inventory to operate profitably, few enough to stay exclusive.",
-    },
-    {
-      title: "Multiple revenue streams",
-      detail:
-        "Rooms, food & beverage, events, wellness and eco-experiences, so no single season carries the asset.",
-    },
-    {
-      title: "ESG-aligned from the ground up",
-      detail:
-        "Organic farm, rainwater harvesting and a protected bird sanctuary built into the masterplan.",
-    },
-  ],
-} as const;
+/** The two lists on the brochure's Bengali fact sheet, with English alongside. */
+export const shareOwnership = [
+  { en: "Saf-Kabla land ownership", bn: "সাফ কাবলা জমির মালিকানা" },
+  { en: "Ownership of the hotel & resort", bn: "হোটেল অ্যান্ড রিসোর্টের মালিকানা" },
+  { en: "Annual halal income", bn: "বাৎসরিক হালাল আয়" },
+  { en: "Sell or transfer with profit", bn: "লাভসহ বিক্রি ও হস্তান্তরের সুযোগ" },
+  { en: "Free holiday stays", bn: "ফ্রি অবকাশ যাপন" },
+];
 
-/** Demand drivers used on the ownership page. */
-export const demandDrivers = [
-  {
-    label: "Destination weddings",
-    detail: "Event lawn, amphitheatre and bridal suites",
-  },
-  {
-    label: "MICE & corporate retreats",
-    detail: "200+ pax conference hall, demand from Dhaka & Sylhet",
-  },
-  {
-    label: "Wellness travel",
-    detail: "Hammam, Thai spa, Ayurveda, yoga pavilion",
-  },
-  {
-    label: "Domestic luxury travel",
-    detail: "Year-round tea-country demand",
-  },
+export const businessModel = [
+  { en: "Room & villa booking", bn: "রুম ও ভিলা বুকিং", icon: "villa" },
+  { en: "Events & conference", bn: "ইভেন্ট ও কনফারেন্স", icon: "conference" },
+  { en: "Wellness & retreat", bn: "ওয়েলনেস এন্ড রিট্রিট", icon: "wellness" },
+  { en: "Restaurant & more", bn: "রেস্টুরেন্ট ও অন্যান্য", icon: "restaurant" },
+  { en: "Organic farm", bn: "অর্গানিক ফার্ম", icon: "farm" },
 ];

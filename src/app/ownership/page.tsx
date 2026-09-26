@@ -1,114 +1,98 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Image from "next/image";
 import { Hero } from "@/components/sections/Hero";
 import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
 import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
 import { ShareCalculator } from "@/components/sections/ShareCalculator";
-import { LandUsage } from "@/components/sections/LandUsage";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { Num } from "@/components/ui/Number";
 import { TierIcon } from "@/components/ui/TierIcon";
-import {
-  demandDrivers,
-  investmentCase,
-  ownershipTiers,
-} from "@/data/ownership";
+import { AmenityIcon } from "@/components/ui/AmenityIcon";
+import { businessModel, ownershipTiers, shareOwnership } from "@/data/ownership";
+import { projectFacts } from "@/data/site";
 import { about } from "@/data/about";
+import { getAsset, getContent } from "@/lib/cms";
+import { InterestForm } from "@/components/sections/InterestForm";
 
 export const metadata: Metadata = {
   title: "Ownership & Membership",
   description:
-    "Four membership categories of fractional ownership in Aven Tea Empire — Saf-Kabla registered land title, direct ownership in the hotel establishment, an interactive share calculator, annual dividends and flexible resale.",
+    "Six membership plans — Executive, Silver, Gold, Platinum, Diamond and Royal — of fractional share ownership in Aven Eco Luxury Resort & Wellness, with Saf-Kabla registered land, annual halal profits, free stays and an interactive share calculator.",
 };
 
-export default function OwnershipPage() {
+function unitsLabel(min: number, max: number | null) {
+  if (max === null) return `${min} & above`;
+  return min === max ? `${min}` : `${min} – ${max}`;
+}
+
+export default async function OwnershipPage() {
+  const [heroImage, benefits] = await Promise.all([
+    getAsset("ownership.hero", "/renders/eco-villa-sunrise.jpg"),
+    getContent("benefits"),
+  ]);
+
   return (
     <>
       <Hero
         eyebrow="Ownership & membership"
-        title="Own a Share of"
-        titleAccent="the Whole Establishment"
-        lede="Aven Tea Empire is structured for fractional ownership and unit sales — four membership categories, an interactive calculator, and a registered title behind every unit."
-        image="/renders/eco-villa-sunrise.jpg"
+        title="Own a Piece"
+        titleAccent="of the Hills"
+        lede="Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — six membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
+        image={heroImage}
         imageAlt="An eco-luxury villa with infinity pool at sunrise, surrounded by tea hills"
         height="tall"
         facts={[
-          { value: "4", label: "Membership categories" },
-          { value: "Saf-Kabla", label: "Registered title" },
-          { value: "40–50%", label: "Year-round discount" },
+          { value: "6", label: "Membership plans" },
+          { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares issued" },
+          { value: "Up to 28%", label: "Plan discount" },
           { value: "Halal", label: "Lifetime income" },
         ]}
         actions={[
           { label: "Calculate my share", href: "#calculator" },
-          { label: "Request details", href: "/contact", variant: "outline-light" },
+          { label: "Register interest", href: "#interest", variant: "outline-light" },
         ]}
       />
 
-      <MembershipCarousel
-        tone="forest"
-        eyebrow="Membership plans"
-        title="Four categories. One rotating deck."
-        lede="Drag, click a side card, or just wait — the deck advances on its own. Each plan pulls its terms live from AVEN's membership records."
-      />
+      <MembershipCarousel />
 
-      <Section tone="cream" id="calculator">
+      <Section tone="cream" id="calculator" className="scroll-mt-16">
         <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
           <ShareCalculator />
         </Suspense>
       </Section>
 
-      {/* Category comparison table */}
-      <Section tone="white" id="compare">
+      {/* Plan comparison */}
+      <Section tone="white" id="compare" className="scroll-mt-16">
         <Container>
           <Reveal className="max-w-2xl">
-            <Eyebrow>Compare categories</Eyebrow>
+            <Eyebrow>Compare plans</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Category is set by the number of shares held.
+              Your plan is set by the shares you hold.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              Stay allowance and accommodation discount both scale with the size
-              of the holding. Unit share pricing is confirmed directly with the
-              AVEN team.
+              Every step up the ladder adds a larger discount on the share
+              price and more free days at the resort each year.
             </p>
           </Reveal>
 
           <Reveal delay={0.08}>
             <div className="mt-10 overflow-x-auto">
               <table className="w-full min-w-[42rem] border-collapse text-left">
-                <caption className="sr-only">
-                  Comparison of the four ownership categories
-                </caption>
+                <caption className="sr-only">Comparison of the six membership plans</caption>
                 <thead>
                   <tr className="border-b border-forest-600/15">
-                    <th
-                      scope="col"
-                      className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
-                    >
-                      Category
-                    </th>
-                    <th
-                      scope="col"
-                      className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
-                    >
-                      Unit share
-                    </th>
-                    <th
-                      scope="col"
-                      className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
-                    >
-                      Free stay
-                    </th>
-                    <th
-                      scope="col"
-                      className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
-                    >
-                      Discount
-                    </th>
+                    {["Plan", "Shares", "Discount", "Free stay / year"].map((h) => (
+                      <th
+                        key={h}
+                        scope="col"
+                        className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
+                      >
+                        {h}
+                      </th>
+                    ))}
                     <th scope="col" className="pb-4">
-                      <span className="sr-only">Enquire</span>
+                      <span className="sr-only">Calculate</span>
                     </th>
                   </tr>
                 </thead>
@@ -126,19 +110,19 @@ export default function OwnershipPage() {
                               {tier.name}
                             </span>
                             <span className="block text-[0.6875rem] font-normal text-forest-900/45">
-                              {tier.subtitle}
+                              {tier.perk ?? tier.subtitle}
                             </span>
                           </span>
                         </span>
                       </th>
-                      <td className="py-5 pr-6 text-sm text-forest-900/75">
-                        {tier.unitShare}
-                      </td>
-                      <td className="py-5 pr-6 text-sm text-forest-900/75">
-                        {tier.freeStay}
+                      <td className="py-5 pr-6 font-numeral text-sm text-forest-900/75">
+                        {unitsLabel(tier.minUnits, tier.maxUnits)}
                       </td>
                       <td className="py-5 pr-6 text-sm font-semibold text-forest-700">
-                        {tier.discount}
+                        {tier.discountPercent > 0 ? `${tier.discountPercent}%` : "Regular price"}
+                      </td>
+                      <td className="py-5 pr-6 font-numeral text-sm text-forest-900/75">
+                        {tier.freeStayDays} days
                       </td>
                       <td className="py-5 text-right">
                         <Button href={`/ownership?plan=${tier.id}#calculator`} variant="secondary" size="sm">
@@ -155,101 +139,128 @@ export default function OwnershipPage() {
 
           <Reveal delay={0.12}>
             <p className="mt-6 text-xs leading-relaxed text-forest-900/45">
-              Free stay is stated per the project masterplan document as a yearly
-              allowance of two days per unit, scaling by category. Accommodation
-              discount of 40% to 50% applies across the year in addition to the
-              category discount shown.
+              Plan discounts apply to the share price. On top of your plan&rsquo;s
+              free stay, every shareholder receives 40% to 50% off
+              accommodation all year round.
             </p>
           </Reveal>
         </Container>
       </Section>
 
-      <OwnershipTeaser />
+      <OwnershipTeaser benefits={benefits} />
 
-      {/* Why invest now */}
-      <Section tone="cream">
+      {/* Lead capture — lands in the admin CRM */}
+      <Section tone="cream" id="interest" className="scroll-mt-16">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-16">
             <Reveal>
-              <Eyebrow>Why invest now</Eyebrow>
+              <Eyebrow>Register your interest</Eyebrow>
               <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-                {investmentCase.headline}
+                Tell us what you&rsquo;re looking for.
+                <span className="italic text-forest-600"> We&rsquo;ll call you.</span>
               </h2>
-              <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                {investmentCase.body}
+              <p className="mt-5 max-w-md text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
+                Share your preferred package and budget. A member of the Aven team
+                will walk you through pricing, instalments and a site visit — no
+                obligation.
               </p>
-
-              <div className="relative mt-10 aspect-16/10 overflow-hidden rounded-2xl shadow-lift-lg">
-                <Image
-                  src="/renders/location-map.jpg"
-                  alt="Satellite map of the Sreemangal area showing the project's setting among the tea gardens"
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 90vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-950/85 to-transparent p-5">
-                  <p className="text-[0.8125rem] font-medium text-cream-50">
-                    Competitive landscape, Srimangal
-                  </p>
-                  <p className="mt-0.5 text-xs text-cream-200/65">
-                    Existing resorts cluster the valley — none positioned as
-                    5-star eco-luxury
-                  </p>
+              <ul className="mt-8 space-y-3 text-sm text-forest-900/70">
+                {["A personal call within one working day", "Current pricing and share availability", "Site-visit booking in Sreemangal", "Help with the application and documents"].map((t) => (
+                  <li key={t} className="flex items-center gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-forest-600/10 text-xs text-forest-700">✓</span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 rounded-2xl border border-forest-600/12 bg-cream-50 p-5">
+                <p className="text-sm font-semibold text-forest-900">Ready to apply now?</p>
+                <p className="mt-1 text-xs text-forest-900/55">Submit a formal share-purchase application with your NID and nominee details.</p>
+                <div className="mt-4">
+                  <Button href="/apply" size="sm">
+                    Start an application
+                    <ArrowRight />
+                  </Button>
                 </div>
               </div>
             </Reveal>
-
-            <div className="lg:pt-12">
-              <RevealGroup className="space-y-8">
-                {investmentCase.reasons.map((r, i) => (
-                  <RevealItem key={r.title}>
-                    <div className="flex gap-5 border-b border-forest-600/10 pb-8">
-                      <Num
-                        as="span"
-                        size="lg"
-                        className="leading-none text-forest-600/30"
-                      >
-                        0{i + 1}
-                      </Num>
-                      <div>
-                        <h3 className="font-display text-2xl text-forest-900">
-                          {r.title}
-                        </h3>
-                        <p className="mt-2 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                          {r.detail}
-                        </p>
-                      </div>
-                    </div>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
-
-              <Reveal delay={0.1}>
-                <h3 className="mt-10 text-sm font-semibold text-forest-900">
-                  Demand drivers
-                </h3>
-                <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {demandDrivers.map((d) => (
-                    <li
-                      key={d.label}
-                      className="rounded-xl border border-forest-600/10 bg-cream-50 p-4"
-                    >
-                      <p className="text-[0.8125rem] font-semibold text-forest-800">
-                        {d.label}
-                      </p>
-                      <p className="mt-1 text-xs leading-relaxed text-forest-900/55">
-                        {d.detail}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </Reveal>
-            </div>
+            <Reveal delay={0.08}>
+              <InterestForm />
+            </Reveal>
           </div>
         </Container>
       </Section>
 
-      <LandUsage />
+      {/* The brochure's Bengali fact sheet, set bilingually */}
+      <Section tone="cream" className="bg-leaf-swirl">
+        <Container>
+          <Reveal className="max-w-2xl">
+            <Eyebrow>At a glance · এক নজরে</Eyebrow>
+            <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
+              The project, in four numbers.
+            </h2>
+          </Reveal>
+
+          <RevealGroup className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landBigha} bigha`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "১০.৯০ বিঘা" },
+              { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২০০০" },
+              { bn: "প্রকল্প সময়সীমা", en: "Timeline", value: `${projectFacts.timelineMonths} months`, sub: "Project delivery", bnValue: "৩০ মাস" },
+              { bn: "সুবিধা", en: "Amenities", value: String(projectFacts.amenities), sub: "Features, all shareholder-owned", bnValue: "২০" },
+            ].map((f) => (
+              <RevealItem key={f.en}>
+                <div className="h-full rounded-2xl border border-forest-600/10 bg-cream-50/80 p-6 backdrop-blur-sm">
+                  <p className="font-bangla text-sm text-forest-900/55">{f.bn}</p>
+                  <p className="mt-3 inline-block rounded-xl bg-[#E9E3C4] px-3.5 py-1.5 font-bangla text-2xl font-medium text-forest-700">
+                    {f.bnValue}
+                  </p>
+                  <p className="mt-4 font-numeral text-2xl text-forest-900">{f.value}</p>
+                  <p className="mt-0.5 text-xs text-forest-900/50">
+                    {f.en} · {f.sub}
+                  </p>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+
+          <div className="mt-12 grid gap-10 lg:grid-cols-2">
+            <Reveal>
+              <h3 className="font-bangla text-2xl font-medium text-forest-900">শেয়ার মালিকানা</h3>
+              <p className="text-sm text-forest-900/50">Share ownership</p>
+              <ul className="mt-5 space-y-3">
+                {shareOwnership.map((item) => (
+                  <li key={item.en} className="flex items-start gap-3">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-sm bg-forest-600" />
+                    <span>
+                      <span className="block font-bangla text-[1.0625rem] text-forest-900">{item.bn}</span>
+                      <span className="block text-xs text-forest-900/50">{item.en}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <h3 className="font-bangla text-2xl font-medium text-forest-900">ব্যবসায়িক মডেল</h3>
+              <p className="text-sm text-forest-900/50">Business model — where the profits come from</p>
+              <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                {businessModel.map((item) => (
+                  <li
+                    key={item.en}
+                    className="flex items-center gap-3 rounded-xl border border-forest-600/10 bg-cream-50/80 p-3"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#B3A272] text-white">
+                      <AmenityIcon icon={item.icon} className="h-7 w-7" />
+                    </span>
+                    <span>
+                      <span className="block font-bangla text-[0.9375rem] text-forest-900">{item.bn}</span>
+                      <span className="block text-xs text-forest-900/50">{item.en}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
 
       {/* Stage disclosure */}
       <Section tone="white" className="py-16 sm:py-20">
@@ -260,12 +271,12 @@ export default function OwnershipPage() {
               {about.timelineNote}
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button href="/contact" size="lg">
-                Request the investment pack
+              <Button href="/register" size="lg">
+                Open a shareholder account
                 <ArrowRight />
               </Button>
-              <Button href="/masterplan" variant="secondary" size="lg">
-                Explore the masterplan
+              <Button href="/contact" variant="secondary" size="lg">
+                Request the investment pack
               </Button>
             </div>
           </Reveal>

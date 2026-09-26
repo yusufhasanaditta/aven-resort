@@ -1,31 +1,34 @@
 /**
  * Global site configuration: brand, contact details and navigation.
  *
- * Source of truth: `Aven_Tea_Empire Hill (1).pdf` (project details) and the
- * AVEN RESORT identity in the `UI Design` mockups.
+ * Source of truth: the AVEN Eco Luxury Resort & Wellness brochure in
+ * `new ui design/` (cover, welcome page and back cover), which supersedes the
+ * earlier "Aven Tea Empire" deck for brand, address and contact details.
  */
 
 export const site = {
-  name: "AVEN Tea Empire",
-  company: "AVEN Ltd.",
+  name: "AVEN Eco Luxury Resort & Wellness",
+  company: "Aven Limited",
   shortName: "AVEN",
-  tagline: "Nature. Luxury. Lasting Value.",
-  motto: "The Avenue to Create Future",
+  tagline: "Avenue Towards Self",
+  motto: "Let's make the empire together.",
   description:
-    "A 5-star eco-luxury resort across five tea hills in Srimangal, Bangladesh — offered to investors as fractional ownership with registered land title.",
+    "An eco-luxury resort and wellness retreat in the tea hills of Sreemangal, Bangladesh — offered as fractional share ownership with Saf-Kabla registered land title.",
   location: {
-    area: "Srimangal, Moulvibazar",
+    area: "Radhanagar, Sreemangal",
     country: "Bangladesh",
-    label: "Srimangal, Moulvibazar, Bangladesh",
+    label: "Radhanagar, Sreemangal, Bangladesh",
+    full: "Begunbari, Radhanagar, Sreemangal, Moulvibazar-3210",
   },
   contact: {
-    phone: "+880 1716 249448",
-    phoneHref: "tel:+8801716249448",
-    email: "aenltd.bd@gmail.com",
-    emailHref: "mailto:aenltd.bd@gmail.com",
+    phone: "+880 1619-788921",
+    phoneHref: "tel:+8801619788921",
+    email: "info.avenlimited@gmail.com",
+    emailHref: "mailto:info.avenlimited@gmail.com",
     headOffice:
-      "6-A, House 121/5, New Eskaton, Ramna, Dhaka-1000, Bangladesh",
+      "Level 6/A, ADD Aotowa Centre, 121/5 New Eskaton (Jame Mashjid Road), Ramna, Dhaka-1000",
     hours: "Sun – Thu, 9:00 AM – 6:00 PM",
+    website: "avenlimited.com",
   },
   social: [
     { label: "Facebook", href: "#", icon: "facebook" },
@@ -33,6 +36,17 @@ export const site = {
     { label: "YouTube", href: "#", icon: "youtube" },
     { label: "LinkedIn", href: "#", icon: "linkedin" },
   ],
+} as const;
+
+/** Headline project facts, from the brochure's Bengali fact sheet. */
+export const projectFacts = {
+  landBigha: "10.90",
+  landSqft: "1,56,816",
+  totalShares: 2000,
+  timelineMonths: 30,
+  amenities: 20,
+  hotelSuites: 100,
+  villas: 20,
 } as const;
 
 export type NavItem = {
@@ -46,30 +60,30 @@ export const navigation: NavItem[] = [
   {
     label: "Ownership",
     href: "/ownership",
-    description: "Membership deck, share calculator & payment plans",
+    description: "Six membership plans, calculator & payment",
   },
   {
     label: "Wellness",
     href: "/wellness",
-    description: "Eleven services across the spa hill",
+    description: "Nine therapies — Aven cares for you",
+  },
+  {
+    label: "Amenities",
+    href: "/amenities",
+    description: "20 features, from library to helipad",
+  },
+  {
+    label: "Stay",
+    href: "/accommodations",
+    description: "100-suite hotel and 20 private-pool villas",
   },
   {
     label: "Masterplan",
     href: "/masterplan",
-    description: "20+ zones across 14 acres, in 3D",
-  },
-  {
-    label: "Accommodations",
-    href: "/accommodations",
-    description: "40 suites and 12 terraced villas",
-  },
-  {
-    label: "Experiences",
-    href: "/experiences",
-    description: "Water, culture and events",
+    description: "The estate, in 3D",
   },
   { label: "Gallery", href: "/gallery", description: "Every render" },
-  { label: "About", href: "/about", description: "Who AVEN is" },
+  { label: "About", href: "/about", description: "Who Aven is" },
   { label: "Contact", href: "/contact", description: "Speak to the team" },
 ];
 

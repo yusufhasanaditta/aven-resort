@@ -39,6 +39,22 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  FOLLOW_UP
+  CONVERTED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -50,7 +66,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  holdings ShareHolding[]
+  holdings     ShareHolding[]
+  applications Application[]
 
   @@map("users")
 }
@@ -115,6 +132,12 @@ model Payment {
   installmentNo   Int           @default(1)
   status          PaymentStatus @default(PENDING)
   gatewayResponse String?
+  /// Bank reference, bKash number, cheque number… for manually recorded payments.
+  reference       String?
+  note            String?
+  /// Admin who recorded or confirmed the payment, when it didn't come through the gateway.
+  recordedBy      String?
+  paidAt          DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -148,4 +171,105 @@ model SiteAsset {
   updatedAt DateTime @updatedAt
 
   @@map("site_assets")
+}
+
+/// A potential investor captured from the website's interest form, the
+/// contact form, or entered by the team — the unit of the admin CRM.
+model Lead {
+  id              String     @id @default(cuid())
+  name            String
+  email           String
+  phone           String
+  location        String?
+  packageSlug     String?
+  units           Int?
+  investmentBDT   Int?
+  paymentPref     String?
+  message         String?
+  source          String     @default("website")
+  status          LeadStatus @default(NEW)
+  priority        Int        @default(0)
+  nextFollowUpAt  DateTime?
+  lastContactedAt DateTime?
+  assignedTo      String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  notes LeadNote[]
+
+  @@index([status])
+  @@map("leads")
+}
+
+/// One entry on a lead's timeline: a note, a logged call/email/meeting, or a status change.
+model LeadNote {
+  id         String   @id @default(cuid())
+  leadId     String
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  kind       String   @default("NOTE")
+  body       String
+  authorName String
+  createdAt  DateTime @default(now())
+
+  @@map("lead_notes")
+}
+
+/// A formal share-purchase application with the applicant's KYC details.
+/// Approval creates the ShareHolding and its instalment schedule.
+model Application {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName          String
+  fatherName        String?
+  email             String
+  phone             String
+  nid               String
+  dateOfBirth       String?
+  address           String
+  occupation        String?
+  nomineeName       String?
+  nomineeRelation   String?
+  nomineePhone      String?
+  planSlug          String
+  units             Int
+  paymentPlan       PaymentPlan       @default(FULL)
+  installmentMonths Int?
+  quotedTotalBDT    Int
+  notes             String?
+  status            ApplicationStatus @default(SUBMITTED)
+  adminNote         String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  holdingId         String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([status])
+  @@map("applications")
+}
+
+/// Editable website content: one JSON document per section (hero, FAQs,
+/// legal pages, contact details…), read by the public pages with the static
+/// defaults in `src/data/cms-defaults.ts` as fallback.
+model SiteContent {
+  key       String   @id
+  value     String
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@map("site_content")
+}
+
+/// Audit trail of admin actions.
+model ActivityLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  target    String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("activity_log")
 }

@@ -76,6 +76,8 @@ export function Hero({
           alt={imageAlt}
           fill
           priority
+          // Admin-supplied images may be absolute URLs that aren't in the image config.
+          unoptimized={/^https?:/.test(image)}
           sizes="100vw"
           className="object-cover"
         />

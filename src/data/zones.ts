@@ -286,7 +286,7 @@ export const zones: Zone[] = [
     zoneType: "Built-Up",
     tagline: "The cultural anchor of the estate",
     description:
-      "An elevated tea-tasting pavilion set amidst mature tea bushes — the signature photographic moment of the resort and the cultural anchor for Srimangal storytelling.",
+      "An elevated tea-tasting pavilion set amidst mature tea bushes — the signature photographic moment of the resort and the cultural anchor for Sreemangal storytelling.",
     highlights: ["Tasting bar", "Library", "Viewing deck", "Tea ceremony"],
     land: { decimals: 5, sqft: 2178, percent: 1.3 },
     image: "/renders/tea-house-lounge.jpg",
@@ -482,7 +482,7 @@ export const estateFacts = [
     value: "3.60",
     unit: "Acres",
     label: "Development & investment area",
-    detail: "360 decimal",
+    detail: "360 decimal · 10.90 bigha · 1,56,816 sq ft",
   },
   {
     value: "7.20",

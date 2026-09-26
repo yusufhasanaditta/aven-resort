@@ -6,7 +6,7 @@ import { gallery } from "@/data/gallery";
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Every render of Aven Tea Empire — the masterplan, the hanging bridge, the terraced villas, the eco-lake, the spa courtyard and the wedding amphitheatre.",
+    "Every render of Aven Eco Luxury Resort — the masterplan, the hanging bridge, the terraced villas, the eco-lake, the spa courtyard and the wedding amphitheatre.",
 };
 
 export default function GalleryPage() {

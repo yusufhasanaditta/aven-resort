@@ -6,10 +6,10 @@
 
 export const about = {
   intro:
-    "AVEN is a real estate, hotel and resort development company committed to building distinguished, lasting destinations. Aven Tea Empire is our flagship eco-luxury resort project in Srimangal, developed as a 5-star eco-tourism destination with shares available to investors.",
+    "Aven Eco Luxury Resort & Wellness, in the hills of Sreemangal, is envisioned as a top wellness resort where luxury meets the raw, breathtaking beauty of nature. A project brought to life by multiple communities from across the country — and in the process, creating a real-time, impactful community of its own.",
   vision: {
     title: "The Vision",
-    body: "AVEN Ltd. is a forward-thinking real estate, hotel and resort development company building sustainable, design-led destinations. We blend investment-grade asset creation with ecological stewardship.",
+    body: "Aven Limited is a forward-thinking real estate, hotel and resort development company building sustainable, design-led destinations. We blend investment-grade asset creation with ecological stewardship.",
   },
   designIntent: {
     title: "Connect without cutting hills",
@@ -34,30 +34,30 @@ export const about = {
     },
   ],
   timelineNote:
-    "Aven Tea Empire is at masterplan and share-sales stage. Figures on this site are transcribed from the project masterplan document; construction and delivery milestones are confirmed directly with the AVEN team.",
+    "Aven Eco Luxury Resort & Wellness is at share-sales stage, with a 30-month project timeline. This is the vision of Aven — current vision and design can be adapted based on the project demands, and delivery milestones are confirmed directly with the Aven team.",
 } as const;
 
 /** Positioning claims used across the site. */
 export const positioning = [
   {
-    stat: "5-Star",
-    label: "Eco-tourism destination",
-    detail: "Positioned as Srimangal's first true eco-luxury resort.",
+    stat: "10.90",
+    label: "Bigha of land",
+    detail: "1,56,816 sq ft in the Radhanagar tea hills.",
   },
   {
-    stat: "55 / 45",
-    label: "Nature to luxury",
-    detail: "Built with balance — most of the estate stays green.",
+    stat: "2000",
+    label: "Unit shares",
+    detail: "Six membership plans, Executive to Royal.",
   },
   {
-    stat: "17",
-    label: "Masterplan zones",
-    detail: "Every acre allocated, classified and costed.",
+    stat: "20",
+    label: "Amenities",
+    detail: "Every shareholder owns a fraction of each.",
   },
   {
-    stat: "60",
-    label: "Keys at scale",
-    detail: "40 suites plus 10–12 villas, plus nature stays.",
+    stat: "120",
+    label: "Suites & villas",
+    detail: "100 hotel suites plus 20 private-pool villas.",
   },
 ];
 

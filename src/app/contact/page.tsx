@@ -6,40 +6,42 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Num } from "@/components/ui/Number";
 import { site } from "@/data/site";
+import { getContent } from "@/lib/cms";
 import { positioning } from "@/data/about";
 
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Speak to the AVEN team about unit shares, ownership categories, the masterplan and site visits at Aven Tea Empire, Srimangal.",
+    "Speak to the AVEN team about unit shares, ownership categories, the masterplan and site visits at Aven Eco Luxury Resort, Sreemangal.",
 };
 
-const contactRows = [
-  {
-    label: "Phone",
-    value: site.contact.phone,
-    href: site.contact.phoneHref,
-    detail: site.contact.hours,
-  },
-  {
-    label: "Email",
-    value: site.contact.email,
-    href: site.contact.emailHref,
-    detail: "We reply within 24 hours",
-  },
-  {
-    label: "Project site",
-    value: site.location.label,
-    detail: "Dual road access from Srimangal",
-  },
-  {
-    label: "Head office",
-    value: site.contact.headOffice,
-    detail: "AVEN Ltd.",
-  },
-];
+export default async function ContactPage() {
+  const contact = await getContent("contact");
+  const contactRows = [
+    {
+      label: "Phone",
+      value: contact.phone,
+      href: `tel:${contact.phone.replace(/[^0-9+]/g, "")}`,
+      detail: contact.hours,
+    },
+    {
+      label: "Email",
+      value: contact.email,
+      href: `mailto:${contact.email}`,
+      detail: "We reply within 24 hours",
+    },
+    {
+      label: "Resort location",
+      value: contact.resortAddress,
+      detail: "In the Radhanagar tea hills",
+    },
+    {
+      label: "Corporate office",
+      value: contact.headOffice,
+      detail: site.company,
+    },
+  ];
 
-export default function ContactPage() {
   return (
     <>
       <Hero
@@ -96,18 +98,18 @@ export default function ContactPage() {
               <Reveal delay={0.12}>
                 <div className="relative mt-8 aspect-4/3 overflow-hidden rounded-2xl shadow-lift">
                   <Image
-                    src="/renders/location-map.jpg"
-                    alt="Map of the Sreemangal area showing the project's location"
+                    src="/brochure/location-map-aven.jpg"
+                    alt="Satellite map of Sreemangal with the Aven resort pinned among the tea gardens"
                     fill
                     sizes="(min-width: 1024px) 34vw, 92vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-950/85 to-transparent p-4">
                     <p className="text-[0.8125rem] font-medium text-cream-50">
-                      Aven Tea Empire
+                      Aven Eco Luxury Resort &amp; Wellness
                     </p>
                     <p className="text-xs text-cream-200/65">
-                      {site.location.label}
+                      {contact.resortAddress}
                     </p>
                   </div>
                 </div>

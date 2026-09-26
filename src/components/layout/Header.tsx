@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { easeOutExpo } from "@/lib/motion";
+import type { Announcement } from "@/data/cms-defaults";
 
 /**
  * Transparent over the hero, then condenses into a cream bar once scrolled —
@@ -16,7 +17,7 @@ import { easeOutExpo } from "@/lib/motion";
  */
 type SessionState = { name: string; role: "SHAREHOLDER" | "ADMIN" } | null;
 
-export function Header() {
+export function Header({ announcement = null }: { announcement?: Announcement | null }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -52,14 +53,25 @@ export function Header() {
     <>
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          "fixed inset-x-0 top-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] print:hidden",
           scrolled || !onHero
             ? "border-b border-forest-600/10 bg-cream-100/85 backdrop-blur-xl"
             : "bg-gradient-to-b from-forest-950/45 to-transparent",
         )}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <div className="mx-auto flex h-[var(--header-height)] max-w-[88rem] items-center justify-between gap-6 px-5 sm:px-8">
+        {announcement && (
+          <div className="flex h-[var(--announce-height)] items-center justify-center gap-3 bg-forest-950 px-4 text-[0.75rem] text-cream-100">
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-gold-400" aria-hidden="true" />
+            <span className="truncate">{announcement.text}</span>
+            {announcement.linkLabel && announcement.href && (
+              <Link href={announcement.href} className="shrink-0 font-semibold text-gold-300 underline-offset-2 hover:underline">
+                {announcement.linkLabel} →
+              </Link>
+            )}
+          </div>
+        )}
+        <div className="mx-auto flex h-[var(--nav-height)] max-w-[88rem] items-center justify-between gap-6 px-5 sm:px-8">
           <Link href="/" aria-label={`${site.name} home`}>
             <Logo tone={light ? "light" : "brand"} />
           </Link>
@@ -104,7 +116,7 @@ export function Header() {
                 href={session.role === "ADMIN" ? "/admin" : "/account"}
                 variant={light ? "light" : "primary"}
                 size="sm"
-                className="hidden sm:inline-flex"
+                className="max-sm:hidden"
               >
                 {session.role === "ADMIN" ? "Admin panel" : `Hi, ${session.name.split(" ")[0]}`}
                 <ArrowRight />
@@ -114,7 +126,7 @@ export function Header() {
                 href={primaryCta.href}
                 variant={light ? "light" : "primary"}
                 size="sm"
-                className="hidden sm:inline-flex"
+                className="max-sm:hidden"
               >
                 {primaryCta.label}
                 <ArrowRight />

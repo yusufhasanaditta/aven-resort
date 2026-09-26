@@ -3,8 +3,9 @@ import Image from "next/image";
 import { Hero } from "@/components/sections/Hero";
 import { VisionStatement } from "@/components/sections/VisionStatement";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
-import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
+import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
+import { getAsset } from "@/lib/cms";
 import {
   accommodationCollections,
   accommodations,
@@ -13,25 +14,27 @@ import {
 export const metadata: Metadata = {
   title: "Accommodations",
   description:
-    "Forty exclusive suites on Hill 2, ten to twelve terraced villas on Hill 3, and tree houses raised into the canopy — the accommodation product at Aven Tea Empire.",
+    "100 exclusive suites in the luxury hotel, 20 private-pool villas — single, duplex and presidential — and tree houses raised into the canopy at Aven Eco Luxury Resort & Wellness.",
 };
 
-export default function AccommodationsPage() {
+export default async function AccommodationsPage() {
+  const heroImage = await getAsset("accommodations.hero", "/renders/hotel-facade.jpg");
+
   return (
     <>
       <Hero
         eyebrow="The product"
-        title="Forty Suites."
-        titleAccent="Twelve Villas. Five Hills."
+        title="100 Suites."
+        titleAccent="20 Private-Pool Villas."
         lede="Every key in the estate sits where the topography put it — the hotel on the highest point, the villas stepping down a slope, the nature stays lightest of all."
-        image="/renders/hotel-facade.jpg"
-        imageAlt="The main hotel building of Aven Tea Resort against the hills at golden hour"
+        image={heroImage}
+        imageAlt="The Aven luxury hotel against forested hills under a clear sky"
         height="tall"
         facts={[
-          { value: "40", label: "Exclusive suites" },
-          { value: "10–12", label: "Terraced villas" },
-          { value: "60", label: "Decimal plot" },
-          { value: "17,400", label: "Sq ft built" },
+          { value: "100", label: "Exclusive suites" },
+          { value: "20", label: "Luxury villas" },
+          { value: "200", label: "Pax ballroom" },
+          { value: "3", label: "Villa types" },
         ]}
         actions={[{ label: "Enquire about ownership", href: "/contact" }]}
       />
@@ -47,8 +50,8 @@ export default function AccommodationsPage() {
               <Reveal className="max-w-2xl">
                 <Eyebrow>{collection}</Eyebrow>
                 <h2 className="mt-4 font-display text-display-md text-forest-900">
-                  {collection === "Hotel" && "The main building, Hill 2"}
-                  {collection === "Villas" && "Terraced down Hill 3"}
+                  {collection === "Hotel" && "The luxury hotel"}
+                  {collection === "Villas" && "Twenty villas, twenty private pools"}
                   {collection === "Nature Stays" && "Into the canopy"}
                 </h2>
               </Reveal>
@@ -134,12 +137,12 @@ export default function AccommodationsPage() {
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
               Unit shares grant direct fractional ownership in the entire hotel
-              establishment, with annual dividends drawn from rooms, dining and
+              establishment, with annual halal profits drawn from rooms, dining and
               activities across every zone.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button href="/ownership" size="lg">
-                Ownership categories
+                Membership plans
                 <ArrowRight />
               </Button>
               <Button href="/contact" variant="secondary" size="lg">

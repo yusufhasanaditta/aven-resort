@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         destination: "/ownership",
         permanent: true,
       },
+      {
+        // Experiences became the 20-amenity tour from the brochure.
+        source: "/experiences",
+        destination: "/amenities",
+        permanent: true,
+      },
     ];
   },
 };

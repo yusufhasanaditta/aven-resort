@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CardCarousel3D } from "@/components/ui/CardCarousel3D";
 import { MembershipCard, type MembershipCardData } from "@/components/ui/MembershipCard";
 import { Container, Eyebrow } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { fallbackPlans } from "@/data/planFallback";
+import { formatBDT, stayDays } from "@/lib/shares";
 
 /**
  * The homepage / membership-page 3D card carousel. Loads live plan data from
@@ -16,8 +18,8 @@ import { fallbackPlans } from "@/data/planFallback";
 export function MembershipCarousel({
   tone = "forest",
   eyebrow = "Membership Plans",
-  title = "Four categories. One rotating deck.",
-  lede = "Drag, click a side card, or just wait — the deck advances on its own. Each plan pulls its terms live from AVEN's membership records.",
+  title = "Six plans. One rotating deck.",
+  lede = "Executive to Royal — click a side card, or just wait and the deck advances on its own. Each plan pulls its terms live from Aven's membership records.",
 }: {
   tone?: "forest" | "cream";
   eyebrow?: string;
@@ -86,11 +88,34 @@ export function MembershipCarousel({
         </Reveal>
       </Container>
 
-      <div className="mt-14 flex h-[30rem] items-center justify-center sm:h-[32rem]">
+      <div className="mt-12 flex h-[22rem] items-center justify-center sm:h-[25rem]">
         <CardCarousel3D
           items={plans}
           className="h-full w-full"
-          renderCard={(plan, isActive) => <MembershipCard plan={plan} isActive={isActive} />}
+          renderCard={(plan, isActive) => (
+            <div className="flex flex-col items-center">
+              <MembershipCard plan={plan} isActive={isActive} />
+              <div
+                className={
+                  "mt-5 flex items-center gap-4 text-center transition-opacity duration-500 " +
+                  (isActive ? "opacity-100" : "pointer-events-none opacity-0")
+                }
+              >
+                <p className={light ? "text-[0.8125rem] text-cream-200/70" : "text-[0.8125rem] text-forest-900/60"}>
+                  {stayDays(plan.freeStayNights)} days free stay ·{" "}
+                  <span className="font-numeral">{formatBDT(plan.unitPriceBDT)}</span>
+                  <span className="opacity-60"> / share, indicative</span>
+                </p>
+                <Link
+                  href={`/ownership?plan=${plan.slug}#calculator`}
+                  tabIndex={isActive ? 0 : -1}
+                  className="rounded-full bg-gold-400 px-4 py-1.5 text-xs font-semibold text-forest-950 transition-colors hover:bg-gold-300"
+                >
+                  Choose {plan.name}
+                </Link>
+              </div>
+            </div>
+          )}
         />
       </div>
 

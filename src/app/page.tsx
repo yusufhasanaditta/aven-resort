@@ -1,171 +1,118 @@
-import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Hero } from "@/components/sections/Hero";
-import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
-import { ShareCalculator } from "@/components/sections/ShareCalculator";
-import { InquiryForm } from "@/components/sections/InquiryForm";
-import { MasterplanTeaser } from "@/components/sections/MasterplanTeaser";
-import { LandUsage } from "@/components/sections/LandUsage";
-import { CardRail } from "@/components/sections/CardRail";
-import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
-import { VisionStatement } from "@/components/sections/VisionStatement";
+import { WellnessLine } from "@/components/sections/home/WellnessLine";
+import { AmenityTiles } from "@/components/sections/home/AmenityTiles";
+import { MembershipSpread } from "@/components/sections/home/MembershipSpread";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
-import { Num } from "@/components/ui/Number";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { accommodations } from "@/data/accommodations";
-import { experiences } from "@/data/experiences";
+import { LogoMark } from "@/components/ui/Logo";
 import { wellnessServices } from "@/data/wellness";
-import { zoneCategories, zones } from "@/data/zones";
-import { about, positioning } from "@/data/about";
-import { investmentCase } from "@/data/ownership";
+import { projectFacts, site } from "@/data/site";
+import { getContent } from "@/lib/cms";
 
-export default function HomePage() {
+/**
+ * The homepage is the brochure, told once: each topic gets one section here
+ * and a link onward to its own page, rather than repeating the ownership
+ * calculator, comparison and benefits that live on /ownership.
+ */
+export default async function HomePage() {
+  const [yoga, ...therapies] = wellnessServices;
+  const [hero, resort, contact] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact")]);
+
   return (
     <>
       <Hero
-        eyebrow="Srimangal, Moulvibazar · Bangladesh"
-        title="An Eco-Luxury Empire"
-        titleAccent="Built Across Five Tea Hills"
-        lede="Aven Tea Empire is a 5-star eco-tourism resort on 10.80 acres above Bangladesh's tea capital — offered to investors as fractional ownership, with registered land title and a share of the hotel itself."
-        image="/renders/hanging-bridge-dusk.jpg"
-        imageAlt="The illuminated hanging bridge crossing the tea valley at dusk, with the main hotel on the hill beyond"
+        eyebrow={hero.eyebrow}
+        title={hero.title}
+        titleAccent={hero.titleAccent}
+        lede={hero.lede}
+        image={hero.image}
+        imageAlt="The cloud walkway glowing gold across the tea hills at dusk, the Aven hotel lit on the ridge beyond"
         actions={[
-          { label: "Explore the masterplan", href: "/masterplan" },
-          {
-            label: "Ownership categories",
-            href: "/ownership",
-            variant: "outline-light",
-          },
-        ]}
+          { label: hero.primaryLabel, href: hero.primaryHref },
+          { label: hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
+        ].filter((a) => a.label && a.href)}
         facts={[
-          { value: "10.80", label: "Acres" },
-          { value: "5", label: "Tea hills" },
-          { value: "17", label: "Zones" },
-          { value: "60", label: "Keys & villas" },
+          { value: projectFacts.landBigha, label: "Bigha of land" },
+          { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
+          { value: String(projectFacts.amenities), label: "Amenities" },
+          { value: String(projectFacts.timelineMonths), label: "Month build" },
         ]}
       />
 
-      {/* 1. Membership plan — the rotating 3D deck */}
-      <MembershipCarousel />
+      <WellnessLine />
 
-      {/* 2. Wellness */}
-      <CardRail
-        eyebrow="Wellness"
-        title={
-          <>
-            Eleven services,{" "}
-            <span className="italic text-forest-600">one hillside sanctuary.</span>
-          </>
-        }
-        lede="Turkish hammam, Thai spa, Ayurveda, sauna & steam, yoga and more — the wellness circuit that occupies Hill 2 alongside the hotel."
-        items={wellnessServices.slice(0, 8).map((w) => ({
-          id: w.id,
-          image: w.image,
-          title: w.name,
-          eyebrow: w.hill,
-          description: w.tagline,
-        }))}
-        cta={{ label: "All 11 wellness services", href: "/wellness" }}
-        ratio="landscape"
-      />
-
-      {/* 3. Ownership / Share calculator + booking form */}
-      <Section tone="cream" id="calculator">
-        <Suspense
-          fallback={
-            <Container>
-              <p className="text-sm text-forest-900/50">Loading calculator…</p>
-            </Container>
-          }
-        >
-          <ShareCalculator />
-        </Suspense>
-      </Section>
-
-      <Section tone="white" className="py-16 sm:py-24">
+      {/* The brochure's welcome letter */}
+      <Section tone="white" className="bg-leaf-swirl overflow-hidden">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-            <Reveal>
-              <Eyebrow>Speak to the team</Eyebrow>
-              <h2 className="mt-4 font-display text-display-sm text-balance text-forest-900">
-                Prefer to talk it through first?
-              </h2>
-              <p className="mt-4 max-w-md text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                Send a message and the AVEN team will call you back with
-                current pricing, availability and a site-visit date.
-              </p>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <InquiryForm />
-            </Reveal>
-          </div>
+          <Reveal className="mx-auto max-w-3xl text-center">
+            <span className="mx-auto block h-14 w-14">
+              <LogoMark />
+            </span>
+            <p className="mt-6 font-display text-display-sm text-balance text-forest-900">{resort.headline}</p>
+            <div className="mx-auto mt-8 grid max-w-2xl gap-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/65 sm:grid-cols-2 sm:text-left">
+              <p>{resort.paragraphOne}</p>
+              <p>{resort.paragraphTwo}</p>
+            </div>
+            <p className="mt-8 text-eyebrow text-forest-600/60">{site.company}</p>
+          </Reveal>
         </Container>
       </Section>
 
-      {/* Positioning band */}
-      <Section tone="cream" className="py-16 sm:py-20">
+      {/* Stay: hotel + villas */}
+      <Section tone="cream" className="pt-0 sm:pt-0 lg:pt-0">
         <Container>
-          <RevealGroup className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            {positioning.map((p) => (
-              <RevealItem key={p.label}>
-                <Num as="p" size="2xl" className="text-forest-700">
-                  {p.stat}
-                </Num>
-                <p className="mt-2 text-sm font-semibold text-forest-900">
-                  {p.label}
+          <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+            <Reveal className="group relative min-h-[26rem] overflow-hidden rounded-3xl lg:min-h-[34rem]">
+              <Image
+                src="/renders/hotel-facade.jpg"
+                alt="The Aven luxury hotel, a stone-and-glass facade framed by forested hills"
+                fill
+                sizes="(min-width: 1024px) 55vw, 95vw"
+                className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-forest-950/85 via-forest-950/10 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-7 sm:p-9">
+                <Eyebrow tone="light">Luxury Hotel</Eyebrow>
+                <p className="mt-3 font-display text-display-sm text-cream-50">
+                  {projectFacts.hotelSuites} exclusive suites
                 </p>
-                <p className="mt-1 text-[0.8125rem] leading-relaxed text-forest-900/55">
-                  {p.detail}
+                <p className="mt-2 max-w-md text-[0.8125rem] leading-relaxed text-cream-100/75">
+                  Presidential &amp; Royal suites · Grand Ballroom (200 pax) ·
+                  Seminar Room (50 pax) · Meeting Room
                 </p>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-        </Container>
-      </Section>
-
-      {/* The project, in prose */}
-      <Section tone="white">
-        <Container>
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
-            <Reveal>
-              <Eyebrow>About the project</Eyebrow>
-              <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-                More than a resort — a{" "}
-                <span className="italic text-forest-600">
-                  lasting asset
-                </span>{" "}
-                in the hills.
-              </h2>
+              </div>
             </Reveal>
 
-            <div>
-              <Reveal>
-                <p className="text-pretty text-lg leading-relaxed text-forest-900/75">
-                  {about.intro}
-                </p>
-                <p className="mt-6 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                  {about.designIntent.body}
-                </p>
+            <div className="grid gap-4">
+              <Reveal delay={0.06} className="group relative min-h-[16rem] overflow-hidden rounded-3xl">
+                <Image
+                  src="/renders/hillside-villas-valley.jpg"
+                  alt="A timber-and-glass villa with an infinity pool above terraced tea hills"
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 95vw"
+                  className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-forest-950/85 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-7">
+                  <Eyebrow tone="light">Luxury Villas</Eyebrow>
+                  <p className="mt-2 font-display text-3xl text-cream-50">
+                    {projectFacts.villas} exclusive villas
+                  </p>
+                  <p className="mt-1 text-[0.8125rem] text-cream-100/75">
+                    Single · Duplex · Presidential — each with a private pool
+                  </p>
+                </div>
               </Reveal>
-
-              <RevealGroup className="mt-10 grid gap-x-8 gap-y-7 sm:grid-cols-2">
-                {about.pillars.map((p) => (
-                  <RevealItem key={p.title}>
-                    <h3 className="text-sm font-semibold text-forest-700">
-                      {p.title}
-                    </h3>
-                    <p className="mt-2 text-[0.8125rem] leading-relaxed text-forest-900/60">
-                      {p.body}
-                    </p>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
-
-              <Reveal delay={0.1}>
-                <div className="mt-9">
-                  <Button href="/about" variant="secondary">
-                    About AVEN
+              <Reveal delay={0.12} className="flex flex-col justify-between rounded-3xl bg-forest-950 p-7 text-cream-50">
+                <p className="font-display text-2xl leading-snug">
+                  Tranquil and serene hill views, from every suite and villa.
+                </p>
+                <div className="mt-6">
+                  <Button href="/accommodations" variant="light">
+                    Explore the stays
                     <ArrowRight />
                   </Button>
                 </div>
@@ -175,173 +122,186 @@ export default function HomePage() {
         </Container>
       </Section>
 
-      <MasterplanTeaser />
-
-      {/* Zone categories */}
-      <Section tone="cream">
+      {/* Site zoning & functions */}
+      <Section tone="white">
         <Container>
-          <Reveal className="max-w-2xl">
-            <Eyebrow>Zoning</Eyebrow>
-            <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Every acre classified.
-            </h2>
-            <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              The masterplan divides the estate into four zone families, with
-              26 named functions across them. Each is allocated, costed and
-              mapped — investment grade throughout.
-            </p>
-          </Reveal>
-
-          <RevealGroup className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {(
-              Object.entries(zoneCategories) as [
-                keyof typeof zoneCategories,
-                (typeof zoneCategories)[keyof typeof zoneCategories],
-              ][]
-            ).map(([key, cat]) => {
-              const count = zones.filter((z) => z.category === key).length;
-              return (
-                <RevealItem key={key}>
-                  <div className="group h-full rounded-2xl border border-forest-600/10 bg-cream-50 p-6 transition-colors duration-500 hover:border-forest-600/25">
-                    <span
-                      className="block h-1 w-10 rounded-full"
-                      style={{ background: cat.color }}
-                    />
-                    <h3 className="mt-5 font-display text-2xl text-forest-900">
-                      {cat.label}
-                    </h3>
-                    <p className="mt-2 text-[0.8125rem] leading-relaxed text-forest-900/60">
-                      {cat.description}
-                    </p>
-                    <p className="mt-5 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-600/60">
-                      {count} {count === 1 ? "zone" : "zones"}
-                    </p>
-                  </div>
-                </RevealItem>
-              );
-            })}
-          </RevealGroup>
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <Reveal className="max-w-2xl">
+              <Eyebrow>Site zoning &amp; functions</Eyebrow>
+              <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
+                Twenty amenities.{" "}
+                <span className="italic text-forest-600">You own a share of each.</span>
+              </h2>
+              <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
+                Every shareholder holds fractional ownership of all the features
+                and amenities, with Saf-Kabla land registration.
+              </p>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <Button href="/amenities" variant="secondary">
+                Tour every amenity
+                <ArrowRight />
+              </Button>
+            </Reveal>
+          </div>
+          <AmenityTiles className="mt-12" />
         </Container>
       </Section>
 
-      <VisionStatement
-        quote="Connect without cutting hills. Preserve topography, create drama."
-        attribution="Design intent, Aven Tea Empire masterplan"
-        image="/renders/kayaking-lake-aerial.jpg"
-        imageAlt="The eco-lake in the misted valley between three tea hills"
-      />
-
-      <CardRail
-        eyebrow="Accommodations"
-        title={
-          <>
-            Forty suites, twelve villas,{" "}
-            <span className="italic text-forest-600">
-              and the canopy above.
-            </span>
-          </>
-        }
-        lede="The hotel crowns Hill 2. The villas step down Hill 3. The nature stays sit lightest of all, raised into the trees on Hill 4."
-        items={accommodations.map((a) => ({
-          id: a.id,
-          image: a.image,
-          title: a.name,
-          eyebrow: a.collection,
-          description: a.tagline,
-          meta: [a.hill],
-        }))}
-        cta={{ label: "All accommodations", href: "/accommodations" }}
-      />
-
-      <LandUsage />
-
-      <CardRail
-        eyebrow="Experiences"
-        title={
-          <>
-            The reason guests return —{" "}
-            <span className="italic text-gold-300">every season.</span>
-          </>
-        }
-        lede="Rooms are one revenue stream of five. Water, culture, dining and events carry the asset through the year."
-        tone="forest"
-        ratio="landscape"
-        items={experiences.slice(0, 9).map((e) => ({
-          id: e.id,
-          image: e.image,
-          title: e.name,
-          eyebrow: e.hill,
-          description: e.summary,
-        }))}
-        cta={{ label: "All experiences", href: "/experiences" }}
-      />
-
-      {/* Why invest */}
+      {/* Wellness mosaic — "Aven cares for you" */}
       <Section tone="cream">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
-            <Reveal>
-              <Eyebrow>Investment opportunity</Eyebrow>
-              <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-                {investmentCase.headline}
-              </h2>
-              <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                {investmentCase.body}
-              </p>
-
-              <div className="relative mt-10 aspect-16/10 overflow-hidden rounded-2xl shadow-lift-lg">
-                <Image
-                  src="/renders/location-map.jpg"
-                  alt="Satellite map showing the project location near Sreemangal, Moulvibazar"
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 90vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-950/85 to-transparent p-5">
-                  <p className="text-[0.8125rem] font-medium text-cream-50">
-                    Srimangal, Moulvibazar
-                  </p>
-                  <p className="mt-0.5 text-xs text-cream-200/65">
-                    Bangladesh&rsquo;s tea capital — dual road access
-                  </p>
-                </div>
+          <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+            <Reveal className="group relative min-h-[28rem] overflow-hidden rounded-3xl">
+              <Image
+                src={yoga.image}
+                alt="A guest in sunrise yoga on a timber deck above the tea terraces"
+                fill
+                sizes="(min-width: 1024px) 38vw, 95vw"
+                className="object-cover transition-transform duration-[1400ms] group-hover:scale-[1.04]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-forest-950/70 via-transparent to-forest-950/60" />
+              <div className="absolute inset-x-0 top-0 p-7 sm:p-9">
+                <Eyebrow tone="light">Wellness &amp; Retreat</Eyebrow>
+                <h2 className="mt-3 font-display text-display-md text-cream-50">
+                  Aven cares <span className="italic text-gold-300">for you.</span>
+                </h2>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-7 sm:p-9">
+                <Button href="/wellness" variant="light">
+                  All nine therapies
+                  <ArrowRight />
+                </Button>
               </div>
             </Reveal>
 
-            <RevealGroup className="space-y-8 lg:pt-12">
-              {investmentCase.reasons.map((r, i) => (
-                <RevealItem key={r.title}>
-                  <div className="flex gap-5 border-b border-forest-600/10 pb-8">
-                    <Num
-                      as="span"
-                      size="lg"
-                      className="leading-none text-forest-600/30"
-                    >
-                      0{i + 1}
-                    </Num>
-                    <div>
-                      <h3 className="font-display text-2xl text-forest-900">
-                        {r.title}
-                      </h3>
-                      <p className="mt-2 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-                        {r.detail}
-                      </p>
-                    </div>
-                  </div>
+            <RevealGroup className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {therapies.map((w) => (
+                <RevealItem key={w.id}>
+                  <Link
+                    href={`/wellness#${w.id}`}
+                    className="group relative block aspect-[3/4] overflow-hidden rounded-2xl"
+                  >
+                    <Image
+                      src={w.image}
+                      alt={w.name}
+                      fill
+                      sizes="(min-width: 1024px) 14vw, 45vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-forest-950/80 via-forest-950/5 to-transparent" />
+                    <p className="absolute inset-x-0 bottom-0 p-3.5 font-display text-lg leading-tight text-cream-50 sm:text-xl">
+                      {w.name}
+                    </p>
+                  </Link>
                 </RevealItem>
               ))}
-              <Reveal delay={0.1}>
-                <Button href="/ownership" size="lg">
-                  See the ownership structure
-                  <ArrowRight />
-                </Button>
-              </Reveal>
             </RevealGroup>
           </div>
         </Container>
       </Section>
 
-      <OwnershipTeaser />
+      {/* Membership */}
+      <Section tone="forest" className="overflow-hidden">
+        <div className="bg-leaf-swirl-light absolute inset-0" aria-hidden="true" />
+        <Container className="relative">
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <Eyebrow tone="light">Membership plans</Eyebrow>
+            <h2 className="mt-4 font-display text-display-md text-balance text-cream-50">
+              Six plans, from Executive{" "}
+              <span className="italic text-gold-300">to Royal.</span>
+            </h2>
+            <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-cream-200/65">
+              Your plan is set by the shares you hold — every step up adds a
+              bigger discount and more free days in the hills. Royal members
+              receive 100% villa ownership.
+            </p>
+          </Reveal>
+          <Reveal delay={0.1} className="mt-14">
+            <MembershipSpread />
+          </Reveal>
+          <Reveal delay={0.15} className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button href="/ownership#calculator" variant="light" size="lg">
+              Calculate my share
+              <ArrowRight />
+            </Button>
+            <Button href="/ownership#why-own" variant="outline-light" size="lg">
+              Why own with us?
+            </Button>
+          </Reveal>
+        </Container>
+      </Section>
+
+      {/* Location */}
+      <Section tone="white">
+        <Container>
+          <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
+            <Reveal className="relative aspect-[1.41] overflow-hidden rounded-3xl shadow-lift-lg">
+              <Image
+                src="/brochure/location-map-aven.jpg"
+                alt="Satellite map of Sreemangal showing Aven Eco Luxury Resort & Wellness south-east of the town, among the tea gardens"
+                fill
+                sizes="(min-width: 1024px) 55vw, 95vw"
+                className="object-cover"
+              />
+              <span className="absolute left-[70.4%] top-[70.4%] block h-24 w-24 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border border-cream-50/60" aria-hidden="true" />
+            </Reveal>
+            <Reveal delay={0.08}>
+              <Eyebrow>Location</Eyebrow>
+              <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
+                In the tea hills of Sreemangal.
+              </h2>
+              <dl className="mt-8 space-y-6 text-[0.9375rem]">
+                <div>
+                  <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-600/60">
+                    Resort
+                  </dt>
+                  <dd className="mt-1.5 leading-relaxed text-forest-900/75">{contact.resortAddress}</dd>
+                </div>
+                <div>
+                  <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-600/60">
+                    Corporate office
+                  </dt>
+                  <dd className="mt-1.5 leading-relaxed text-forest-900/75">{contact.headOffice}</dd>
+                </div>
+              </dl>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href="/contact">
+                  Book a site visit
+                  <ArrowRight />
+                </Button>
+                <Button href={`tel:${contact.phone.replace(/[^0-9+]/g, "")}`} variant="secondary">
+                  {contact.phone}
+                </Button>
+              </div>
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
+
+      {/* Closing — the brochure's last page */}
+      <section className="bg-leaf-swirl relative overflow-hidden bg-cream-100 py-24 text-center sm:py-32">
+        <Container>
+          <Reveal>
+            <p className="text-sm text-forest-900/55">Welcome to</p>
+            <p className="mt-2 font-display text-6xl tracking-[0.3em] text-forest-900 sm:text-7xl">AVEN</p>
+            <p className="mt-6 font-display text-2xl italic text-forest-700 sm:text-3xl">{resort.motto}</p>
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              <Button href="/register" size="lg">
+                Become a shareholder
+                <ArrowRight />
+              </Button>
+              <Button href="/ownership#interest" variant="secondary" size="lg">
+                Register interest
+              </Button>
+            </div>
+            <p className="mx-auto mt-12 max-w-xl text-xs leading-relaxed text-forest-900/40">
+              This is the vision of Aven. Current vision and design can be adapted
+              based on the project demands.
+            </p>
+          </Reveal>
+        </Container>
+      </section>
     </>
   );
 }

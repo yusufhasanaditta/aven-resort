@@ -23,22 +23,21 @@ export type FallbackPlan = {
   sortOrder: number;
 };
 
-const UNIT_RANGE = /(\d+)\s*(?:[-–]\s*(\d+))?/;
+/** Placeholder until Aven Limited confirms unit pricing — mirrors `prisma/seed.ts`. */
+export const PLACEHOLDER_UNIT_PRICE_BDT = 500_000;
 
-export const fallbackPlans: FallbackPlan[] = ownershipTiers.map((t, i) => {
-  const match = t.unitShare.match(UNIT_RANGE);
-  return {
-    id: `fallback-${t.id}`,
-    slug: t.id,
-    name: t.name,
-    subtitle: t.subtitle,
-    minUnits: match ? Number(match[1]) : 1,
-    maxUnits: match?.[2] ? Number(match[2]) : null,
-    unitPriceBDT: 500_000,
-    freeStayNights: Number(t.freeStay.match(/\d+/)?.[0] ?? 0),
-    discountPercent: Number(t.discount.match(/\d+/)?.[0] ?? 0),
-    accentColor: t.accent,
-    featured: t.featured,
-    sortOrder: i,
-  };
-});
+export const fallbackPlans: FallbackPlan[] = ownershipTiers.map((t, i) => ({
+  id: `fallback-${t.id}`,
+  slug: t.id,
+  name: t.name,
+  subtitle: t.subtitle,
+  minUnits: t.minUnits,
+  maxUnits: t.maxUnits,
+  unitPriceBDT: PLACEHOLDER_UNIT_PRICE_BDT,
+  // The brochure counts free stay in days; the schema stores nights.
+  freeStayNights: t.freeStayDays - 1,
+  discountPercent: t.discountPercent,
+  accentColor: t.accent,
+  featured: t.featured,
+  sortOrder: i,
+}));

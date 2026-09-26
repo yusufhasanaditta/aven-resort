@@ -1,8 +1,10 @@
 /**
  * Accommodation product: what an owner's share actually buys into.
  *
- * Room counts, layouts and architectural notes come from the
- * "Accommodations & 5-Star Hub" and "Elite Living" pages of the deck.
+ * Room counts follow the AVEN brochure's "Luxury Hotel" (100 exclusive
+ * suites, presidential & royal suites, 200-pax ballroom, 50-pax seminar room)
+ * and "Luxury Villas" (20 villas — single, duplex, presidential — with private
+ * pools) pages; architectural notes come from the earlier masterplan deck.
  */
 
 export type Accommodation = {
@@ -25,7 +27,7 @@ export const accommodations: Accommodation[] = [
     hill: "Hill 2 — Top Floor",
     tagline: "The highest rooms on the highest hill",
     description:
-      "The top floor of the main building is given entirely to Presidential and Royal suites, each with a private terrace and an unbroken 180° view over the tea gardens. These are the rooms the whole masterplan is oriented around.",
+      "The crown of the luxury hotel: Presidential and Royal suites with private terraces and an unbroken view over the tea gardens — the rooms the whole resort is oriented around.",
     specs: [
       { label: "Floor", value: "Top level" },
       { label: "Outlook", value: "180° tea garden" },
@@ -42,39 +44,39 @@ export const accommodations: Accommodation[] = [
   },
   {
     id: "executive-rooms",
-    name: "Executive Rooms",
+    name: "Exclusive Suites",
     collection: "Hotel",
-    hill: "Hill 2 — Levels 1 & 2",
-    tagline: "The core of the 40-suite hub",
+    hill: "Luxury Hotel",
+    tagline: "100 exclusive suites under one roof",
     description:
-      "Levels one and two of the main building carry the executive rooms, sharing the floor with the grand ballroom and the wellness spa's hill-view treatment rooms. Sloped roofs, local stone and glass, with deep overhangs sized for Srimangal's rain.",
+      "The luxury hotel carries 100 exclusive suites alongside a 200-pax Grand Ballroom, a 50-pax Seminar Room and a Meeting Room — stone and glass against the forested hills, with the wellness programme a short walk away.",
     specs: [
-      { label: "Suites", value: "40 exclusive" },
-      { label: "Levels", value: "1 & 2" },
-      { label: "Plot", value: "60 decimals" },
-      { label: "Built", value: "17,400 sq ft" },
+      { label: "Suites", value: "100 exclusive" },
+      { label: "Grand Ballroom", value: "200 pax" },
+      { label: "Seminar Room", value: "50 pax" },
+      { label: "Meeting Room", value: "On site" },
     ],
     features: [
+      "Presidential & Royal suites",
       "Grand Ballroom, 200 pax",
-      "Wellness spa on floor",
-      "Deep overhangs for monsoon",
+      "Seminar & meeting rooms",
       "Local stone + glass",
     ],
     image: "/renders/hotel-facade.jpg",
   },
   {
     id: "terraced-villas",
-    name: "Hillside Terraced Villas",
+    name: "Luxury Villas",
     collection: "Villas",
-    hill: "Hill 3",
-    tagline: "Each villa steps down the slope",
+    hill: "Villa slopes",
+    tagline: "20 exclusive villas, stepping down the hill",
     description:
-      "Ten to twelve villas terraced along the slopes of Hill 3, each stepping down the hill so that no villa overlooks another. Floor-to-ceiling glass faces the valley; private pools sit on the upper level with two ensuite masters below.",
+      "Twenty exclusive villas — single, duplex and presidential — terraced along the slopes so no villa overlooks another. Floor-to-ceiling glass faces the valley, each with a luxurious private pool and a tranquil, serene hill view.",
     specs: [
-      { label: "Villas", value: "10 – 12" },
-      { label: "Layout", value: "Living + 2 masters + deck" },
-      { label: "Land", value: "70 decimals" },
-      { label: "Share", value: "19.4% of development" },
+      { label: "Villas", value: "20 exclusive" },
+      { label: "Types", value: "Single · Duplex · Presidential" },
+      { label: "Pool", value: "Private, every villa" },
+      { label: "Outlook", value: "Serene hill view" },
     ],
     features: [
       "Private pool on upper level",

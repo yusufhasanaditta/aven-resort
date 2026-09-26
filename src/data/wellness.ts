@@ -1,10 +1,8 @@
 /**
- * The wellness programme — eleven named services drawn from the Spa &
- * Wellness zone (Hill 2) and its "INCLUDES" bullets in the masterplan
- * document, plus the adjacent fitness, nutrition and tea-culture offerings
- * documented elsewhere in the deck. Four services below share one render
- * because the source image itself shows all four pavilions in a single
- * courtyard shot — the same grouping the masterplan document uses.
+ * The wellness programme — the nine services on the brochure's "Wellness &
+ * Retreat" and "Aven Cares for You" pages. Photography is the brochure's own
+ * (higher-resolution originals in /renders where they exist, crops from the
+ * brochure pages in /brochure where they don't).
  */
 
 export type WellnessService = {
@@ -14,124 +12,105 @@ export type WellnessService = {
   description: string;
   image: string;
   includes: string[];
-  hill: string;
+  /** Where on the estate it happens. */
+  setting: string;
 };
 
 export const wellnessIntro = {
-  eyebrow: "Wellness",
-  title: "Eleven services, one hillside sanctuary.",
-  lede: "The Spa & Wellness zone occupies 10 decimals on Hill 2, overlooking the bird sanctuary — a Turkish hammam, an authentic Thai spa, an Ayurveda centre, sauna and steam rooms, and a yoga pavilion, extended here with the fitness, nutrition and tea-culture services that complete the programme.",
+  eyebrow: "Wellness & Retreat",
+  title: "Aven cares for you.",
+  lede: "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Nine therapies, all provided within the resort.",
 };
 
 export const wellnessServices: WellnessService[] = [
   {
-    id: "hammam",
-    name: "Turkish Hammam",
-    tagline: "Steam, stone and centuries of ritual",
-    description:
-      "A domed hammam built in the Turkish tradition — heated marble, steam and a full scrub-and-massage ritual, set within the Spa & Wellness courtyard on Hill 2.",
-    image: "/renders/spa-wellness-courtyard.jpg",
-    includes: ["Heated marble platform", "Traditional scrub", "Steam chamber"],
-    hill: "Hill 2 — Spa & Wellness",
-  },
-  {
-    id: "thai-spa",
-    name: "Thai Spa",
-    tagline: "The golden pavilion beside the hammam",
-    description:
-      "An authentic Thai spa pavilion, gold-roofed and open-sided, offering traditional Thai massage and herbal compress therapy overlooking the meditation garden.",
-    image: "/renders/spa-wellness-courtyard.jpg",
-    includes: ["Traditional Thai massage", "Herbal compress therapy", "Open-air pavilion"],
-    hill: "Hill 2 — Spa & Wellness",
-  },
-  {
-    id: "ayurveda",
-    name: "Ayurveda & Panchakarma",
-    tagline: "Herbal wellness, the old way",
-    description:
-      "A stone-built Ayurveda centre offering Panchakarma and herbal wellness treatments, drawing on Ayurvedic tradition within the same wellness courtyard.",
-    image: "/renders/spa-wellness-courtyard.jpg",
-    includes: ["Panchakarma", "Herbal wellness therapies", "Consultation room"],
-    hill: "Hill 2 — Spa & Wellness",
-  },
-  {
-    id: "sauna-steam",
-    name: "Sauna & Steam Therapy",
-    tagline: "Timber-lined heat therapy",
-    description:
-      "A timber sauna and steam room set at the edge of the wellness courtyard, for guests completing a treatment circuit or simply unwinding after a day on the tea trails.",
-    image: "/renders/spa-wellness-courtyard.jpg",
-    includes: ["Dry sauna", "Steam room", "Cold plunge access"],
-    hill: "Hill 2 — Spa & Wellness",
-  },
-  {
-    id: "treatments",
-    name: "Hill-View Spa Treatments",
-    tagline: "Where the view is part of the therapy",
-    description:
-      "Private treatment rooms on the spa floor of the main building, each oriented outward to the hill rather than inward — facials, body therapies and signature tea rituals with a 180° outlook.",
-    image: "/renders/spa-treatment.jpg",
-    includes: ["Signature tea rituals", "Facial & body therapies", "Couples suites"],
-    hill: "Hill 2 — Main Building",
-  },
-  {
     id: "yoga",
-    name: "Yoga Pavilion & Sunrise Practice",
+    name: "Yoga",
     tagline: "Practice facing the first light",
     description:
-      "An open timber pavilion sited east so sunrise comes up directly over the tea terraces — guided sunrise yoga, sound bowl sessions and open-air practice through the day.",
+      "Guided sessions on an open timber deck above the tea terraces, timed so sunrise comes up over the hills while you practise.",
     image: "/renders/yoga-tea-garden.jpg",
-    includes: ["Sunrise yoga", "Sound bowl sessions", "Open-air deck"],
-    hill: "Hill 2 — Spa & Wellness",
-  },
-  {
-    id: "meditation",
-    name: "Meditation Garden & Forest Bathing",
-    tagline: "A quiet ridge above the valley",
-    description:
-      "A raised timber deck on the ridge line, built for slow mornings, guided meditation and forest-bathing walks with the valley opening out below.",
-    image: "/renders/nature-viewing-deck.jpg",
-    includes: ["Guided meditation", "Forest bathing walks", "Ridge-line deck"],
-    hill: "Hill 4 — Ridge",
-  },
-  {
-    id: "fitness",
-    name: "Fitness Studio",
-    tagline: "A full circuit on the wellness floor",
-    description:
-      "An equipped fitness studio on the spa floor of the main building — free weights, kettlebells and cardio for guests keeping to a routine during their stay.",
-    image: "/renders/fitness-studio.jpg",
-    includes: ["Free weights & kettlebells", "Cardio equipment", "Personal training on request"],
-    hill: "Hill 2 — Main Building",
+    includes: ["Sunrise sessions", "Open-air deck", "All levels"],
+    setting: "Hillside yoga deck",
   },
   {
     id: "nutrition",
-    name: "Wellness Nutrition Consultation",
-    tagline: "A plan built around your stay",
+    name: "Nutritional Consultation",
+    tagline: "A food plan built around your stay",
     description:
-      "One-on-one consultations with a wellness nutritionist, building a food plan around the resort's own organic farm and kitchens for the length of a guest's stay.",
+      "One-on-one consultations with a wellness nutritionist, planning meals around the resort's own organic farm and kitchens.",
     image: "/renders/wellness-nutrition.jpg",
-    includes: ["One-on-one consultation", "Farm-to-table meal planning", "Dietary programmes"],
-    hill: "Hill 2 — Main Building",
+    includes: ["One-on-one consultation", "Farm-to-table planning", "Dietary programmes"],
+    setting: "Wellness centre",
   },
   {
-    id: "earthing",
-    name: "Barefoot Earthing Trail",
+    id: "mudwalk",
+    name: "Barefoot Mud Walk",
     tagline: "The estate, underfoot",
     description:
-      "A dedicated barefoot trail through wet grass and natural ground — a simple, deliberate counterpoint to the resort's more built wellness offerings.",
+      "A dedicated barefoot trail through wet grass and natural earth — a simple, grounding counterpoint to the resort's built therapies.",
     image: "/renders/barefoot-earthing.jpg",
-    includes: ["Natural-ground barefoot path", "Guided walking sessions", "Morning & dusk slots"],
-    hill: "Across the estate",
+    includes: ["Natural-ground trail", "Guided walks", "Morning & dusk"],
+    setting: "Across the estate",
   },
   {
-    id: "tea-ceremony",
-    name: "Tea Ceremony Wellness",
-    tagline: "The original wellness ritual of the hills",
+    id: "reflexology",
+    name: "Reflexology",
+    tagline: "Pressure, precision and release",
     description:
-      "A guided tea ceremony and tasting at the Tea House on Hill 3 — treated here as a wellness practice in its own right, not only a cultural one: breathwork, slow tasting and the quiet of the tea library.",
-    image: "/renders/tea-house-lounge.jpg",
-    includes: ["Guided tea ceremony", "Mindful tasting flight", "Tea library access"],
-    hill: "Hill 3 — Tea House",
+      "Therapeutic foot reflexology in candle-lit treatment rooms, working pressure points to ease tension through the whole body.",
+    image: "/brochure/reflexology.jpg",
+    includes: ["Foot reflexology", "Warm oil therapy", "Private rooms"],
+    setting: "Wellness centre",
+  },
+  {
+    id: "gym",
+    name: "Gym Training",
+    tagline: "Keep your routine in the hills",
+    description:
+      "An equipped training studio with free weights, kettlebells and cardio, with personal training for guests keeping to a programme.",
+    image: "/renders/fitness-studio.jpg",
+    includes: ["Free weights", "Cardio equipment", "Personal training"],
+    setting: "Fitness studio",
+  },
+  {
+    id: "cupping",
+    name: "Facial Cupping",
+    tagline: "Gentle lift, natural glow",
+    description:
+      "Facial cupping and gua-sha stone therapy to stimulate circulation and relax the face — a quiet hour in a hill-view treatment room.",
+    image: "/renders/spa-treatment.jpg",
+    includes: ["Facial cupping", "Gua-sha stone", "Hill-view rooms"],
+    setting: "Spa treatment rooms",
+  },
+  {
+    id: "acupuncture",
+    name: "Acupuncture",
+    tagline: "An ancient practice, carefully given",
+    description:
+      "Traditional acupuncture sessions with a qualified practitioner, for relief, recovery and balance during your retreat.",
+    image: "/brochure/acupuncture.jpg",
+    includes: ["Qualified practitioner", "Consultation first", "Recovery focus"],
+    setting: "Wellness centre",
+  },
+  {
+    id: "quartz",
+    name: "Quartz Therapy",
+    tagline: "Stillness, crystal and scent",
+    description:
+      "Crystal and quartz therapy with incense and warm light — a meditative treatment designed purely for calm.",
+    image: "/brochure/quartz-therapy.jpg",
+    includes: ["Crystal therapy", "Aromatherapy", "Guided stillness"],
+    setting: "Meditation rooms",
+  },
+  {
+    id: "sound",
+    name: "Sound Healing",
+    tagline: "Let the bowls do the work",
+    description:
+      "Singing-bowl sound healing sessions, the resonance used to slow breath and settle the mind — individually or in small groups.",
+    image: "/brochure/sound-healing.jpg",
+    includes: ["Singing bowls", "Private or group", "Evening sessions"],
+    setting: "Meditation rooms",
   },
 ];

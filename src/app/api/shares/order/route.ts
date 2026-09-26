@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { shareOrderSchema, zodErrors } from "@/lib/validation";
 import { calculate, buildInstallmentSchedule } from "@/lib/shares";
 import { initiatePayment, isConfigured } from "@/lib/sslcommerz";
+import { convertLeadsFor } from "@/lib/crm";
 
 /**
  * Creates a share holding at the price the calculator showed, then either
@@ -60,6 +61,8 @@ export async function POST(request: Request) {
     },
   });
 
+  await convertLeadsFor(user.email, `reserved ${result.units} ${result.plan.name} share(s) online`);
+
   const tranId = `AVEN-${holding.id}-1-${randomUUID().slice(0, 8)}`;
 
   await prisma.payment.create({
@@ -89,7 +92,7 @@ export async function POST(request: Request) {
     customerEmail: user.email,
     customerPhone: user.phone,
     customerAddress: user.location,
-    productName: `${result.plan.name} — ${result.units} unit share(s), Aven Tea Empire`,
+    productName: `${result.plan.name} — ${result.units} unit share(s), Aven Eco Luxury Resort`,
   });
 
   if (!gateway.ok) {

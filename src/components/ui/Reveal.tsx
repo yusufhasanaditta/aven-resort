@@ -66,17 +66,19 @@ export function RevealGroup({
 export function RevealItem({
   as = "div",
   preset = "fadeUp",
+  id,
   className,
   children,
 }: {
   as?: "div" | "li" | "article";
   preset?: "fadeUp" | "riseIn";
+  id?: string;
   className?: string;
   children: React.ReactNode;
 }) {
   const Component = motion[as];
   return (
-    <Component variants={presets[preset]} className={className}>
+    <Component id={id} variants={presets[preset]} className={className}>
       {children}
     </Component>
   );

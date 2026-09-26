@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       where: { id: payment.id },
       data: {
         status: "SUCCESS",
+        paidAt: new Date(),
         valId,
         gatewayResponse: JSON.stringify({ ipn: Object.fromEntries(form), validation: check.raw }),
       },

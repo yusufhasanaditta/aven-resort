@@ -1,19 +1,25 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The AVEN mark: a leaf pair with a gold seed, redrawn as inline SVG from the
- * logo in the UI Design mockups so it stays crisp and recolourable.
+ * The AVEN mark: a high-contrast "A" with three wave lines running through
+ * its base — the hills and tea terraces — redrawn as inline SVG from the
+ * brochure cover so it stays crisp and recolourable.
  */
 export function LogoMark({
   className,
   tone = "brand",
+  color,
+  wave,
 }: {
   className?: string;
-  tone?: "brand" | "light";
+  tone?: "brand" | "light" | "gold";
+  /** Override the whole mark's colour, e.g. to match a membership card's ink. */
+  color?: string;
+  /** Override the wave colour, e.g. to tint the mark per membership plan. */
+  wave?: string;
 }) {
-  const leafDark = tone === "light" ? "#FAF8F2" : "#0E4D38";
-  const leafMid = tone === "light" ? "#C9E0D2" : "#7FA650";
-  const seed = tone === "light" ? "#E8CF87" : "#C9A227";
+  const ink = color ?? (tone === "light" ? "#FAF8F2" : tone === "gold" ? "#E8CF87" : "#0B4332");
+  const waves = wave ?? (tone === "brand" && !color ? "#0E4D38" : ink);
 
   return (
     <svg
@@ -22,22 +28,16 @@ export function LogoMark({
       aria-hidden="true"
       className={cn("h-full w-full", className)}
     >
-      <path
-        d="M20 36C20 26.5 14.8 18.6 6.4 15.2 4.6 24.4 9.8 34.2 20 36Z"
-        fill={leafMid}
-      />
-      <path
-        d="M20 36C20 23.4 26 12.4 35.6 7 38.4 19.6 31.6 32.2 20 36Z"
-        fill={leafDark}
-      />
-      <path
-        d="M20 36C20 29 17.4 22.6 12.8 18"
-        stroke={leafDark}
-        strokeOpacity="0.35"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-      />
-      <circle cx="12.2" cy="10.4" r="4.2" fill={seed} />
+      {/* Thin left leg, heavy right leg, like a Didone capital */}
+      <path d="M19.6 4.5 7.6 35.5" stroke={ink} strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M19 3.6h2.4L34 35.6h-4.4L19 3.6Z" fill={ink} />
+      <path d="M4.8 35.6h5.8M27.8 35.6h8.6" stroke={ink} strokeWidth="1.2" strokeLinecap="round" />
+      {/* Hills & terraces */}
+      <g stroke={waves} strokeWidth="1.25" strokeLinecap="round">
+        <path d="M11.8 24.6c2.4-2.3 4.8-2.3 7.2 0s4.8 2.3 7.2 0" />
+        <path d="M10.2 28.4c2.8-2.5 5.6-2.5 8.4 0s5.6 2.5 8.4 0 2.2-1.4 3-1" />
+        <path d="M8.6 32.2c3.2-2.7 6.4-2.7 9.6 0s6.4 2.7 9.6 0c1.2-1 2.4-1.3 3.6-1" />
+      </g>
     </svg>
   );
 }
@@ -57,19 +57,19 @@ export function Logo({
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-display text-xl font-semibold tracking-[0.14em]",
-            tone === "light" ? "text-cream-50" : "text-forest-700",
+            "font-display text-[1.375rem] font-medium tracking-[0.3em]",
+            tone === "light" ? "text-cream-50" : "text-forest-800",
           )}
         >
           AVEN
         </span>
         <span
           className={cn(
-            "mt-0.5 text-[0.5rem] font-semibold tracking-[0.34em]",
+            "mt-1 whitespace-nowrap text-[0.46875rem] font-semibold tracking-[0.2em] sm:tracking-[0.28em]",
             tone === "light" ? "text-cream-200/80" : "text-forest-600/65",
           )}
         >
-          TEA EMPIRE
+          ECO LUXURY RESORT
         </span>
       </span>
     </span>

@@ -8,7 +8,13 @@ import { Container, Eyebrow } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { ButtonAction, Button, ArrowRight } from "@/components/ui/Button";
 import { MembershipBadge } from "@/components/ui/MembershipCard";
-import { calculate, buildInstallmentSchedule, formatBDT } from "@/lib/shares";
+import {
+  calculate,
+  buildInstallmentSchedule,
+  formatBDT,
+  ownershipPercent,
+  stayDays,
+} from "@/lib/shares";
 import { fallbackPlans, type FallbackPlan } from "@/data/planFallback";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -148,10 +154,10 @@ export function ShareCalculator() {
           See your category before you buy.
         </h2>
         <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-          Enter a unit count to see the category it falls into, the free-stay
-          and discount that come with it, and — if you choose instalments —
-          exactly what&rsquo;s due and when. Pricing shown is indicative until AVEN
-          confirms a final unit price.
+          Enter a unit count to see the plan it falls into — Executive through
+          Royal — the discount and free stay that come with it, and, if you
+          choose instalments, exactly what&rsquo;s due and when. Pricing is
+          indicative until Aven confirms a final unit price.
         </p>
 
         {plansStatus === "fallback" && (
@@ -282,23 +288,44 @@ export function ShareCalculator() {
                 >
                   {formatBDT(result.totalBDT)}
                 </motion.p>
-                <p className="mt-1 text-xs text-cream-200/40">
-                  Indicative — final unit price confirmed by AVEN Ltd.
+                {result.savingsBDT > 0 ? (
+                  <p className="mt-1 text-xs text-cream-200/50">
+                    <span className="line-through opacity-70">{formatBDT(result.grossBDT)}</span>{" "}
+                    <span className="font-semibold text-gold-300">
+                      You save {formatBDT(result.savingsBDT)}
+                    </span>{" "}
+                    with {result.plan.name}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-cream-200/40">
+                    Regular price — plan discounts start at 3 shares.
+                  </p>
+                )}
+                <p className="mt-1 text-[0.6875rem] text-cream-200/35">
+                  Indicative — final unit price confirmed by Aven Limited.
                 </p>
 
-                <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-cream-50/10 pt-5">
+                <dl className="mt-6 grid grid-cols-3 gap-4 border-t border-cream-50/10 pt-5">
                   <div>
                     <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
                       Free stay / year
                     </dt>
-                    <dd className="mt-1 font-numeral text-lg">{result.freeStayNights} nights</dd>
+                    <dd className="mt-1 font-numeral text-lg">{stayDays(result.freeStayNights)} days</dd>
                   </div>
                   <div>
                     <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
-                      Accommodation discount
+                      Plan discount
                     </dt>
                     <dd className="mt-1 font-numeral text-lg">
                       {result.discountPercent > 0 ? `${result.discountPercent}%` : "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
+                      Of the project
+                    </dt>
+                    <dd className="mt-1 font-numeral text-lg">
+                      {ownershipPercent(result.units).toFixed(2)}%
                     </dd>
                   </div>
                 </dl>

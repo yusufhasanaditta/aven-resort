@@ -1,5 +1,6 @@
 /**
- * The full render library, extracted from the project PDFs.
+ * The full render library, extracted from the project PDFs and the AVEN
+ * brochure in `new ui design/`.
  *
  * `span` drives the masonry layout on /gallery — "wide" images take two
  * columns, "tall" images take two rows.
@@ -298,10 +299,34 @@ export const gallery: GalleryItem[] = [
     category: "masterplan",
   },
   {
-    src: "/renders/location-map.jpg",
-    title: "Srimangal Context",
-    caption: "The site within Bangladesh's tea capital, Moulvibazar.",
+    src: "/brochure/location-map-aven.jpg",
+    title: "Radhanagar, Sreemangal",
+    caption: "Aven among the tea gardens south-east of Sreemangal town.",
     category: "masterplan",
     span: "wide",
+  },
+  {
+    src: "/brochure/reflexology.jpg",
+    title: "Reflexology",
+    caption: "Foot reflexology in candle-lit treatment rooms.",
+    category: "wellness",
+  },
+  {
+    src: "/brochure/acupuncture.jpg",
+    title: "Acupuncture",
+    caption: "Traditional acupuncture with a qualified practitioner.",
+    category: "wellness",
+  },
+  {
+    src: "/brochure/sound-healing.jpg",
+    title: "Sound Healing",
+    caption: "Singing-bowl sessions to slow the breath.",
+    category: "wellness",
+  },
+  {
+    src: "/brochure/quartz-therapy.jpg",
+    title: "Quartz Therapy",
+    caption: "Crystal, incense and warm light.",
+    category: "wellness",
   },
 ];

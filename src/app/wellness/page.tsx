@@ -8,30 +8,33 @@ import { TiltCard, Depth } from "@/components/ui/TiltCard";
 import { Num } from "@/components/ui/Number";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { wellnessIntro, wellnessServices } from "@/data/wellness";
+import { getAsset } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Wellness",
   description:
-    "Eleven wellness services at Aven Tea Empire — Turkish hammam, Thai spa, Ayurveda, sauna & steam, yoga, fitness, nutrition and a barefoot earthing trail across the Spa & Wellness hill.",
+    "Nine wellness therapies at Aven Eco Luxury Resort & Wellness — yoga, nutritional consultation, barefoot mud walk, reflexology, gym training, facial cupping, acupuncture, quartz therapy and sound healing.",
 };
 
-export default function WellnessPage() {
+export default async function WellnessPage() {
+  const heroImage = await getAsset("wellness.hero", "/renders/yoga-tea-garden.jpg");
+
   return (
     <>
       <Hero
         eyebrow={wellnessIntro.eyebrow}
-        title="A Hillside Given Over"
-        titleAccent="Entirely to Wellness"
+        title="Retreat, Don't Escape."
+        titleAccent="Aven Cares for You"
         lede={wellnessIntro.lede}
-        image="/renders/spa-wellness-courtyard.jpg"
-        imageAlt="The spa courtyard with hammam, Thai pavilion, Ayurveda centre and meditation garden"
+        image={heroImage}
+        imageAlt="A guest in sunrise yoga on a timber deck above the misted tea terraces"
         height="tall"
         leaves={false}
         facts={[
-          { value: "11", label: "Wellness services" },
-          { value: "10", label: "Decimals dedicated" },
-          { value: "4", label: "Treatment traditions" },
-          { value: "180°", label: "Hill-view treatment rooms" },
+          { value: "9", label: "Therapies" },
+          { value: "100%", label: "Provided in-resort" },
+          { value: "Body", label: "& mind" },
+          { value: "Every", label: "Plan includes stays" },
         ]}
         actions={[{ label: "Speak to the wellness team", href: "/contact" }]}
       />
@@ -41,18 +44,18 @@ export default function WellnessPage() {
           <Reveal className="max-w-2xl">
             <Eyebrow>The programme</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Eleven services, built into one hill.
+              Nine therapies, one peaceful self.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              Every service below sits within walking distance of the next —
-              a working wellness circuit rather than a single spa building,
-              overlooking the bird sanctuary on Hill 2.
+              From sunrise yoga and a barefoot mud walk to acupuncture and
+              singing-bowl sound healing — every one of these services is
+              provided within the resort.
             </p>
           </Reveal>
 
           <RevealGroup className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {wellnessServices.map((service, i) => (
-              <RevealItem key={service.id}>
+              <RevealItem key={service.id} className="scroll-mt-28" id={service.id}>
                 <TiltCard
                   className="group h-full"
                   innerClassName="h-full rounded-2xl bg-cream-100 shadow-lift ring-1 ring-forest-600/8 transition-shadow duration-500 group-hover:shadow-float"
@@ -76,7 +79,7 @@ export default function WellnessPage() {
                       </Depth>
                       <Depth z={20} className="absolute bottom-3 left-4">
                         <span className="text-[0.6875rem] font-medium text-cream-100/85">
-                          {service.hill}
+                          {service.setting}
                         </span>
                       </Depth>
                     </div>
@@ -111,27 +114,27 @@ export default function WellnessPage() {
       </Section>
 
       <VisionStatement
-        quote="Holistic wellness sanctuary — a place for the body and the hills to meet."
-        attribution="Spa & Wellness, Hill 2"
-        image="/renders/yoga-tea-garden.jpg"
-        imageAlt="A guest in sunrise yoga practice overlooking the tea terraces"
+        quote="Retreating your body and mind towards a stronger, more passionate, and peaceful self."
+        attribution="Aven Eco Luxury Resort & Wellness"
+        image="/renders/barefoot-earthing.jpg"
+        imageAlt="Bare feet stepping onto wet earth and grass on the mud-walk trail"
       />
 
       <Section tone="cream">
         <Container>
           <Reveal className="mx-auto max-w-2xl text-center">
-            <Eyebrow>Part of every ownership category</Eyebrow>
+            <Eyebrow>Part of every membership plan</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
               Wellness access comes with every unit share.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              Every category of ownership — Executive through Royal — carries
-              a year-round accommodation discount and a free-stay allowance
-              that includes the wellness programme.
+              Every plan — Executive through Royal — carries free stay days
+              each year and a 40–50% accommodation discount year-round, with
+              the wellness programme on your doorstep.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button href="/ownership" size="lg">
-                See membership categories
+                See membership plans
                 <ArrowRight />
               </Button>
               <Button href="/ownership#calculator" variant="secondary" size="lg">

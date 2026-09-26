@@ -4,10 +4,9 @@ import { prisma } from "@/lib/db";
 /**
  * Enquiry endpoint.
  *
- * Validates the payload and persists it to the database, where the admin
- * panel's Inquiries tab reads it. Swap or add to the `deliver` call for a CRM
- * push or transactional email when the team is ready — the persistence and
- * the UI don't need to change.
+ * Validates the payload and stores it as a CRM lead (source "contact-form"),
+ * so every contact-page enquiry shows up in the admin Leads pipeline for
+ * follow-up alongside the interest-form leads.
  */
 
 export type InquiryPayload = {
@@ -34,18 +33,15 @@ function validate(body: Partial<InquiryPayload>) {
 }
 
 async function deliver(payload: InquiryPayload) {
-  await prisma.inquiry.create({
+  await prisma.lead.create({
     data: {
-      type: payload.type,
-      name: payload.name,
-      email: payload.email,
-      phone: payload.phone,
-      subject: payload.subject || null,
-      message: payload.message,
+      name: payload.name.trim(),
+      email: payload.email.trim().toLowerCase(),
+      phone: payload.phone.trim(),
+      message: [payload.subject, payload.message].filter(Boolean).join(" — "),
+      source: `contact-form:${payload.type || "general"}`,
     },
   });
-  // Add a CRM push or transactional email here when the team is ready —
-  // persistence above already makes every enquiry visible in /admin.
 }
 
 export async function POST(request: Request) {

@@ -14,7 +14,7 @@ import { site } from "@/data/site";
 export const metadata: Metadata = {
   title: "About AVEN",
   description:
-    "AVEN Ltd. is a real estate, hotel and resort development company building sustainable, design-led destinations. Aven Tea Empire is its flagship eco-luxury project in Srimangal.",
+    "Aven Limited is building Aven Eco Luxury Resort & Wellness in the hills of Sreemangal — a top wellness resort where luxury meets the raw beauty of nature, owned by a community of shareholders.",
 };
 
 export default function AboutPage() {
@@ -22,8 +22,8 @@ export default function AboutPage() {
     <>
       <Hero
         eyebrow="About AVEN"
-        title="More Than a Resort —"
-        titleAccent="An Avenue to Create Future"
+        title="Avenue Towards Self —"
+        titleAccent="Let's Make the Empire Together"
         lede={site.description}
         image="/renders/main-hotel-aerial.jpg"
         imageAlt="The main hotel building crowning Hill 2, surrounded by tea-covered hills"

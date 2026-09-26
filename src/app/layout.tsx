@@ -1,15 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Cormorant_Garamond, Hind_Siliguri, Inter } from "next/font/google";
 import { site } from "@/data/site";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { HideOn } from "@/components/layout/HideOn";
+import { getContent } from "@/lib/cms";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-display",
+  display: "swap",
+});
+
+// The brochure's fact sheet is in Bengali; Hind Siliguri keeps it legible
+// beside Inter without leaning on whatever Bengali fallback the OS has.
+const bangla = Hind_Siliguri({
+  subsets: ["bengali"],
+  weight: ["400", "500", "600"],
+  variable: "--font-bangla",
   display: "swap",
 });
 
@@ -20,15 +31,17 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://aventeaempire.com"),
+  metadataBase: new URL("https://avenlimited.com"),
   title: {
-    default: `${site.name} — Eco-Luxury Resort in Srimangal`,
-    template: `%s · ${site.name}`,
+    default: `${site.name} — ${site.tagline}`,
+    template: `%s · AVEN`,
   },
   description: site.description,
   keywords: [
-    "Aven Tea Empire",
-    "Srimangal resort",
+    "Aven Eco Luxury Resort",
+    "Aven Limited",
+    "Sreemangal resort",
+    "wellness retreat Bangladesh",
     "eco-luxury Bangladesh",
     "fractional ownership resort",
     "Moulvibazar tea resort",
@@ -58,22 +71,34 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const announcement = await getContent("announcement");
+  const showAnnouncement = announcement.enabled && !!announcement.text.trim();
+
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${sans.variable} ${bangla.variable}${showAnnouncement ? " has-announcement" : ""}`}
+    >
       <body className="min-h-screen antialiased">
-        <SmoothScroll />
+        <HideOn prefixes={["/admin"]}>
+          <SmoothScroll />
+        </HideOn>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-forest-600 focus:px-5 focus:py-2.5 focus:text-sm focus:font-medium focus:text-cream-50"
         >
           Skip to content
         </a>
-        <Header />
+        <HideOn prefixes={["/admin"]}>
+          <Header announcement={showAnnouncement ? announcement : null} />
+        </HideOn>
         <main id="main">{children}</main>
-        <Footer />
+        <HideOn prefixes={["/admin"]}>
+          <Footer />
+        </HideOn>
       </body>
     </html>
   );

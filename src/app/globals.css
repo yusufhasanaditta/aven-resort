@@ -44,14 +44,22 @@
 
   --font-display: var(--font-display), "Georgia", serif;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-bangla: var(--font-bangla), "Noto Sans Bengali", sans-serif;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
 }
 
 :root {
-  --header-height: 4.75rem;
+  --nav-height: 4.75rem;
+  /* The CMS announcement bar sits above the nav; pages pad by the sum. */
+  --announce-height: 0rem;
+  --header-height: calc(var(--nav-height) + var(--announce-height));
   color-scheme: light;
+}
+
+html.has-announcement {
+  --announce-height: 2.25rem;
 }
 
 @layer base {
@@ -208,6 +216,16 @@
   .mask-fade-r {
     mask-image: linear-gradient(to right, black 80%, transparent 100%);
   }
+
+  /* The swirling-leaf linework behind the brochure's text pages. */
+  .bg-leaf-swirl {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'160'%20height%3D'160'%20viewBox%3D'0%200%20160%20160'%3E%3Cg%20fill%3D'none'%20stroke%3D'rgba(14%2C77%2C56%2C0.035)'%20stroke-width%3D'5'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(0%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(90%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(180%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(270%2080%2080)'%2F%3E%3Cg%20transform%3D'translate(0%200)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(160%200)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(0%20160)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(160%20160)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    background-size: 220px 220px;
+  }
+  .bg-leaf-swirl-light {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'160'%20height%3D'160'%20viewBox%3D'0%200%20160%20160'%3E%3Cg%20fill%3D'none'%20stroke%3D'rgba(250%2C248%2C242%2C0.05)'%20stroke-width%3D'5'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(0%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(90%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(180%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'rotate(270%2080%2080)'%2F%3E%3Cg%20transform%3D'translate(0%200)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(160%200)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(0%20160)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(160%20160)'%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(45%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(135%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(225%2080%2080)'%2F%3E%3Cpath%20d%3D'M80%2080C56%2066%2050%2032%2072%204c20%2022%2026%2054%208%2076Z'%20transform%3D'translate(-80%20-80)%20rotate(315%2080%2080)'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+    background-size: 220px 220px;
+  }
 }
 
 @keyframes aven-float {
@@ -233,6 +251,23 @@
   animation: aven-float 7s var(--ease-in-out-quint) infinite;
 }
 
+/* An endless horizontal ticker — the track holds two copies of its content. */
+@keyframes aven-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  animation: aven-marquee 48s linear infinite;
+}
+.animate-marquee-reverse {
+  animation: aven-marquee 56s linear infinite reverse;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -242,7 +277,9 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .animate-float {
+  .animate-float,
+  .animate-marquee,
+  .animate-marquee-reverse {
     animation: none;
   }
 }

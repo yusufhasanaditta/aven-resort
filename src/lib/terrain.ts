@@ -39,7 +39,7 @@ export const TERRAIN_SEGMENTS = 200;
 /**
  * A single tilla.
  *
- * Srimangal's hills are steep-sided and distinctly separate, so a plain
+ * Sreemangal's hills are steep-sided and distinctly separate, so a plain
  * gaussian reads far too soft — the exponent is pushed up until each mound
  * falls away sharply enough that five of them stay legible as five.
  */

@@ -29,9 +29,14 @@ export function LogoutButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
 export function PayNextButton({
   holdingId,
   label = "Pay next instalment",
+  tone = "dark",
+  className,
 }: {
   holdingId: string;
   label?: string;
+  /** "light" for use on dark surfaces, like the shareholder dashboard. */
+  tone?: "dark" | "light";
+  className?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -65,11 +70,21 @@ export function PayNextButton({
 
   return (
     <div>
-      <ButtonAction size="sm" disabled={busy} onClick={pay}>
+      <ButtonAction
+        size="sm"
+        variant={tone === "light" ? "light" : "primary"}
+        disabled={busy}
+        onClick={pay}
+        className={className}
+      >
         {busy ? "Starting payment…" : label}
       </ButtonAction>
-      {notice && <p className="mt-2 text-xs text-forest-700">{notice}</p>}
-      {error && <p className="mt-2 text-xs text-gold-600">{error}</p>}
+      {notice && (
+        <p className={tone === "light" ? "mt-2 text-xs text-cream-200/75" : "mt-2 text-xs text-forest-700"}>{notice}</p>
+      )}
+      {error && (
+        <p className={tone === "light" ? "mt-2 text-xs text-gold-300" : "mt-2 text-xs text-gold-600"}>{error}</p>
+      )}
     </div>
   );
 }

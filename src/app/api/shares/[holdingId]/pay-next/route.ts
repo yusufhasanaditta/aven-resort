@@ -83,7 +83,7 @@ export async function POST(
     customerEmail: holding.user.email,
     customerPhone: holding.user.phone,
     customerAddress: holding.user.location,
-    productName: `${holding.plan.name} — ${label}, Aven Tea Empire`,
+    productName: `${holding.plan.name} — ${label}, Aven Eco Luxury Resort`,
   });
 
   if (!gateway.ok) {

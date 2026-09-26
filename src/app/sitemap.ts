@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { navigation } from "@/data/site";
 
-const BASE = "https://aventeaempire.com";
+const BASE = "https://avenlimited.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return navigation.map((item) => ({
+  const pages = [...navigation, { href: "/apply" }, { href: "/faq" }, { href: "/terms" }, { href: "/privacy" }];
+  return pages.map((item) => ({
     url: `${BASE}${item.href === "/" ? "" : item.href}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,

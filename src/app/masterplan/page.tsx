@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { MasterplanExplorer } from "@/components/sections/MasterplanExplorer";
 import { LandUsage } from "@/components/sections/LandUsage";
-import { ZoneFunctionsGrid } from "@/components/sections/ZoneFunctionsGrid";
-import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
+import { Button, ArrowRight } from "@/components/ui/Button";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { zoneCategories, zones } from "@/data/zones";
@@ -11,7 +10,7 @@ import { zoneCategories, zones } from "@/data/zones";
 export const metadata: Metadata = {
   title: "Interactive Masterplan",
   description:
-    "Explore all 17 zones and 26 named functions of Aven Tea Empire in 3D — five tea hills, 10.80 acres, with land allocation and zone type for every parcel.",
+    "Explore all 17 zones and 26 named functions of Aven Eco Luxury Resort in 3D — five tea hills, 10.90 bigha of development land, with land allocation and zone type for every parcel.",
 };
 
 export default function MasterplanPage() {
@@ -131,18 +130,28 @@ export default function MasterplanPage() {
         </Container>
       </Section>
 
-      <ZoneFunctionsGrid />
-
       <LandUsage />
 
-      {/* Master Membership Plan — deliberately last: every zone and every
-          decimal above is what a membership plan actually buys into. */}
-      <MembershipCarousel
-        tone="forest"
-        eyebrow="Master Membership Plan"
-        title="Everything above, held in four categories."
-        lede="Every zone, every hill, every function on this page sits inside the same four ownership categories. This is the master plan — the deck that ties the estate to the share."
-      />
+      {/* Every decimal above is what a membership plan buys into. */}
+      <Section tone="forest" className="py-16 sm:py-20">
+        <Container className="flex flex-wrap items-center justify-between gap-8">
+          <Reveal className="max-w-xl">
+            <Eyebrow tone="light">From plan to share</Eyebrow>
+            <p className="mt-3 font-display text-display-sm text-balance text-cream-50">
+              Every zone on this page is held by the shareholders.
+            </p>
+          </Reveal>
+          <Reveal delay={0.08} className="flex flex-wrap gap-3">
+            <Button href="/amenities" variant="outline-light" size="lg">
+              Tour the 20 amenities
+            </Button>
+            <Button href="/ownership" variant="light" size="lg">
+              Choose a membership
+              <ArrowRight />
+            </Button>
+          </Reveal>
+        </Container>
+      </Section>
     </>
   );
 }

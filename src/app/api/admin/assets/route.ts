@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { logActivity, revalidateSite } from "@/lib/admin";
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -27,5 +28,7 @@ export async function PATCH(request: Request) {
     create: { key, url, label: key },
   });
 
+  revalidateSite();
+  await logActivity(admin.name, "Replaced image", asset.label);
   return NextResponse.json({ ok: true, asset });
 }
