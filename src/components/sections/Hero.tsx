@@ -197,16 +197,16 @@ export function Hero({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: easeOutExpo, delay: 0.78 }}
               className={cn(
-                "mt-14 grid gap-px overflow-hidden rounded-2xl border border-cream-50/15 bg-cream-50/10 backdrop-blur-md",
+                "mt-14 grid gap-px overflow-hidden rounded-2xl border border-cream-50/30 bg-cream-50/20 backdrop-blur-xl shadow-xl",
                 facts.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "max-w-2xl grid-cols-1 sm:grid-cols-[1.5fr_1fr]",
               )}
             >
               {facts.map((f) => (
-                <div key={f.label} className="bg-forest-950/35 px-5 py-5">
-                  <Num as="dt" size="lg" className="text-cream-50">
+                <div key={f.label} className="bg-forest-950/60 px-5 py-5">
+                  <Num as="dt" size="lg" className="text-cream-50 font-semibold drop-shadow-md">
                     {f.value}
                   </Num>
-                  <dd className="mt-1 text-[0.6875rem] uppercase tracking-[0.16em] text-cream-200/60">
+                  <dd className="mt-1 text-[0.6875rem] font-medium uppercase tracking-[0.16em] text-cream-200/90 drop-shadow-sm">
                     {f.label}
                   </dd>
                 </div>
