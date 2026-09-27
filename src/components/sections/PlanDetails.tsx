@@ -27,8 +27,7 @@ export function planBreakdown(plan: MembershipCardData) {
 /**
  * The chart row for a plan, as a panel: both ways to pay, the down payment,
  * the monthly amount and a ribbon showing every part of the schedule —
- * down payment, 1st installment, 2nd installment… No savings or discounts:
- * the two prices speak for themselves.
+ * down payment, 1st installment, 2nd installment… No savings or discounts.
  */
 export function PlanDetails({
   plan,

@@ -215,8 +215,8 @@ export default async function HomePage() {
               <span className="italic text-gold-300">to Royal.</span>
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-cream-200/65">
-              Your plan is set by the shares you hold — every step up brings a
-              lower share price and more free days in the hills. Royal members
+              Your plan is set by the shares you hold — every share is ৳5,00,000,
+              and every step up brings more free days in the hills. Royal members
               receive 35 free days a year and 100% villa ownership.
             </p>
           </Reveal>

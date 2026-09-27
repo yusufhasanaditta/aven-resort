@@ -148,7 +148,7 @@ export function ShareCalculator() {
         </h2>
         <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
           Enter a unit count to see the plan it falls into — Executive through
-          Royal — its share price, what you save and the free stay that come
+          Royal — the total at ৳5,00,000 per share and the free stay that comes
           with it, and, if you choose installments, the down payment and exactly
           what&rsquo;s due each month.
         </p>

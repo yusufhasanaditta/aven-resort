@@ -131,7 +131,7 @@ export const shareCopy: Record<Lang, Copy> = {
       items: [
         { q: "Is my ownership legally protected?", a: "Yes. Every share is backed by Saf-Kabla registered land, and each purchase is documented with a signed agreement and a money receipt for every payment." },
         { q: "What is the minimum I can buy?", a: "One share. Your plan is set by the number of shares you hold: Executive 1–4, Gold 5–9, Platinum 10–19, Diamond 20–29 and Royal 30 or more." },
-        { q: "Can I pay in installments?", a: "Yes. Pay a down payment, then 12 to 24 monthly installments depending on your plan — or pay in full for a lower share price. Your schedule, amount paid and remaining balance are always visible in your shareholder dashboard." },
+        { q: "Can I pay in installments?", a: "Yes. Pay a down payment, then 12 to 24 monthly installments depending on your plan — or pay in full at once. Every share is ৳5,00,000 either way. Your schedule, amount paid and remaining balance are always visible in your shareholder dashboard." },
         { q: "Can I visit the site before buying?", a: "Of course. Book a guided site visit to Sreemangal and meet the team on the land itself." },
         { q: "Can I sell or transfer my shares later?", a: "Yes. Shares can be transferred or sold at any time." },
       ],
@@ -236,7 +236,7 @@ export const shareCopy: Record<Lang, Copy> = {
       items: [
         { q: "আমার মালিকানা কি আইনগতভাবে সুরক্ষিত?", a: "হ্যাঁ। প্রতিটি শেয়ার সাফ কাবলা নিবন্ধিত জমি দ্বারা সুরক্ষিত, এবং প্রতিটি ক্রয় স্বাক্ষরিত চুক্তি ও প্রতিটি পেমেন্টের মানি রিসিটের মাধ্যমে নথিভুক্ত।" },
         { q: "সর্বনিম্ন কতটি শেয়ার কেনা যায়?", a: "একটি শেয়ার। আপনার শেয়ার সংখ্যা অনুযায়ী প্ল্যান নির্ধারিত হয়: এক্সিকিউটিভ ১–৪, গোল্ড ৫–৯, প্লাটিনাম ১০–১৯, ডায়মন্ড ২০–২৯ এবং রয়্যাল ৩০ বা তার বেশি।" },
-        { q: "কিস্তিতে পরিশোধ করা যাবে কি?", a: "হ্যাঁ। প্ল্যান অনুযায়ী ডাউন পেমেন্টের পর ১২ থেকে ২৪টি মাসিক কিস্তিতে পরিশোধ করতে পারবেন — অথবা এককালীন পরিশোধে কম শেয়ার মূল্য পাবেন। আপনার কিস্তির সময়সূচি, পরিশোধিত ও বাকি টাকা সবসময় শেয়ারহোল্ডার ড্যাশবোর্ডে দেখা যাবে।" },
+        { q: "কিস্তিতে পরিশোধ করা যাবে কি?", a: "হ্যাঁ। প্ল্যান অনুযায়ী ডাউন পেমেন্টের পর ১২ থেকে ২৪টি মাসিক কিস্তিতে পরিশোধ করতে পারবেন — অথবা এককালীন পরিশোধ করতে পারবেন। উভয় ক্ষেত্রেই প্রতি শেয়ার ৫,০০,০০০ টাকা। আপনার কিস্তির সময়সূচি, পরিশোধিত ও বাকি টাকা সবসময় শেয়ারহোল্ডার ড্যাশবোর্ডে দেখা যাবে।" },
         { q: "কেনার আগে কি সাইট পরিদর্শন করা যাবে?", a: "অবশ্যই। শ্রীমঙ্গলে গাইডেড সাইট ভিজিট বুক করুন এবং সরাসরি জমিতে আমাদের টিমের সাথে দেখা করুন।" },
         { q: "পরে কি শেয়ার বিক্রি বা হস্তান্তর করা যাবে?", a: "হ্যাঁ। যেকোনো সময় শেয়ার হস্তান্তর বা বিক্রি করা যায়।" },
       ],

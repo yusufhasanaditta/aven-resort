@@ -3,9 +3,9 @@
  *
  * Plans and pricing are transcribed from the "Share Price & Membership
  * Chart" in `new ui design/share price and membership chart/` (valid until
- * 30 September 2026). Each plan is priced two ways per share: an installment
- * price (a down payment, then equal monthly installments) and a lower
- * full-payment price. Plan names follow Aven's naming: the chart's "Silver"
+ * 30 September 2026): package size, down payment, number of monthly
+ * installments and free stay. Every share is priced at ৳5,00,000 — the same
+ * on an installment plan or paid in full. Plan names follow Aven's naming: the chart's "Silver"
  * (5 shares) is sold as Gold and its "Gold" (10 shares) as Platinum. The
  * chart's "Save" column is deliberately not shown anywhere on the site.
  */
@@ -34,6 +34,9 @@ export type OwnershipTier = {
 /** Last day the chart's prices apply. */
 export const PRICE_CHART_VALID_UNTIL = "30 September 2026";
 
+/** Every share costs the same ৳5,00,000, whichever plan and however it is paid. */
+export const SHARE_PRICE_BDT = 500_000;
+
 export const ownershipTiers: OwnershipTier[] = [
   {
     id: "executive",
@@ -42,8 +45,8 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 1,
     maxUnits: 4,
     freeStayDays: 3,
-    installmentPriceBDT: 350_000,
-    fullPriceBDT: 320_000,
+    installmentPriceBDT: SHARE_PRICE_BDT,
+    fullPriceBDT: SHARE_PRICE_BDT,
     downPaymentBDT: 100_000,
     installmentCount: 12,
     featured: false,
@@ -56,8 +59,8 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 5,
     maxUnits: 9,
     freeStayDays: 10,
-    installmentPriceBDT: 330_000,
-    fullPriceBDT: 320_000,
+    installmentPriceBDT: SHARE_PRICE_BDT,
+    fullPriceBDT: SHARE_PRICE_BDT,
     downPaymentBDT: 450_000,
     installmentCount: 15,
     featured: true,
@@ -70,8 +73,8 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 10,
     maxUnits: 19,
     freeStayDays: 18,
-    installmentPriceBDT: 320_000,
-    fullPriceBDT: 300_000,
+    installmentPriceBDT: SHARE_PRICE_BDT,
+    fullPriceBDT: SHARE_PRICE_BDT,
     downPaymentBDT: 1_000_000,
     installmentCount: 18,
     featured: false,
@@ -84,8 +87,8 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 20,
     maxUnits: 29,
     freeStayDays: 26,
-    installmentPriceBDT: 300_000,
-    fullPriceBDT: 280_000,
+    installmentPriceBDT: SHARE_PRICE_BDT,
+    fullPriceBDT: SHARE_PRICE_BDT,
     downPaymentBDT: 1_500_000,
     installmentCount: 20,
     featured: false,
@@ -98,8 +101,8 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 30,
     maxUnits: null,
     freeStayDays: 35,
-    installmentPriceBDT: 300_000,
-    fullPriceBDT: 280_000,
+    installmentPriceBDT: SHARE_PRICE_BDT,
+    fullPriceBDT: SHARE_PRICE_BDT,
     downPaymentBDT: 2_000_000,
     installmentCount: 24,
     featured: false,

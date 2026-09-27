@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Hero } from "@/components/sections/Hero";
-import { MembershipCarousel } from "@/components/sections/MembershipCarousel";
+import { PlanChart } from "@/components/sections/PlanChart";
 import { OwnershipTeaser } from "@/components/sections/OwnershipTeaser";
 import { ShareCalculator } from "@/components/sections/ShareCalculator";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { TierIcon } from "@/components/ui/TierIcon";
 import { AmenityIcon } from "@/components/ui/AmenityIcon";
-import { PRICE_CHART_VALID_UNTIL, businessModel, ownershipTiers, shareOwnership } from "@/data/ownership";
-import { formatBDT } from "@/lib/shares";
+import { businessModel, ownershipTiers, shareOwnership } from "@/data/ownership";
 import { projectFacts } from "@/data/site";
 import { about } from "@/data/about";
 import { getAsset, getContent } from "@/lib/cms";
@@ -21,16 +19,6 @@ export const metadata: Metadata = {
   description:
     "Five membership plans — Executive, Gold, Platinum, Diamond and Royal — of fractional share ownership in Aven Eco Luxury Resort & Wellness, with Saf-Kabla registered land, annual halal profits, free stays, installment plans and an interactive share calculator.",
 };
-
-/** "৳2.8 Lac" — the chart's own notation. */
-function lac(amount: number) {
-  return `৳${Number((amount / 100_000).toFixed(2))} Lac`;
-}
-
-function unitsLabel(min: number, max: number | null) {
-  if (max === null) return `${min} & above`;
-  return min === max ? `${min}` : `${min} – ${max}`;
-}
 
 export default async function OwnershipPage() {
   const [heroImage, benefits] = await Promise.all([
@@ -51,120 +39,21 @@ export default async function OwnershipPage() {
         facts={[
           { value: String(ownershipTiers.length), label: "Membership plans" },
           { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares issued" },
-          { value: lac(Math.min(...ownershipTiers.map((t) => t.fullPriceBDT))), label: "From, per share" },
+          { value: "৳5 Lakh", label: "Per share" },
           { value: "Halal", label: "Lifetime income" },
         ]}
         actions={[
-          { label: "Calculate my share", href: "#calculator" },
+          { label: "See the plans", href: "#compare" },
           { label: "Register interest", href: "#interest", variant: "outline-light" },
         ]}
       />
 
-      <MembershipCarousel />
+      <PlanChart />
 
       <Section tone="cream" id="calculator" className="scroll-mt-16">
         <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
           <ShareCalculator />
         </Suspense>
-      </Section>
-
-      {/* Plan comparison */}
-      <Section tone="white" id="compare" className="scroll-mt-16">
-        <Container>
-          <Reveal className="max-w-2xl">
-            <Eyebrow>Share price &amp; membership chart</Eyebrow>
-            <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Pay by installment, or pay in full.
-            </h2>
-            <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              Every plan has two prices per share. An installment plan starts with
-              a down payment, followed by equal monthly installments — 1st, 2nd,
-              3rd and on to the last. Paying in full is a single payment at the
-              full-payment price.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.08}>
-            <div className="mt-10 overflow-x-auto rounded-2xl border border-forest-600/10 bg-cream-50">
-              <table className="w-full min-w-[58rem] border-collapse text-left">
-                <caption className="sr-only">Share price and membership chart</caption>
-                <thead>
-                  <tr className="border-b border-forest-600/15 bg-forest-600/[0.04]">
-                    {["Plan", "Package", "Installment plan", "Full payment", "Free stay / year"].map((h) => (
-                      <th
-                        key={h}
-                        scope="col"
-                        className="px-5 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                    <th scope="col" className="px-5 py-4">
-                      <span className="sr-only">Calculate</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ownershipTiers.map((tier) => {
-                    const n = tier.minUnits;
-                    const instTotal = tier.installmentPriceBDT * n;
-                    const fullTotal = tier.fullPriceBDT * n;
-                    return (
-                      <tr key={tier.id} className="border-b border-forest-600/8 align-top transition-colors last:border-0 hover:bg-forest-600/4">
-                        <th scope="row" className="px-5 py-5">
-                          <span className="flex items-center gap-3">
-                            <TierIcon tierId={tier.id} color={tier.accent} size="sm" />
-                            <span>
-                              <span className="block font-display text-xl text-forest-900">{tier.name}</span>
-                              <span className="block text-[0.6875rem] font-normal text-forest-900/45">
-                                {unitsLabel(tier.minUnits, tier.maxUnits)} shares
-                              </span>
-                            </span>
-                          </span>
-                        </th>
-                        <td className="px-5 py-5 font-numeral text-sm text-forest-900/75">
-                          {n} share{n > 1 ? "s" : ""}
-                        </td>
-                        <td className="px-5 py-5 text-sm text-forest-900/75">
-                          <span className="block font-numeral text-forest-900">
-                            {formatBDT(tier.installmentPriceBDT)} × {n} = {formatBDT(instTotal)}
-                          </span>
-                          <span className="mt-1 block text-xs text-forest-900/55">
-                            {formatBDT(tier.downPaymentBDT)} down · {tier.installmentCount} monthly
-                          </span>
-                        </td>
-                        <td className="px-5 py-5 text-sm text-forest-900/75">
-                          <span className="block font-numeral text-forest-900">
-                            {formatBDT(tier.fullPriceBDT)} × {n} = {formatBDT(fullTotal)}
-                          </span>
-                          <span className="mt-1 block text-xs text-forest-900/55">One payment</span>
-                        </td>
-                        <td className="px-5 py-5 font-numeral text-sm text-forest-900/75">
-                          {tier.freeStayDays} days
-                          {tier.perk && <span className="mt-1 block font-sans text-xs font-semibold text-forest-700">{tier.perk}</span>}
-                        </td>
-                        <td className="px-5 py-5 text-right">
-                          <Button href={`/ownership?plan=${tier.id}#calculator`} variant="secondary" size="sm">
-                            Calculate
-                            <ArrowRight />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <p className="mt-6 text-xs leading-relaxed text-forest-900/45">
-              This chart is valid until {PRICE_CHART_VALID_UNTIL}. A share count
-              between packages uses that plan&rsquo;s per-share price, with the down
-              payment prorated per share.
-            </p>
-          </Reveal>
-        </Container>
       </Section>
 
       <OwnershipTeaser benefits={benefits} />

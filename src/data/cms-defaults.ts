@@ -143,7 +143,7 @@ export const cmsDefaults: CmsContent = {
       category: "Payments",
       question: "Can I pay in installments?",
       answer:
-        "Yes. Each plan has its own installment terms: a down payment at purchase, then 12 to 24 equal monthly installments (Executive 12, Gold 15, Platinum 18, Diamond 20, Royal 24), due on the 1st of each month. Paying in full has its own, lower share price. Your dashboard shows every due date, what you've paid and what remains.",
+        "Yes. Each plan has its own installment terms: a down payment at purchase, then 12 to 24 equal monthly installments (Executive 12, Gold 15, Platinum 18, Diamond 20, Royal 24), due on the 1st of each month. Or pay the full amount at once — every share is ৳5,00,000 either way. Your dashboard shows every due date, what you've paid and what remains.",
     },
     {
       category: "Payments",
@@ -186,7 +186,7 @@ These terms govern use of this website and applications to purchase shares in Av
 Submitting an application or reservation does not by itself transfer ownership. Ownership is confirmed once Aven Limited approves the application and the required payment is received, and is documented through Saf-Kabla land registration.
 
 ## Pricing
-Share prices follow the current Share Price & Membership Chart and apply to purchases made while that chart is valid. Each plan has an installment price and a lower full-payment price per share, set by the number of shares in each purchase.
+Share prices follow the current Share Price & Membership Chart and apply to purchases made while that chart is valid. Every share is priced at ৳5,00,000, whether paid by installment or in full; the down payment and number of installments are set by the plan.
 
 ## Installments
 Installment plans are payable on the due dates shown in your dashboard. Aven Limited may contact you about overdue installments and may review holdings with persistent arrears in line with your share agreement.
