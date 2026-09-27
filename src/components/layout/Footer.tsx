@@ -3,6 +3,33 @@ import { navigation, site } from "@/data/site";
 import { Logo } from "@/components/ui/Logo";
 import { FooterEnquiry } from "@/components/layout/FooterEnquiry";
 import { getContent } from "@/lib/cms";
+import { navBn, ui, type Lang } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+
+/**
+ * Where each network's icon goes before the admin has entered the account
+ * URL: a search for Aven on that network, so every icon always leads somewhere.
+ */
+const SEARCH = encodeURIComponent("Aven Eco Luxury Resort");
+const socialFallback: Record<string, string> = {
+  facebook: `https://www.facebook.com/search/top?q=${SEARCH}`,
+  instagram: `https://www.instagram.com/explore/search/keyword/?q=${SEARCH}`,
+  youtube: `https://www.youtube.com/results?search_query=${SEARCH}`,
+  tiktok: `https://www.tiktok.com/search?q=${SEARCH}`,
+  linkedin: `https://www.linkedin.com/search/results/all/?keywords=${SEARCH}`,
+  x: `https://x.com/search?q=${SEARCH}`,
+};
+
+/** Brand colour each icon lights up in on hover. */
+const socialHover: Record<string, string> = {
+  facebook: "group-hover:bg-[#1877F2]",
+  instagram: "group-hover:bg-[linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)]",
+  youtube: "group-hover:bg-[#FF0000]",
+  tiktok: "group-hover:bg-black",
+  linkedin: "group-hover:bg-[#0A66C2]",
+  x: "group-hover:bg-black",
+  whatsapp: "group-hover:bg-[#25D366]",
+};
 
 const socialPaths: Record<string, string> = {
   facebook:
@@ -20,8 +47,11 @@ const socialPaths: Record<string, string> = {
     "M12 4.5a7.4 7.4 0 0 0-6.4 11.1L4.6 19.4l3.9-1a7.4 7.4 0 1 0 3.5-13.9Zm0 1.4a6 6 0 1 1-3.1 11.2l-.2-.1-2.3.6.6-2.2-.1-.2A6 6 0 0 1 12 5.9Zm-2.4 2.8c-.2 0-.4 0-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.3c.1.2 1.6 2.5 3.9 3.4 1.9.7 2.3.6 2.7.6.4-.1 1.3-.6 1.5-1.1.2-.5.2-1 .1-1.1l-.4-.3-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.1-.3.2-.5.1-.2-.1-1-.4-1.8-1.1a6.7 6.7 0 0 1-1.3-1.6c-.1-.2 0-.3.1-.4l.4-.4.2-.4v-.4l-.7-1.6c-.1-.4-.3-.4-.5-.4h-.5Z",
 };
 
-export async function Footer() {
+export async function Footer({ lang = "en" }: { lang?: Lang }) {
   const contact = await getContent("contact");
+  const t = ui[lang];
+  const label = (href: string, en: string) => (lang === "bn" ? navBn[href]?.label ?? en : en);
+  // Every network always shows; each links to Aven's account once it's set in Admin → Content.
   const social = (
     [
       ["Facebook", contact.facebook, "facebook"],
@@ -31,13 +61,13 @@ export async function Footer() {
       ["LinkedIn", contact.linkedin, "linkedin"],
       ["X", contact.x, "x"],
     ] as [string, string | undefined, string][]
-  ).filter(([, href]) => href?.trim()) as [string, string, string][];
+  ).map(([name, href, icon]) => [name, href?.trim() || socialFallback[icon], icon] as [string, string, string]);
   const telHref = `tel:${contact.phone.replace(/[^0-9+]/g, "")}`;
   const whatsapp = contact.whatsapp.replace(/[^0-9]/g, "").replace(/^0/, "880");
   if (whatsapp) social.push(["WhatsApp", `https://wa.me/${whatsapp}`, "whatsapp"]);
 
   return (
-    <footer className="relative overflow-hidden bg-forest-950 text-cream-100 print:hidden">
+    <footer className={cn("relative overflow-hidden bg-forest-950 text-cream-100 print:hidden", lang === "bn" && "font-bangla")}>
       <FooterEnquiry />
 
       {/* Link columns */}
@@ -54,7 +84,7 @@ export async function Footer() {
           </div>
 
           <nav>
-            <h3 className="text-eyebrow text-cream-200/45">Explore</h3>
+            <h3 className="text-eyebrow text-cream-200/45">{t.explore}</h3>
             <ul className="mt-5 space-y-2.5">
               {navigation.slice(0, 5).map((item) => (
                 <li key={item.href}>
@@ -62,7 +92,7 @@ export async function Footer() {
                     href={item.href}
                     className="text-sm text-cream-100/70 transition-colors hover:text-cream-50"
                   >
-                    {item.label}
+                    {label(item.href, item.label)}
                   </Link>
                 </li>
               ))}
@@ -70,19 +100,19 @@ export async function Footer() {
           </nav>
 
           <nav>
-            <h3 className="text-eyebrow text-cream-200/45">Company</h3>
+            <h3 className="text-eyebrow text-cream-200/45">{t.company}</h3>
             <ul className="mt-5 space-y-2.5">
               {[
                 ...navigation.slice(5),
-                { label: "Apply for shares", href: "/apply" },
-                { label: "FAQ", href: "/faq" },
+                { label: t.applyForShares, href: "/apply" },
+                { label: t.faq, href: "/faq" },
               ].map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     className="text-sm text-cream-100/70 transition-colors hover:text-cream-50"
                   >
-                    {item.label}
+                    {label(item.href, item.label)}
                   </Link>
                 </li>
               ))}
@@ -90,7 +120,7 @@ export async function Footer() {
           </nav>
 
           <div>
-            <h3 className="text-eyebrow text-cream-200/45">Get in touch</h3>
+            <h3 className="text-eyebrow text-cream-200/45">{t.getInTouch}</h3>
             <ul className="mt-5 space-y-4 text-sm">
               <li>
                 <a href={telHref} className="text-cream-100/70 transition-colors hover:text-cream-50">
@@ -99,7 +129,7 @@ export async function Footer() {
                 <p className="mt-0.5 text-xs text-cream-200/40">{contact.hours}</p>
                 {whatsapp && (
                   <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-gold-300/80 hover:text-gold-300">
-                    WhatsApp us →
+                    {t.whatsapp}
                   </a>
                 )}
               </li>
@@ -110,14 +140,14 @@ export async function Footer() {
               </li>
               <li className="text-cream-100/70">
                 <a href={contact.mapUrl} target="_blank" rel="noopener noreferrer" className="group block">
-                  <span className="block transition-colors group-hover:text-cream-50">Resort · View on map ↗</span>
+                  <span className="block transition-colors group-hover:text-cream-50">{t.resortMap}</span>
                   <span className="mt-0.5 block text-xs text-cream-200/40">
                     {contact.resortAddress}
                   </span>
                 </a>
               </li>
               <li className="text-cream-100/70">
-                <span className="block">Corporate office</span>
+                <span className="block">{t.corporateOffice}</span>
                 <span className="mt-0.5 block text-xs leading-relaxed text-cream-200/40">
                   {contact.headOffice}
                 </span>
@@ -131,10 +161,10 @@ export async function Footer() {
       <div className="border-t border-cream-50/10">
         <div className="mx-auto flex max-w-[88rem] flex-col gap-4 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div>
-            <h3 className="text-eyebrow text-cream-200/45">Follow Aven</h3>
-            <p className="mt-1 text-xs text-cream-200/40">News, construction progress and life in the tea hills.</p>
+            <h3 className="text-eyebrow text-cream-200/45">{t.followAven}</h3>
+            <p className="mt-1 text-xs text-cream-200/40">{t.followSub}</p>
           </div>
-          <ul className="flex flex-wrap gap-2">
+          <ul translate="no" className="flex flex-wrap gap-2">
             {social.map(([label, href, icon]) => (
               <li key={label}>
                 <a
@@ -143,8 +173,8 @@ export async function Footer() {
                   rel="noopener noreferrer"
                   className="group inline-flex h-10 items-center gap-2 rounded-full bg-cream-50/[0.04] pl-1.5 pr-4 text-[0.8125rem] text-cream-100/75 ring-1 ring-cream-50/12 transition-all hover:-translate-y-0.5 hover:bg-cream-50/10 hover:text-cream-50 hover:ring-gold-400/40"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cream-50/8 transition-colors group-hover:bg-gold-400">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-cream-100/80 transition-colors group-hover:fill-forest-950">
+                  <span className={cn("flex h-7 w-7 items-center justify-center rounded-full bg-cream-50/8 transition-colors", socialHover[icon])}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-cream-100/80 transition-colors group-hover:fill-white">
                       <path d={socialPaths[icon]} />
                     </svg>
                   </span>
@@ -159,13 +189,12 @@ export async function Footer() {
       <div className="border-t border-cream-50/10">
         <div className="mx-auto flex max-w-[88rem] flex-col gap-3 px-5 py-6 text-xs text-cream-200/40 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>
-            © {new Date().getFullYear()} {site.company} · All rights reserved ·{" "}
-            <Link href="/terms" className="hover:text-cream-100">Terms</Link> ·{" "}
-            <Link href="/privacy" className="hover:text-cream-100">Privacy</Link>
+            © {new Date().getFullYear()} {site.company} · {t.rights} ·{" "}
+            <Link href="/terms" className="hover:text-cream-100">{t.terms}</Link> ·{" "}
+            <Link href="/privacy" className="hover:text-cream-100">{t.privacy}</Link>
           </p>
           <p className="max-w-xl text-pretty sm:text-right">
-            This is the vision of Aven. Renders are artistic impressions; current
-            vision and design can be adapted based on the project demands.
+            {t.disclaimer}
           </p>
         </div>
       </div>

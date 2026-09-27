@@ -28,6 +28,7 @@ export function Hero({
   actions,
   height = "full",
   leaves = true,
+  bangla = false,
   accentStyle = "block",
 }: {
   /** Optional line above the title; omitted when empty. */
@@ -43,6 +44,8 @@ export function Hero({
   actions?: { label: string; href: string; variant?: "light" | "outline-light" }[];
   height?: "full" | "tall" | "short";
   leaves?: boolean;
+  /** Copy is hand-written Bangla: set it in the Bangla face and keep the auto-translator off it. */
+  bangla?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
@@ -65,7 +68,9 @@ export function Hero({
   return (
     <section
       ref={ref}
+      translate={bangla ? "no" : undefined}
       className={cn(
+        bangla && "font-bangla",
         "relative flex items-end overflow-hidden bg-forest-950",
         heights[height],
       )}
@@ -119,7 +124,7 @@ export function Hero({
               </motion.p>
             )}
 
-            <h1 className="font-display text-display-xl text-balance text-cream-50">
+            <h1 className={cn("text-balance text-cream-50", bangla ? "text-[clamp(2.6rem,7vw,5.5rem)] font-semibold leading-[1.15]" : "font-display text-display-xl")}>
               {title.split(" ").map((word, i) => (
                 <span key={i} className="inline-block overflow-hidden">
                   <motion.span
@@ -147,7 +152,8 @@ export function Hero({
                       delay: 0.34,
                     }}
                     className={cn(
-                      "inline-block italic text-gold-300",
+                      "inline-block text-gold-300",
+                      !bangla && "italic",
                       accentStyle === "line" && "mt-2 text-[clamp(1.35rem,4.2vw,3.4rem)] leading-tight sm:whitespace-nowrap",
                     )}
                   >

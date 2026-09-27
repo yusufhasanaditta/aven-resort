@@ -11,6 +11,7 @@ import { businessModel } from "@/data/ownership";
 import { fallbackPlans } from "@/data/planFallback";
 import { bnDigits, isLang, shareCopy, type Lang } from "@/data/ownYourShare";
 import { prisma } from "@/lib/db";
+import { getLang } from "@/lib/i18n-server";
 import { getAsset, getContent } from "@/lib/cms";
 import { stayDays } from "@/lib/shares";
 import { cn } from "@/lib/utils";
@@ -20,8 +21,8 @@ const PATH = "/own-your-share";
 type Props = { searchParams: Promise<{ lang?: string }> };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { lang } = await searchParams;
-  const bn = lang === "bn";
+  const { lang: raw } = await searchParams;
+  const bn = (isLang(raw) ? raw : await getLang()) === "bn";
   return {
     title: bn ? "আপনার শেয়ারের মালিক হন" : "Own Your Share",
     description: bn
@@ -57,7 +58,7 @@ function PhoneIcon({ className }: { className?: string }) {
 
 export default async function OwnYourSharePage({ searchParams }: Props) {
   const { lang: raw } = await searchParams;
-  const lang: Lang = isLang(raw) ? raw : "en";
+  const lang: Lang = isLang(raw) ? raw : await getLang();
   const bn = lang === "bn";
   const t = shareCopy[lang];
 
@@ -76,7 +77,7 @@ export default async function OwnYourSharePage({ searchParams }: Props) {
   const num = (v: string | number) => (bn ? bnDigits(v) : String(v));
 
   return (
-    <div lang={bn ? "bn" : "en"} className={cn(bn && "font-bangla")}>
+    <div lang={bn ? "bn" : "en"} translate="no" className={cn(bn && "font-bangla")}>
       {/* ——— Hero: copy on the left, the four headline facts on the right ——— */}
       <section className="relative overflow-hidden bg-forest-950">
         <Image src={heroImage} alt="" fill priority unoptimized={/^https?:/.test(heroImage)} sizes="100vw" className="object-cover opacity-60" />

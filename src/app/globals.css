@@ -283,3 +283,27 @@ html.has-announcement {
     animation: none;
   }
 }
+
+/* Automatic translation (Bangla): keep Google's toolbar, tooltip and
+   highlight out of the design. */
+.goog-te-banner-frame,
+.skiptranslate > iframe,
+iframe.skiptranslate,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Bangla has no capitals and breaks apart under wide tracking. */
+html[lang="bn"] .text-eyebrow {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}

@@ -12,6 +12,7 @@ import { businessModel, ownershipTiers, shareOwnership } from "@/data/ownership"
 import { projectFacts } from "@/data/site";
 import { about } from "@/data/about";
 import { getAsset, getContent } from "@/lib/cms";
+import { getLang } from "@/lib/i18n-server";
 import { InterestForm } from "@/components/sections/InterestForm";
 
 export const metadata: Metadata = {
@@ -25,30 +26,46 @@ export default async function OwnershipPage() {
     getAsset("ownership.hero", "/renders/eco-villa-sunrise.jpg"),
     getContent("benefits"),
   ]);
+  const lang = await getLang();
+  const bn = lang === "bn";
 
   return (
     <>
       <Hero
-        eyebrow="Ownership & membership"
-        title="Own a Piece"
-        titleAccent="of the Hills"
-        lede="Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — five membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
+        bangla={bn}
+        eyebrow={bn ? "মালিকানা ও মেম্বারশিপ" : "Ownership & membership"}
+        title={bn ? "পাহাড়ের এক টুকরো" : "Own a Piece"}
+        titleAccent={bn ? "আপনার হোক" : "of the Hills"}
+        lede={
+          bn
+            ? "সাফ কাবলা নিবন্ধিত জমির নিশ্চয়তায় পুরো হোটেল ও রিসোর্টের আংশিক মালিকানা — এক্সিকিউটিভ থেকে রয়্যাল পর্যন্ত পাঁচটি মেম্বারশিপ প্ল্যান, আর একটি ক্যালকুলেটর যা দেখায় আপনি ঠিক কত পরিশোধ করবেন।"
+            : "Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — five membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
+        }
         image={heroImage}
         imageAlt="An eco-luxury villa with infinity pool at sunrise, surrounded by tea hills"
         height="tall"
-        facts={[
-          { value: String(ownershipTiers.length), label: "Membership plans" },
-          { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares issued" },
-          { value: "৳5 Lakh", label: "Per share" },
-          { value: "Halal", label: "Lifetime income" },
-        ]}
+        facts={
+          bn
+            ? [
+                { value: "৫", label: "মেম্বারশিপ প্ল্যান" },
+                { value: "২,৭০০", label: "মোট শেয়ার" },
+                { value: "৳৫ লক্ষ", label: "প্রতি শেয়ার" },
+                { value: "হালাল", label: "আজীবন আয়" },
+              ]
+            : [
+                { value: String(ownershipTiers.length), label: "Membership plans" },
+                { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares issued" },
+                { value: "৳5 Lakh", label: "Per share" },
+                { value: "Halal", label: "Lifetime income" },
+              ]
+        }
         actions={[
-          { label: "See the plans", href: "#compare" },
-          { label: "Register interest", href: "#interest", variant: "outline-light" },
+          { label: bn ? "প্ল্যানগুলো দেখুন" : "See the plans", href: "#compare" },
+          { label: bn ? "আগ্রহ জানান" : "Register interest", href: "#interest", variant: "outline-light" },
         ]}
       />
 
-      <PlanChart />
+      <PlanChart lang={lang} />
 
       <Section tone="cream" id="calculator" className="scroll-mt-16">
         <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
@@ -56,7 +73,7 @@ export default async function OwnershipPage() {
         </Suspense>
       </Section>
 
-      <OwnershipTeaser benefits={benefits} />
+      <OwnershipTeaser benefits={benefits} lang={lang} />
 
       {/* Lead capture — lands in the admin CRM */}
       <Section tone="cream" id="interest" className="scroll-mt-16">

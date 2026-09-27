@@ -6,6 +6,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HideOn } from "@/components/layout/HideOn";
 import { getContent } from "@/lib/cms";
+import { getLang } from "@/lib/i18n-server";
+import { AutoTranslate } from "@/components/layout/AutoTranslate";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -74,12 +76,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const announcement = await getContent("announcement");
+  const [announcement, lang] = await Promise.all([getContent("announcement"), getLang()]);
   const showAnnouncement = announcement.enabled && !!announcement.text.trim();
 
   return (
     <html
-      lang="en"
+      lang={lang}
       className={`${display.variable} ${sans.variable} ${bangla.variable}${showAnnouncement ? " has-announcement" : ""}`}
     >
       <body className="min-h-screen antialiased">
@@ -93,12 +95,17 @@ export default async function RootLayout({
           Skip to content
         </a>
         <HideOn prefixes={["/admin"]}>
-          <Header announcement={showAnnouncement ? announcement : null} />
+          <Header announcement={showAnnouncement ? announcement : null} lang={lang} />
         </HideOn>
         <main id="main">{children}</main>
         <HideOn prefixes={["/admin"]}>
-          <Footer />
+          <Footer lang={lang} />
         </HideOn>
+        {lang === "bn" && (
+          <HideOn prefixes={["/admin"]}>
+            <AutoTranslate />
+          </HideOn>
+        )}
       </body>
     </html>
   );

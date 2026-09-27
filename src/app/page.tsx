@@ -12,6 +12,7 @@ import { WellnessQuotes } from "@/components/sections/home/WellnessQuotes";
 import { wellnessServices } from "@/data/wellness";
 import { projectFacts, site } from "@/data/site";
 import { getContent } from "@/lib/cms";
+import { getLang } from "@/lib/i18n-server";
 
 /**
  * The homepage is the brochure, told once: each topic gets one section here
@@ -23,25 +24,29 @@ const villaTypes = ["Super Deluxe Residential", "Single", "Duplex", "Presidentia
 
 export default async function HomePage() {
   const [yoga, ...therapies] = wellnessServices;
-  const [hero, resort, contact] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact")]);
+  const [hero, resort, contact, lang] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact"), getLang()]);
+  const bn = lang === "bn";
 
   return (
     <>
       <Hero
-        eyebrow={hero.eyebrow}
-        title={hero.title}
-        titleAccent={hero.titleAccent}
+        bangla={bn}
+        eyebrow={bn ? undefined : hero.eyebrow}
+        title={bn ? "স্বাগতম" : hero.title}
+        titleAccent={bn ? "অ্যাভেন ইকো লাক্সারি রিসোর্ট অ্যান্ড ওয়েলনেস" : hero.titleAccent}
         accentStyle="line"
-        lede={hero.lede || undefined}
+        lede={bn ? undefined : hero.lede || undefined}
         image={hero.image}
         imageAlt="The cloud walkway glowing gold across the tea hills at dusk, the Aven hotel lit on the ridge beyond"
         actions={[
-          { label: hero.primaryLabel, href: hero.primaryHref },
-          { label: hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
+          { label: bn ? "এখনই বুক করুন" : hero.primaryLabel, href: hero.primaryHref },
+          { label: bn ? "আপনার শেয়ার নিন" : hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
         ].filter((a) => a.label && a.href)}
         facts={[
-          { value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, label: "Land" },
-          { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
+          bn
+            ? { value: "৫ একর · ১৫.১৫ বিঘা", label: "জমির পরিমাণ" }
+            : { value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, label: "Land" },
+          bn ? { value: "২,৭০০", label: "মোট শেয়ার" } : { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
         ]}
       />
 

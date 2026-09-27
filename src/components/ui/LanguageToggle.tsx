@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { setLanguage } from "@/components/layout/LangSwitch";
 import type { Lang } from "@/data/ownYourShare";
 import { cn } from "@/lib/utils";
 
@@ -12,9 +14,9 @@ function GlobeIcon({ className }: { className?: string }) {
 }
 
 /**
- * English ⇄ Bangla switch. The language lives in the URL (`?lang=bn`) so the
- * page renders on the server in the chosen language — no flash of the other
- * one, and a Bangla link can be shared as-is.
+ * English ⇄ Bangla switch for the Own Your Share page. It sets the same
+ * site-wide language as the header switch, then reloads the page (dropping
+ * any `?lang=` override) so everything renders in the chosen language.
  */
 export function LanguageToggle({
   lang,
@@ -25,22 +27,20 @@ export function LanguageToggle({
   path: string;
   variant?: "segmented" | "floating";
 }) {
-  const href = (l: Lang) => (l === "en" ? path : `${path}?lang=${l}`);
 
   if (variant === "floating") {
     const next: Lang = lang === "en" ? "bn" : "en";
     return (
-      <Link
-        href={href(next)}
-        scroll={false}
-        replace
-        hrefLang={next}
+      <button
+        type="button"
+        onClick={() => setLanguage(next, path)}
+        lang={next}
         aria-label={next === "bn" ? "বাংলায় পড়ুন (Switch to Bangla)" : "Switch to English"}
         className="fixed bottom-5 left-5 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-forest-600 px-5 text-sm font-medium text-cream-50 shadow-lift-lg ring-1 ring-cream-50/15 transition-all duration-300 hover:-translate-y-0.5 hover:bg-forest-700 print:hidden"
       >
         <GlobeIcon className="h-4.5 w-4.5" />
         <span className={next === "bn" ? "font-bangla text-[0.9375rem]" : undefined}>{next === "bn" ? "বাংলা" : "English"}</span>
-      </Link>
+      </button>
     );
   }
 
@@ -52,12 +52,11 @@ export function LanguageToggle({
     >
       <GlobeIcon className="ml-2 h-4 w-4 text-cream-100/70" />
       {(["en", "bn"] as const).map((l) => (
-        <Link
+        <button
           key={l}
-          href={href(l)}
-          scroll={false}
-          replace
-          hrefLang={l}
+          type="button"
+          onClick={() => lang !== l && setLanguage(l, path)}
+          lang={l}
           aria-current={lang === l ? "true" : undefined}
           className={cn(
             "rounded-full px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors",
@@ -66,7 +65,7 @@ export function LanguageToggle({
           )}
         >
           {l === "en" ? "English" : "বাংলা"}
-        </Link>
+        </button>
       ))}
     </div>
   );
