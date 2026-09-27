@@ -10,6 +10,7 @@ import { InvoicesPanel } from "./InvoicesPanel";
 import { BuyPanel } from "./BuyPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { ApplicationsPanel, PaymentInstructionsCard, type AccountApplication } from "./ApplicationsPanel";
+import { NotificationBell, type AccountNotification } from "./NotificationBell";
 import type { PaymentInstructions } from "@/data/cms-defaults";
 import type { DashboardData } from "@/lib/account";
 import { accountTabs, type AccountTabId } from "@/lib/account-tabs";
@@ -42,12 +43,14 @@ export function AccountDashboard({
   payment,
   applications,
   paymentInfo,
+  notifications,
 }: {
   data: DashboardData;
   initialTab: AccountTabId;
   payment?: string;
   applications: AccountApplication[];
   paymentInfo: PaymentInstructions | null;
+  notifications: AccountNotification[];
 }) {
   const [tab, setTab] = useState<AccountTabId>(initialTab);
 
@@ -139,6 +142,7 @@ export function AccountDashboard({
               <p className="text-[0.625rem] font-semibold uppercase tracking-[0.24em] text-cream-200/40">My Aven</p>
               <h1 className="font-display text-3xl text-cream-50 sm:text-4xl">{activeLabel}</h1>
             </div>
+            <NotificationBell initial={notifications} />
           </div>
 
           {banner && (

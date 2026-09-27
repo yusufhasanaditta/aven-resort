@@ -20,14 +20,24 @@ export function CardCarousel3D<T>({
   autoplayMs = 4200,
   className,
   cardClassName,
+  onActiveChange,
 }: {
   items: T[];
   renderCard: (item: T, isActive: boolean) => React.ReactNode;
   autoplayMs?: number;
   className?: string;
   cardClassName?: string;
+  /** Called whenever the front card changes, so surrounding UI can follow it. */
+  onActiveChange?: (index: number) => void;
 }) {
   const [active, setActive] = useState(0);
+  const onChangeRef = useRef(onActiveChange);
+  useEffect(() => {
+    onChangeRef.current = onActiveChange;
+  });
+  useEffect(() => {
+    onChangeRef.current?.(active);
+  }, [active]);
   const [paused, setPaused] = useState(false);
   const reduced = useReducedMotion();
   const count = items.length;

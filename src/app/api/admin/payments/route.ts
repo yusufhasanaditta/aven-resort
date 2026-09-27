@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { notifyPaymentReceived } from "@/lib/notify";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { holdingInclude, toAdminPayments } from "@/lib/admin-serialize";
 import { holdingLedger } from "@/lib/account";
@@ -19,9 +20,9 @@ export async function GET() {
 
 /**
  * Records a payment received outside the gateway — cash at the office, a bank
- * transfer, bKash, a cheque. It settles one instalment in full (the next
+ * transfer, bKash, a cheque. It settles one installment in full (the next
  * unpaid one unless specified), voids any gateway attempt still pending for
- * that instalment, activates the holding, and returns the new payment so the
+ * that installment, activates the holding, and returns the new payment so the
  * team can open its money receipt straight away.
  */
 export async function POST(request: Request) {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
   if (step.status === "SUCCESS") return NextResponse.json({ error: `${step.label} is already paid.` }, { status: 409 });
   if (d.amountBDT !== step.amountBDT) {
     return NextResponse.json(
-      { errors: { amountBDT: `${step.label} is ${formatBDT(step.amountBDT)} — record the full instalment.` } },
+      { errors: { amountBDT: `${step.label} is ${formatBDT(step.amountBDT)} — record the full installment.` } },
       { status: 422 },
     );
   }
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
   });
 
   await convertLeadsFor(holding.user.email, "first payment received");
+  await notifyPaymentReceived(payment.id);
   await logActivity(
     guard.name,
     "Recorded payment",

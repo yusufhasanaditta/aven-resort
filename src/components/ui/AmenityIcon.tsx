@@ -50,6 +50,14 @@ const paths: Record<string, React.ReactNode> = {
       <path d="M4 28h24" />
     </>
   ),
+  reception: (
+    <>
+      <path d="M3 27h26M5 27V19h22v8" />
+      <path d="M9 19c0-4 3.1-7 7-7s7 3 7 7M16 12V9.5M14.5 9.5h3" />
+      <circle cx="16" cy="5" r="2.2" />
+      <path d="M9 23h4" />
+    </>
+  ),
   stage: (
     <>
       <path d="M4 26c0-7 5.5-12 12-12s12 5 12 12" />

@@ -3,13 +3,13 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { shareOrderSchema, zodErrors } from "@/lib/validation";
-import { calculate, buildInstallmentSchedule } from "@/lib/shares";
+import { calculate } from "@/lib/shares";
 import { initiatePayment, isConfigured } from "@/lib/sslcommerz";
 import { convertLeadsFor } from "@/lib/crm";
 
 /**
  * Creates a share holding at the price the calculator showed, then either
- * hands back an SSLCommerz redirect URL (full payment or first instalment)
+ * hands back an SSLCommerz redirect URL (full payment or first installment)
  * or a clear "gateway not connected" message — never a fabricated success.
  */
 export async function POST(request: Request) {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ errors: zodErrors(parsed.error) }, { status: 422 });
   }
 
-  const { planSlug, units, paymentPlan, installmentMonths } = parsed.data;
+  const { planSlug, units, paymentPlan } = parsed.data;
 
   const plans = await prisma.membershipPlan.findMany();
   const plan = plans.find((p) => p.slug === planSlug);
@@ -38,12 +38,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown membership plan." }, { status: 400 });
   }
 
-  const result = calculate(plans, units, paymentPlan, installmentMonths);
-  const schedule =
-    paymentPlan === "INSTALLMENT" && installmentMonths
-      ? buildInstallmentSchedule(result.totalBDT, installmentMonths)
-      : null;
-  const firstDue = schedule ? schedule[0].amountBDT : result.totalBDT;
+  // Installment count and down payment come from the plan, not the client.
+  const result = calculate(plans, units, paymentPlan);
+  const firstDue = result.installments ? result.installments[0].amountBDT : result.totalBDT;
 
   const user = await prisma.user.findUnique({ where: { id: session.sub } });
   if (!user) {
@@ -57,7 +54,8 @@ export async function POST(request: Request) {
       units: result.units,
       totalAmountBDT: result.totalBDT,
       paymentPlan,
-      installmentMonths: paymentPlan === "INSTALLMENT" ? installmentMonths : null,
+      installmentMonths: result.installments ? result.installments.length : null,
+      downPaymentBDT: result.downPaymentBDT,
     },
   });
 

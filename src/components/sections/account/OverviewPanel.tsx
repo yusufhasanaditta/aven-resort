@@ -30,7 +30,7 @@ export function OverviewPanel({
     { icon: "wallet", label: "Paid to date", value: formatBDTCompact(summary.paidBDT), sub: `of ${formatBDTCompact(summary.committedBDT)} committed` },
     { icon: "bell", label: "Outstanding", value: formatBDTCompact(summary.outstandingBDT), sub: summary.outstandingBDT ? "Across open plans" : "Nothing owed" },
     { icon: "sun", label: "Free stay", value: `${summary.stayDaysPerYear} days`, sub: "Per year, at the resort" },
-    { icon: "percent", label: "Plan discount", value: summary.currentPlan?.discountPercent ? `${summary.currentPlan.discountPercent}%` : "—", sub: "Plus 40–50% off rooms" },
+    { icon: "percent", label: "Plan share price", value: summary.currentPlan ? formatBDTCompact(summary.currentPlan.fullPriceBDT) : "—", sub: "Per share, paid in full" },
   ];
 
   return (
@@ -257,7 +257,7 @@ function PlanRing({ data, onBuy }: { data: DashboardData; onBuy: () => void }) {
               </p>
               <p className="mt-2 text-xs leading-relaxed text-cream-200/55">
                 {summary.nextPlan.name} brings {stayDays(summary.nextPlan.freeStayNights)} free days a year
-                {summary.nextPlan.discountPercent ? ` and ${summary.nextPlan.discountPercent}% off the share price` : ""}.
+                {` and ${formatBDT(summary.nextPlan.fullPriceBDT)} a share paid in full`}.
               </p>
             </>
           ) : (
@@ -289,7 +289,7 @@ function NextPayment({ data }: { data: DashboardData }) {
           {pending
             ? "A payment is being confirmed by SSLCommerz. It will appear on your invoices as soon as it clears."
             : data.holdings.length
-              ? "No instalments are due. Every open holding is settled."
+              ? "No installments are due. Every open holding is settled."
               : "Once you reserve shares, your next due payment and its countdown appear here."}
         </p>
         {!data.holdings.length && (
@@ -315,7 +315,7 @@ function NextPayment({ data }: { data: DashboardData }) {
       />
       <PanelTitle eyebrow="Next payment" title={formatBDT(next.amountBDT)} />
       <p className="mt-1 text-xs text-cream-200/55">
-        {next.planName} · Instalment {next.n} of {next.of}
+        {next.planName} · Installment {next.n} of {next.of}
       </p>
       <div className="relative mt-6 flex items-end gap-3">
         <p className={cn("font-numeral text-6xl leading-none", overdue ? "text-red-300" : "text-cream-50")}>
@@ -337,7 +337,7 @@ function NextPayment({ data }: { data: DashboardData }) {
   );
 }
 
-/** The instalments after the next one on the same holding, so the panel shows what's coming. */
+/** The installments after the next one on the same holding, so the panel shows what's coming. */
 function UpNext({ data, holdingId, after }: { data: DashboardData; holdingId: string; after: number }) {
   const holding = data.holdings.find((h) => h.id === holdingId);
   const later = holding?.steps.filter((s) => s.n > after && s.status !== "SUCCESS").slice(0, 3) ?? [];

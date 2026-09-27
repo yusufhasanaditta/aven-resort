@@ -1,49 +1,54 @@
 /**
- * Seeds the six membership plans and the admin-replaceable site assets. Run
+ * Seeds the membership plans and the admin-replaceable site assets. Run
  * with `npm run db:seed`.
  *
- * Plans follow the "Membership Plans" pages of the AVEN brochure: Executive
- * (1–2 shares, regular price, 3 days' free stay), Silver (3, 5%, 6 days),
- * Gold (5, 10%, 10 days), Platinum (10, 15%, 18 days), Diamond (20, 20%,
- * 30 days) and Royal (30, 28%, 30 days + 100% villa ownership). Free stay is
- * stored as nights (days − 1).
- *
- * unitPriceBDT is a placeholder. The brochure never prints a unit price, so
- * until Aven Limited confirms one this seed uses ৳500,000 per unit so the
- * calculator has something real to compute against; every amount it shows
- * is marked indicative for this reason. Edit it from the admin panel the
- * moment real pricing is confirmed.
+ * Plans come from `src/data/ownership.ts`, which transcribes the "Share
+ * Price & Membership Chart": Executive, Gold, Platinum, Diamond and Royal, each
+ * with an installment price, a full-payment price, a down payment and a fixed
+ * number of monthly installments. Free stay is stored as nights (days − 1).
+ * Re-running the seed overwrites plan pricing with the chart's figures.
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { ownershipTiers } from "../src/data/ownership";
+import { planForUnits } from "../src/lib/shares";
 
 const prisma = new PrismaClient();
 
-const PLACEHOLDER_UNIT_PRICE_BDT = 500_000;
-
-const plans = [
-  { slug: "executive", name: "Executive", subtitle: "Enter the Aven community", minUnits: 1, maxUnits: 2, freeStayNights: 2, discountPercent: 0, accentColor: "#2E5A3F", featured: false, sortOrder: 0 },
-  { slug: "silver", name: "Silver", subtitle: "A stronger stake, a longer stay", minUnits: 3, maxUnits: 4, freeStayNights: 5, discountPercent: 5, accentColor: "#8C8D90", featured: false, sortOrder: 1 },
-  { slug: "gold", name: "Gold", subtitle: "The most chosen plan", minUnits: 5, maxUnits: 9, freeStayNights: 9, discountPercent: 10, accentColor: "#A57A4B", featured: true, sortOrder: 2 },
-  { slug: "platinum", name: "Platinum", subtitle: "Premium lifestyle, higher returns", minUnits: 10, maxUnits: 19, freeStayNights: 17, discountPercent: 15, accentColor: "#2B2B2B", featured: false, sortOrder: 3 },
-  { slug: "diamond", name: "Diamond", subtitle: "A month in the hills, every year", minUnits: 20, maxUnits: 29, freeStayNights: 29, discountPercent: 20, accentColor: "#A33D3A", featured: false, sortOrder: 4 },
-  { slug: "royal", name: "Royal", subtitle: "100% villa ownership", minUnits: 30, maxUnits: null, freeStayNights: 29, discountPercent: 28, accentColor: "#1F1C3D", featured: false, sortOrder: 5 },
-];
+const plans = ownershipTiers.map((t, i) => ({
+  slug: t.id,
+  name: t.name,
+  subtitle: t.subtitle,
+  minUnits: t.minUnits,
+  maxUnits: t.maxUnits,
+  unitPriceBDT: t.installmentPriceBDT,
+  fullPriceBDT: t.fullPriceBDT,
+  downPaymentBDT: t.downPaymentBDT,
+  installmentCount: t.installmentCount,
+  freeStayNights: t.freeStayDays - 1,
+  accentColor: t.accent,
+  featured: t.featured,
+  sortOrder: i,
+}));
 
 /**
- * The earlier four-category deck had a "Premium" plan that the brochure
- * replaces with Silver. Rename it in place rather than deleting it, so any
- * holdings already made against it keep a valid plan.
+ * Plans the price chart no longer sells — the old "Premium" and "Silver" —
+ * are retired. Any holdings made against them move to whichever current plan
+ * covers their share count, so every holding keeps a valid plan.
  */
-async function migrateLegacyPlans() {
-  const premium = await prisma.membershipPlan.findUnique({ where: { slug: "premium" } });
-  const silver = await prisma.membershipPlan.findUnique({ where: { slug: "silver" } });
-  if (premium && !silver) {
-    await prisma.membershipPlan.update({ where: { id: premium.id }, data: { slug: "silver" } });
-  } else if (premium && silver) {
-    await prisma.shareHolding.updateMany({ where: { planId: premium.id }, data: { planId: silver.id } });
-    await prisma.membershipPlan.delete({ where: { id: premium.id } });
+async function retireLegacyPlans() {
+  const current = await prisma.membershipPlan.findMany({ where: { slug: { in: plans.map((p) => p.slug) } } });
+  const retired = await prisma.membershipPlan.findMany({
+    where: { slug: { notIn: plans.map((p) => p.slug) } },
+    include: { holdings: { select: { id: true, units: true } } },
+  });
+  for (const old of retired) {
+    for (const h of old.holdings) {
+      await prisma.shareHolding.update({ where: { id: h.id }, data: { planId: planForUnits(current, h.units).id } });
+    }
+    await prisma.membershipPlan.delete({ where: { id: old.id } });
   }
+  return retired.map((p) => p.slug);
 }
 
 // Page hero images the admin Media tab can replace. The homepage banner is
@@ -76,17 +81,18 @@ async function importLegacyInquiries() {
 }
 
 async function main() {
-  await migrateLegacyPlans();
   const imported = await importLegacyInquiries();
   if (imported) console.log(`Checked ${imported} legacy enquiries into the CRM.`);
 
   for (const plan of plans) {
     await prisma.membershipPlan.upsert({
       where: { slug: plan.slug },
-      update: { ...plan, unitPriceBDT: PLACEHOLDER_UNIT_PRICE_BDT },
-      create: { ...plan, unitPriceBDT: PLACEHOLDER_UNIT_PRICE_BDT },
+      update: plan,
+      create: plan,
     });
   }
+  const retired = await retireLegacyPlans();
+  if (retired.length) console.log(`Retired plans: ${retired.join(", ")}.`);
 
   await prisma.siteAsset.deleteMany({ where: { key: { in: ["home.hero", "masterplan.hero"] } } });
   for (const asset of assets) {

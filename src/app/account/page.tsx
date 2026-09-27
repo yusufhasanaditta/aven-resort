@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { runInstallmentReminders } from "@/lib/notify";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildDashboard } from "@/lib/account";
@@ -19,7 +21,10 @@ export default async function AccountPage({
 
   const { payment, tab } = await searchParams;
 
-  const [holdings, plans, applications, paymentInfo] = await Promise.all([
+  // Catch up on any reminder the daily job hasn't sent yet — after the page is on its way.
+  after(() => runInstallmentReminders({ userId: user.id }).catch((err) => console.error("Reminder catch-up failed", err)));
+
+  const [holdings, plans, applications, paymentInfo, notifications] = await Promise.all([
     prisma.shareHolding.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -28,6 +33,7 @@ export default async function AccountPage({
     prisma.membershipPlan.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.application.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     getContent("payment"),
+    prisma.notification.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 30 }),
   ]);
 
   const data = buildDashboard(user, holdings, plans);
@@ -50,6 +56,15 @@ export default async function AccountPage({
         reviewedAt: a.reviewedAt?.toISOString() ?? null,
       }))}
       paymentInfo={paymentInfo.enabled ? paymentInfo : null}
+      notifications={notifications.map((n) => ({
+        id: n.id,
+        kind: n.kind,
+        title: n.title,
+        body: n.body,
+        href: n.href,
+        read: !!n.readAt,
+        createdAt: n.createdAt.toISOString(),
+      }))}
     />
   );
 }

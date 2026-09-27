@@ -3,7 +3,7 @@ import { MembershipCard } from "@/components/ui/MembershipCard";
 import { fallbackPlans } from "@/data/planFallback";
 
 /**
- * The six membership cards fanned out like a dealt hand. Hovering (or
+ * The membership cards fanned out like a dealt hand. Hovering (or
  * focusing) a card straightens it and lifts it clear of the others. On small
  * screens the fan becomes a horizontal snap-scroll row instead.
  *

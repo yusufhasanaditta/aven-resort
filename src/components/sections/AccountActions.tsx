@@ -25,10 +25,10 @@ export function LogoutButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
   );
 }
 
-/** Starts the next due payment on a holding — an instalment, or a retry of a full payment. */
+/** Starts the next due payment on a holding — an installment, or a retry of a full payment. */
 export function PayNextButton({
   holdingId,
-  label = "Pay next instalment",
+  label = "Pay next installment",
   tone = "dark",
   className,
 }: {

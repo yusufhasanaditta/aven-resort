@@ -5,7 +5,7 @@ import { Button, ArrowRight } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Answers about owning shares in Aven Eco Luxury Resort & Wellness — plans, instalments, payments, returns, free stays and the project timeline.",
+  description: "Answers about owning shares in Aven Eco Luxury Resort & Wellness — plans, installments, payments, returns, free stays and the project timeline.",
 };
 
 /**
@@ -70,7 +70,7 @@ export default async function FaqPage() {
               <p className="mt-1 text-sm text-cream-200/65">Call {contact.phone} or leave your details and we&rsquo;ll call you.</p>
             </div>
             <div className="mt-5 shrink-0 sm:mt-0">
-              <Button href="/ownership#interest" variant="light">
+              <Button href="/interest" variant="light">
                 Register interest
                 <ArrowRight />
               </Button>

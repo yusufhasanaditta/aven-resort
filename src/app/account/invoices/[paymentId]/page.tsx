@@ -115,9 +115,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                   </div>
                 )}
                 <div>
-                  <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">Instalment</dt>
+                  <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">Installment</dt>
                   <dd className="mt-0.5 text-forest-900">
-                    {holding.paymentPlan === "INSTALLMENT" ? `${payment.installmentNo} of ${holding.installmentMonths}` : "Full payment"}
+                    {paymentLabel(holding, payment.installmentNo)}
                   </dd>
                 </div>
               </dl>
@@ -139,7 +139,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                     </p>
                     <p className="mt-1 text-xs text-forest-900/60">{paymentLabel(holding, payment.installmentNo)}</p>
                     <p className="mt-1 text-xs text-forest-900/60">
-                      {formatBDT(perUnit)} per share after {plan.discountPercent}% plan discount · {ownershipPercent(holding.units).toFixed(2)}% of the resort ·{" "}
+                      {formatBDT(perUnit)} per share ({holding.paymentPlan === "INSTALLMENT" ? "installment" : "full-payment"} price) · {ownershipPercent(holding.units).toFixed(2)}% of the resort ·{" "}
                       {stayDays(plan.freeStayNights)} days free stay a year
                     </p>
                   </td>

@@ -28,11 +28,15 @@ export function Hero({
   actions,
   height = "full",
   leaves = true,
+  accentStyle = "block",
 }: {
-  eyebrow: string;
+  /** Optional line above the title; omitted when empty. */
+  eyebrow?: string;
   title: string;
   titleAccent?: string;
-  lede: string;
+  /** "block" sets the accent as large as the title; "line" keeps it to one line under it. */
+  accentStyle?: "block" | "line";
+  lede?: string;
   image: string;
   imageAlt: string;
   facts?: { value: string; label: string }[];
@@ -103,17 +107,19 @@ export function Hero({
         className="relative z-10 w-full pb-14 pt-32 sm:pb-20"
       >
         <Container>
-          <div className="max-w-3xl">
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.1 }}
-              className="text-eyebrow text-gold-400"
-            >
-              {eyebrow}
-            </motion.p>
+          <div className={accentStyle === "line" ? "max-w-5xl" : "max-w-3xl"}>
+            {eyebrow && (
+              <motion.p
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: easeOutExpo, delay: 0.1 }}
+                className="mb-5 text-eyebrow text-gold-400"
+              >
+                {eyebrow}
+              </motion.p>
+            )}
 
-            <h1 className="mt-5 font-display text-display-xl text-balance text-cream-50">
+            <h1 className="font-display text-display-xl text-balance text-cream-50">
               {title.split(" ").map((word, i) => (
                 <span key={i} className="inline-block overflow-hidden">
                   <motion.span
@@ -140,7 +146,10 @@ export function Hero({
                       ease: easeOutExpo,
                       delay: 0.34,
                     }}
-                    className="inline-block italic text-gold-300"
+                    className={cn(
+                      "inline-block italic text-gold-300",
+                      accentStyle === "line" && "mt-2 text-[clamp(1.35rem,4.2vw,3.4rem)] leading-tight sm:whitespace-nowrap",
+                    )}
                   >
                     {titleAccent}
                   </motion.span>
@@ -148,14 +157,16 @@ export function Hero({
               )}
             </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: easeOutExpo, delay: 0.5 }}
-              className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-cream-100/80"
-            >
-              {lede}
-            </motion.p>
+            {lede && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.9, ease: easeOutExpo, delay: 0.5 }}
+                className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-cream-100/80"
+              >
+                {lede}
+              </motion.p>
+            )}
 
             {actions && actions.length > 0 && (
               <motion.div
@@ -185,7 +196,10 @@ export function Hero({
               initial={{ opacity: 0, y: 26 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: easeOutExpo, delay: 0.78 }}
-              className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-cream-50/15 bg-cream-50/10 backdrop-blur-md sm:grid-cols-4"
+              className={cn(
+                "mt-14 grid gap-px overflow-hidden rounded-2xl border border-cream-50/15 bg-cream-50/10 backdrop-blur-md",
+                facts.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "max-w-2xl grid-cols-1 sm:grid-cols-[1.5fr_1fr]",
+              )}
             >
               {facts.map((f) => (
                 <div key={f.label} className="bg-forest-950/35 px-5 py-5">

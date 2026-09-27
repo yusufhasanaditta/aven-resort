@@ -1,9 +1,10 @@
 /**
  * Accommodation product: what an owner's share actually buys into.
  *
- * Room counts follow the AVEN brochure's "Luxury Hotel" (100 exclusive
+ * Room counts are the current figures from Aven (140 hotel rooms, 40
+ * villas); the rest follows the AVEN brochure's "Luxury Hotel" (exclusive
  * suites, presidential & royal suites, 200-pax ballroom, 50-pax seminar room)
- * and "Luxury Villas" (20 villas — single, duplex, presidential — with private
+ * and "Luxury Villas" (villas — single, duplex, presidential — with private
  * pools) pages; architectural notes come from the earlier masterplan deck.
  */
 
@@ -47,11 +48,11 @@ export const accommodations: Accommodation[] = [
     name: "Exclusive Suites",
     collection: "Hotel",
     hill: "Luxury Hotel",
-    tagline: "100 exclusive suites under one roof",
+    tagline: "140 exclusive rooms under one roof",
     description:
-      "The luxury hotel carries 100 exclusive suites alongside a 200-pax Grand Ballroom, a 50-pax Seminar Room and a Meeting Room — stone and glass against the forested hills, with the wellness programme a short walk away.",
+      "The luxury hotel carries 140 exclusive rooms alongside a 200-pax Grand Ballroom, a 50-pax Seminar Room and a Meeting Room — stone and glass against the forested hills, with the wellness programme a short walk away.",
     specs: [
-      { label: "Suites", value: "100 exclusive" },
+      { label: "Rooms", value: "140 exclusive" },
       { label: "Grand Ballroom", value: "200 pax" },
       { label: "Seminar Room", value: "50 pax" },
       { label: "Meeting Room", value: "On site" },
@@ -69,12 +70,12 @@ export const accommodations: Accommodation[] = [
     name: "Luxury Villas",
     collection: "Villas",
     hill: "Villa slopes",
-    tagline: "20 exclusive villas, stepping down the hill",
+    tagline: "40 exclusive villas, stepping down the hill",
     description:
-      "Twenty exclusive villas — single, duplex and presidential — terraced along the slopes so no villa overlooks another. Floor-to-ceiling glass faces the valley, each with a luxurious private pool and a tranquil, serene hill view.",
+      "Forty exclusive villas — super deluxe residential, single, duplex and presidential — terraced along the slopes so no villa overlooks another. Floor-to-ceiling glass faces the valley, with private pool and a tranquil, serene hill view.",
     specs: [
-      { label: "Villas", value: "20 exclusive" },
-      { label: "Types", value: "Single · Duplex · Presidential" },
+      { label: "Villas", value: "40 exclusive" },
+      { label: "Types", value: "Super Deluxe Residential · Single · Duplex · Presidential" },
       { label: "Pool", value: "Private, every villa" },
       { label: "Outlook", value: "Serene hill view" },
     ],

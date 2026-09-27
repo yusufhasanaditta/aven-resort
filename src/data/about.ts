@@ -34,7 +34,7 @@ export const about = {
     },
   ],
   timelineNote:
-    "Aven Eco Luxury Resort & Wellness is at share-sales stage, with a 30-month project timeline. This is the vision of Aven — current vision and design can be adapted based on the project demands, and delivery milestones are confirmed directly with the Aven team.",
+    "Aven Eco Luxury Resort & Wellness is at share-sales stage, with a 3-year (36-month) project timeline. This is the vision of Aven — current vision and design can be adapted based on the project demands, and delivery milestones are confirmed directly with the Aven team.",
 } as const;
 
 /** Positioning claims used across the site. */
@@ -47,7 +47,7 @@ export const positioning = [
   {
     stat: "2700",
     label: "Unit shares",
-    detail: "Six membership plans, Executive to Royal.",
+    detail: "Five membership plans, Executive to Royal.",
   },
   {
     stat: "20",
@@ -55,9 +55,9 @@ export const positioning = [
     detail: "Every shareholder owns a fraction of each.",
   },
   {
-    stat: "120",
-    label: "Suites & villas",
-    detail: "100 hotel suites plus 20 private-pool villas.",
+    stat: "180",
+    label: "Rooms & villas",
+    detail: "140 hotel rooms plus 40 private-pool villas.",
   },
 ];
 

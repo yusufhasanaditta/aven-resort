@@ -66,10 +66,36 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  holdings     ShareHolding[]
-  applications Application[]
+  holdings      ShareHolding[]
+  applications  Application[]
+  notifications Notification[]
 
   @@map("users")
+}
+
+/// A message to a shareholder: installment reminders, payment receipts,
+/// application updates. Shown in the dashboard inbox and, when email is
+/// configured, also emailed. `dedupeKey` makes every automatic reminder
+/// idempotent, so the daily job can run any number of times.
+model Notification {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// DUE_SOON · DUE_TODAY · OVERDUE · PAYMENT_RECEIVED · REMINDER
+  kind          String
+  title         String
+  body          String
+  href          String?
+  holdingId     String?
+  installmentNo Int?
+  dedupeKey     String    @unique
+  /// SENT · FAILED · SKIPPED (no email provider configured)
+  emailStatus   String    @default("SKIPPED")
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
 
 /// A purchasable ownership tier. Seeded from the four categories in the
@@ -77,20 +103,26 @@ model User {
 /// from the admin panel from here on — the marketing pages should read these
 /// via the API rather than the static data file once seeded.
 model MembershipPlan {
-  id              String   @id @default(cuid())
-  slug            String   @unique
-  name            String
-  subtitle        String
-  minUnits        Int
-  maxUnits        Int?
-  unitPriceBDT    Int
-  freeStayNights  Int
-  discountPercent Int
-  accentColor     String
-  featured        Boolean  @default(false)
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  subtitle         String
+  minUnits         Int
+  maxUnits         Int?
+  /// Per-share price when paying by instalment.
+  unitPriceBDT     Int
+  /// Per-share price when paying in full.
+  fullPriceBDT     Int      @default(0)
+  /// Down payment for the plan's package size (minUnits shares).
+  downPaymentBDT   Int      @default(0)
+  /// Monthly instalments after the down payment.
+  installmentCount Int      @default(12)
+  freeStayNights   Int
+  accentColor      String
+  featured         Boolean  @default(false)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   holdings ShareHolding[]
 
@@ -101,18 +133,21 @@ model MembershipPlan {
 /// a unit count and payment schedule, `ACTIVE` once the opening payment (or
 /// full amount) clears.
 model ShareHolding {
-  id                String        @id @default(cuid())
+  id                String         @id @default(cuid())
   userId            String
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId            String
   plan              MembershipPlan @relation(fields: [planId], references: [id])
   units             Int
   totalAmountBDT    Int
-  paymentPlan       PaymentPlan   @default(FULL)
+  paymentPlan       PaymentPlan    @default(FULL)
+  /// Number of scheduled payments. With a down payment, payment 1 is the
+  /// down payment and the rest are equal monthly instalments.
   installmentMonths Int?
-  status            HoldingStatus @default(PENDING_PAYMENT)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  downPaymentBDT    Int?
+  status            HoldingStatus  @default(PENDING_PAYMENT)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   payments Payment[]
 

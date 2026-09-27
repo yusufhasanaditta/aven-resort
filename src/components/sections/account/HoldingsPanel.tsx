@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TierIcon } from "@/components/ui/TierIcon";
 import { PayNextButton } from "@/components/sections/AccountActions";
 import { Glass, StatusChip, accentOnDark } from "./ui";
-import { daysUntil, formatDate, type DashboardData, type DashHolding } from "@/lib/account";
+import { daysUntil, formatDate, paymentPlanLabel, type DashboardData, type DashHolding } from "@/lib/account";
 import { formatBDT, ownershipPercent, stayDays } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,10 @@ export function HoldingsPanel({ data, onBuy }: { data: DashboardData; onBuy: () 
 
 function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string }) {
   const [open, setOpen] = useState(h.steps.length <= 6 || !h.fullyPaid);
-  const paidCount = h.steps.filter((s) => s.status === "SUCCESS").length;
+  const paidCount = h.paidCount;
+  const nextStep = h.nextDue ? h.steps.find((s) => s.n === h.nextDue!.n) : undefined;
+  const nextDays = h.nextDue ? daysUntil(h.nextDue.dueDate, now) : 0;
+  const pct = h.totalAmountBDT ? Math.round((h.paidBDT / h.totalAmountBDT) * 100) : 0;
 
   return (
     <Glass as="article" className="overflow-hidden p-0 sm:p-0">
@@ -65,7 +68,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
       <dl className="grid grid-cols-2 gap-px border-y border-white/6 bg-white/6 sm:grid-cols-4">
         {[
           { k: "Opened", v: formatDate(h.openedAt) },
-          { k: "Plan", v: h.paymentPlan === "INSTALLMENT" ? `${h.installmentMonths} months` : "Full payment" },
+          { k: "Plan", v: paymentPlanLabel(h) },
           { k: "Of the resort", v: `${ownershipPercent(h.units).toFixed(2)}%` },
           { k: "Free stay", v: `${stayDays(h.plan.freeStayNights)} days / yr` },
         ].map((d) => (
@@ -76,10 +79,35 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         ))}
       </dl>
 
+      {/* Installment tracker */}
+      {h.status !== "CANCELLED" && h.steps.length > 1 && (
+        <div className="grid gap-3 p-5 pb-0 sm:grid-cols-2 sm:p-6 sm:pb-0 lg:grid-cols-4">
+          <TrackerStat label="Paid" value={`${paidCount} of ${h.steps.length}`} sub={`${formatBDT(h.paidBDT)} · ${pct}%`} tone="emerald" />
+          <TrackerStat
+            label="Installments left"
+            value={String(h.leftCount)}
+            sub={h.leftCount ? `${formatBDT(h.remainingBDT)} remaining` : "Nothing left to pay"}
+            tone="gold"
+          />
+          <TrackerStat
+            label="Next due"
+            value={nextStep ? nextStep.part : "—"}
+            sub={h.nextDue ? `${formatBDT(h.nextDue.amountBDT)} · ${formatDate(h.nextDue.dueDate)}` : "All paid"}
+            tone="sky"
+          />
+          <TrackerStat
+            label={h.overdueCount ? "Overdue" : "Countdown"}
+            value={h.overdueCount ? `${h.overdueCount} overdue` : !h.nextDue ? "Done" : nextDays <= 0 ? "Due today" : `${nextDays} days`}
+            sub={h.overdueCount ? "Please pay to stay on schedule" : h.nextDue ? "Until the next installment" : "Fully paid"}
+            tone={h.overdueCount ? "red" : "slate"}
+          />
+        </div>
+      )}
+
       <div className="p-5 sm:p-6">
         <div className="flex items-center justify-between text-xs">
           <p className="text-cream-200/55">
-            {paidCount} of {h.steps.length} paid · {formatBDT(h.paidBDT)}
+            {paidCount} of {h.steps.length} paid · {h.leftCount} left · {formatBDT(h.paidBDT)} of {formatBDT(h.totalAmountBDT)}
           </p>
           {h.steps.length > 1 && (
             <button type="button" onClick={() => setOpen((o) => !o)} className="font-medium text-gold-300 hover:underline">
@@ -117,9 +145,19 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                     isNext && "bg-gold-400/[0.06]",
                   )}
                 >
-                  <span className="font-numeral text-cream-200/40">{String(s.n).padStart(2, "0")}</span>
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full font-numeral text-[0.6875rem]",
+                      s.status === "SUCCESS" ? "bg-emerald-300/15 text-emerald-200" : "bg-white/6 text-cream-200/60",
+                    )}
+                  >
+                    {s.status === "SUCCESS" ? "✓" : s.n}
+                  </span>
                   <span>
-                    <span className="block text-cream-100">{s.label}</span>
+                    <span className="block text-cream-100">
+                      {s.part}
+                      {s.part !== s.label && <span className="text-cream-200/40"> · {s.label.replace(s.part, "").replace(/^ /, "") || ""}</span>}
+                    </span>
                     <span className="block text-[0.6875rem] text-cream-200/45">
                       {s.paidAt
                         ? `Paid ${formatDate(s.paidAt)}`
@@ -151,12 +189,30 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
               <PayNextButton
                 holdingId={h.id}
                 tone="light"
-                label={h.paymentPlan === "INSTALLMENT" ? `Pay instalment ${h.nextDue?.n}` : "Complete payment"}
+                label={h.paymentPlan === "INSTALLMENT" && nextStep ? `Pay ${nextStep.part.toLowerCase()}` : "Complete payment"}
               />
             </>
           )}
         </div>
       </div>
     </Glass>
+  );
+}
+
+const trackerTones = {
+  emerald: "text-emerald-300",
+  gold: "text-gold-300",
+  sky: "text-sky-300",
+  red: "text-red-300",
+  slate: "text-cream-50",
+};
+
+function TrackerStat({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: keyof typeof trackerTones }) {
+  return (
+    <div className="rounded-2xl bg-white/[0.04] px-4 py-3.5 ring-1 ring-white/6">
+      <p className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/45">{label}</p>
+      <p className={cn("mt-1 font-display text-2xl leading-tight", trackerTones[tone])}>{value}</p>
+      <p className="mt-0.5 text-[0.6875rem] text-cream-200/50">{sub}</p>
+    </div>
   );
 }

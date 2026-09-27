@@ -49,7 +49,7 @@ export function ApplicationsTab({ focus, nav, onChanged }: { focus: TabFocus; na
     <>
       <PageHeader
         title="Share applications"
-        description="Online share-purchase applications with KYC details. Approving one creates the holding and its instalment schedule on the customer's account."
+        description="Online share-purchase applications with KYC details. Approving one creates the holding and its installment schedule on the customer's account."
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Segmented<Filter>
@@ -109,7 +109,7 @@ export function ApplicationsTab({ focus, nav, onChanged }: { focus: TabFocus; na
                 </div>
               </div>
               <p className="mt-3 text-[0.6875rem] text-[#8A948E]">
-                {a.paymentPlan === "INSTALLMENT" ? `${a.installmentMonths}-month instalments` : "Full payment"} · submitted {relTime(a.createdAt)}
+                {a.paymentPlan === "INSTALLMENT" ? `Down payment + ${a.installmentMonths} monthly` : "Full payment"} · submitted {relTime(a.createdAt)}
               </p>
             </button>
           ))}
@@ -206,7 +206,7 @@ function ApplicationDrawer({
               <p className="text-xs text-white/60">Applied for</p>
               <p className="mt-1 text-xl font-semibold capitalize">{app.planSlug} · {app.units} shares</p>
               <p className="mt-1 text-xs text-white/60">
-                {app.paymentPlan === "INSTALLMENT" ? `${app.installmentMonths} monthly instalments` : "Full payment"}
+                {app.paymentPlan === "INSTALLMENT" ? `Down payment + ${app.installmentMonths} monthly installments` : "Full payment"}
               </p>
             </div>
             <div className="text-right">

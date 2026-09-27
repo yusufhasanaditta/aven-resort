@@ -31,12 +31,16 @@ export type ContactContent = {
   whatsapp: string;
   headOffice: string;
   resortAddress: string;
+  /** Google Maps link for the resort — every map and resort address opens it. */
+  mapUrl: string;
   hours: string;
   website: string;
   facebook: string;
   instagram: string;
   youtube: string;
   linkedin: string;
+  tiktok: string;
+  x: string;
 };
 
 export type PaymentInstructions = {
@@ -71,15 +75,15 @@ export type CmsKey = keyof CmsContent;
 export const cmsDefaults: CmsContent = {
   announcement: {
     enabled: false,
-    text: "Share sales are open — six membership plans from Executive to Royal.",
+    text: "Share sales are open — five membership plans from Executive to Royal.",
     linkLabel: "See the plans",
     href: "/ownership",
   },
   hero: {
-    eyebrow: "Eco Luxury Resort and Wellness · Sreemangal",
-    title: "Avenue",
-    titleAccent: "Towards Self",
-    lede: "Own a piece of the hills. Aven is an eco-luxury wellness resort rising in the tea gardens of Sreemangal — offered as fractional shares with Saf-Kabla registered land.",
+    eyebrow: "",
+    title: "Welcome",
+    titleAccent: "Aven Eco Luxury Resort and Wellness",
+    lede: "",
     image: "/renders/hanging-bridge-dusk.jpg",
     primaryLabel: "Book Now",
     primaryHref: "/contact?type=booking#enquiry",
@@ -101,12 +105,15 @@ export const cmsDefaults: CmsContent = {
     whatsapp: site.contact.phone,
     headOffice: site.contact.headOffice,
     resortAddress: site.location.full,
+    mapUrl: site.location.mapUrl,
     hours: site.contact.hours,
     website: site.contact.website,
     facebook: "",
     instagram: "",
     youtube: "",
     linkedin: "",
+    tiktok: "",
+    x: "",
   },
   payment: {
     enabled: false,
@@ -130,13 +137,13 @@ export const cmsDefaults: CmsContent = {
       category: "Ownership",
       question: "How is my membership plan decided?",
       answer:
-        "By the number of shares in your purchase: Executive (1–2), Silver (3–4), Gold (5–9), Platinum (10–19), Diamond (20–29) and Royal (30+). Each step up adds a larger discount on the share price and more free days each year.",
+        "By the number of shares in your purchase: Executive (1–4), Gold (5–9), Platinum (10–19), Diamond (20–29) and Royal (30+). Each step up lowers the share price and adds more free days each year — from 3 days for Executive to 35 days for Royal.",
     },
     {
       category: "Payments",
-      question: "Can I pay in instalments?",
+      question: "Can I pay in installments?",
       answer:
-        "Yes. Choose a 3 to 24-month plan when you apply. The first instalment is due at purchase and the rest on the 1st of each following month — your dashboard shows every due date, what you've paid and what remains.",
+        "Yes. Each plan has its own installment terms: a down payment at purchase, then 12 to 24 equal monthly installments (Executive 12, Gold 15, Platinum 18, Diamond 20, Royal 24), due on the 1st of each month. Paying in full has its own, lower share price. Your dashboard shows every due date, what you've paid and what remains.",
     },
     {
       category: "Payments",
@@ -154,13 +161,13 @@ export const cmsDefaults: CmsContent = {
       category: "Stays",
       question: "How does the free stay work?",
       answer:
-        "Every plan includes free days at the resort each year (3 days for Executive up to 30 days for Diamond and Royal), plus 40–50% off accommodation all year round.",
+        "Every plan includes free days at the resort each year — 3 days for Executive, 10 for Gold, 18 for Platinum, 26 for Diamond and 35 for Royal.",
     },
     {
       category: "Project",
       question: "When will the resort be ready?",
       answer:
-        "The project timeline is 30 months. This is the vision of Aven — current vision and design can be adapted based on project demands, and milestones are shared with shareholders as they are reached.",
+        "The project timeline is 3 years (36 months). This is the vision of Aven — current vision and design can be adapted based on project demands, and milestones are shared with shareholders as they are reached.",
     },
     {
       category: "Project",
@@ -179,10 +186,10 @@ These terms govern use of this website and applications to purchase shares in Av
 Submitting an application or reservation does not by itself transfer ownership. Ownership is confirmed once Aven Limited approves the application and the required payment is received, and is documented through Saf-Kabla land registration.
 
 ## Pricing
-Unit prices shown on this website are indicative until confirmed in writing by Aven Limited. Plan discounts are applied according to the number of shares in each purchase.
+Share prices follow the current Share Price & Membership Chart and apply to purchases made while that chart is valid. Each plan has an installment price and a lower full-payment price per share, set by the number of shares in each purchase.
 
-## Instalments
-Instalment plans are payable on the due dates shown in your dashboard. Aven Limited may contact you about overdue instalments and may review holdings with persistent arrears in line with your share agreement.
+## Installments
+Installment plans are payable on the due dates shown in your dashboard. Aven Limited may contact you about overdue installments and may review holdings with persistent arrears in line with your share agreement.
 
 ## Project vision
 Renders, layouts and amenities describe the vision of Aven. The current vision and design can be adapted based on project demands.

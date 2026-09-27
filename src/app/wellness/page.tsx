@@ -129,8 +129,8 @@ export default async function WellnessPage() {
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
               Every plan — Executive through Royal — carries free stay days
-              each year and a 40–50% accommodation discount year-round, with
-              the wellness programme on your doorstep.
+              each year — up to 35 days for Royal — with the wellness
+              programme on your doorstep.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button href="/ownership" size="lg">

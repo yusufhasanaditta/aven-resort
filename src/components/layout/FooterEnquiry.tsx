@@ -23,7 +23,7 @@ export function FooterEnquiry() {
             Own a piece of the hills of Sreemangal.
           </h2>
           <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-cream-200/65">
-            Unit shares are offered across six membership plans, Executive to
+            Unit shares are offered across five membership plans, Executive to
             Royal — each carrying Saf-Kabla registered land, annual halal
             profits and free stays. Speak to the Aven team for current
             availability.

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { notifyPaymentReceived } from "@/lib/notify";
 import { validateTransaction } from "@/lib/sslcommerz";
 
 /**
@@ -64,5 +65,6 @@ export async function POST(request: Request) {
     }),
   ]);
 
+  await notifyPaymentReceived(payment.id);
   return NextResponse.json({ ok: true, recorded: "SUCCESS" });
 }

@@ -7,7 +7,8 @@ import { MembershipSpread } from "@/components/sections/home/MembershipSpread";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { LogoMark } from "@/components/ui/Logo";
+import { Logo, LogoMark } from "@/components/ui/Logo";
+import { WellnessQuotes } from "@/components/sections/home/WellnessQuotes";
 import { wellnessServices } from "@/data/wellness";
 import { projectFacts, site } from "@/data/site";
 import { getContent } from "@/lib/cms";
@@ -17,6 +18,9 @@ import { getContent } from "@/lib/cms";
  * and a link onward to its own page, rather than repeating the ownership
  * calculator, comparison and benefits that live on /ownership.
  */
+/** Villa options shown on the homepage stay card. */
+const villaTypes = ["Super Deluxe Residential", "Single", "Duplex", "Presidential"];
+
 export default async function HomePage() {
   const [yoga, ...therapies] = wellnessServices;
   const [hero, resort, contact] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact")]);
@@ -27,7 +31,8 @@ export default async function HomePage() {
         eyebrow={hero.eyebrow}
         title={hero.title}
         titleAccent={hero.titleAccent}
-        lede={hero.lede}
+        accentStyle="line"
+        lede={hero.lede || undefined}
         image={hero.image}
         imageAlt="The cloud walkway glowing gold across the tea hills at dusk, the Aven hotel lit on the ridge beyond"
         actions={[
@@ -35,10 +40,8 @@ export default async function HomePage() {
           { label: hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
         ].filter((a) => a.label && a.href)}
         facts={[
-          { value: projectFacts.landAcres, label: "Acres of land" },
+          { value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, label: "Land" },
           { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
-          { value: String(projectFacts.amenities), label: "Amenities" },
-          { value: String(projectFacts.timelineMonths), label: "Month build" },
         ]}
       />
 
@@ -77,7 +80,7 @@ export default async function HomePage() {
               <div className="absolute inset-x-0 bottom-0 p-7 sm:p-9">
                 <Eyebrow tone="light">Luxury Hotel</Eyebrow>
                 <p className="mt-3 font-display text-display-sm text-cream-50">
-                  {projectFacts.hotelSuites} exclusive suites
+                  {projectFacts.hotelRooms} exclusive rooms
                 </p>
                 <p className="mt-2 max-w-md text-[0.8125rem] leading-relaxed text-cream-100/75">
                   Presidential &amp; Royal suites · Grand Ballroom (200 pax) ·
@@ -101,21 +104,21 @@ export default async function HomePage() {
                   <p className="mt-2 font-display text-3xl text-cream-50">
                     {projectFacts.villas} exclusive villas
                   </p>
-                  <p className="mt-1 text-[0.8125rem] text-cream-100/75">
-                    Single · Duplex · Presidential — each with a private pool
+                  <ul className="mt-3 flex flex-wrap gap-1.5">
+                    {villaTypes.map((t) => (
+                      <li key={t} className="rounded-full bg-cream-50/12 px-3 py-1 text-[0.75rem] text-cream-50 ring-1 ring-cream-50/20 backdrop-blur-sm">
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-gold-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gold-300" aria-hidden="true" />
+                    With private pool
                   </p>
                 </div>
               </Reveal>
-              <Reveal delay={0.12} className="flex flex-col justify-between rounded-3xl bg-forest-950 p-7 text-cream-50">
-                <p className="font-display text-2xl leading-snug">
-                  Tranquil and serene hill views, from every suite and villa.
-                </p>
-                <div className="mt-6">
-                  <Button href="/accommodations" variant="light">
-                    Explore the stays
-                    <ArrowRight />
-                  </Button>
-                </div>
+              <Reveal delay={0.12} className="flex">
+                <WellnessQuotes className="w-full" />
               </Reveal>
             </div>
           </div>
@@ -208,13 +211,13 @@ export default async function HomePage() {
           <Reveal className="mx-auto max-w-2xl text-center">
             <Eyebrow tone="light">Membership plans</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-cream-50">
-              Six plans, from Executive{" "}
+              Five plans, from Executive{" "}
               <span className="italic text-gold-300">to Royal.</span>
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-cream-200/65">
-              Your plan is set by the shares you hold — every step up adds a
-              bigger discount and more free days in the hills. Royal members
-              receive 100% villa ownership.
+              Your plan is set by the shares you hold — every step up brings a
+              lower share price and more free days in the hills. Royal members
+              receive 35 free days a year and 100% villa ownership.
             </p>
           </Reveal>
           <Reveal delay={0.1} className="mt-14">
@@ -237,6 +240,7 @@ export default async function HomePage() {
         <Container>
           <div className="grid items-center gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
             <Reveal className="relative aspect-[1.41] overflow-hidden rounded-3xl shadow-lift-lg">
+              <a href={contact.mapUrl} target="_blank" rel="noopener noreferrer" aria-label="Open the resort location in Google Maps" className="group absolute inset-0 block">
               <Image
                 src="/brochure/location-map-aven.jpg"
                 alt="Satellite map of Sreemangal showing Aven Eco Luxury Resort & Wellness south-east of the town, among the tea gardens"
@@ -245,6 +249,11 @@ export default async function HomePage() {
                 className="object-cover"
               />
               <span className="absolute left-[70.4%] top-[70.4%] block h-24 w-24 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full border border-cream-50/60" aria-hidden="true" />
+              <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-cream-50/95 px-3 py-1.5 text-xs font-medium text-forest-800 shadow-lift transition-transform duration-300 group-hover:-translate-y-0.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3.5 w-3.5"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Zm0-8.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                    Open in Google Maps
+                  </span>
+              </a>
             </Reveal>
             <Reveal delay={0.08}>
               <Eyebrow>Location</Eyebrow>
@@ -256,7 +265,11 @@ export default async function HomePage() {
                   <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-600/60">
                     Resort
                   </dt>
-                  <dd className="mt-1.5 leading-relaxed text-forest-900/75">{contact.resortAddress}</dd>
+                  <dd className="mt-1.5 leading-relaxed text-forest-900/75">
+                    <a href={contact.mapUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-forest-600/25 underline-offset-4 transition-colors hover:text-forest-700 hover:decoration-forest-600">
+                      {contact.resortAddress}
+                    </a>
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-600/60">
@@ -284,14 +297,16 @@ export default async function HomePage() {
         <Container>
           <Reveal>
             <p className="text-sm text-forest-900/55">Welcome to</p>
-            <p className="mt-2 font-display text-6xl tracking-[0.3em] text-forest-900 sm:text-7xl">AVEN</p>
+            <h2 className="mt-4 flex justify-center">
+              <Logo className="h-20 sm:h-28" />
+            </h2>
             <p className="mt-6 font-display text-2xl italic text-forest-700 sm:text-3xl">{resort.motto}</p>
             <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <Button href="/register" size="lg">
+              <Button href="/apply" size="lg">
                 Become a shareholder
                 <ArrowRight />
               </Button>
-              <Button href="/ownership#interest" variant="secondary" size="lg">
+              <Button href="/interest" variant="secondary" size="lg">
                 Register interest
               </Button>
             </div>

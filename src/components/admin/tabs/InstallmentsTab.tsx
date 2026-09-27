@@ -14,7 +14,11 @@ import {
   SearchInput,
   Segmented,
   Stat,
+  firstError,
+  relTime,
+  send,
   useAdminFetch,
+  useToast,
 } from "../kit";
 import { HoldingLedger } from "../HoldingLedger";
 import { RecordPaymentModal } from "../RecordPayment";
@@ -31,6 +35,27 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
   const [q, setQ] = useState("");
   const [recording, setRecording] = useState<{ holding: AdminHolding; step?: number } | null>(null);
   const [now] = useState(() => new Date().toISOString());
+  const toast = useToast();
+  const [running, setRunning] = useState(false);
+  const log = useAdminFetch<ReminderLog>("/api/admin/reminders");
+
+  async function runReminders() {
+    setRunning(true);
+    const { ok, json } = await send("/api/admin/reminders", "POST", {});
+    setRunning(false);
+    if (!ok) return toast(firstError(json), "error");
+    const sent = Number(json.sent) || 0;
+    const emailed = Number(json.emailed) || 0;
+    toast(sent ? `${sent} reminder${sent > 1 ? "s" : ""} sent${emailed ? ` · ${emailed} emailed` : ""}` : "Everyone is already reminded for today");
+    log.reload();
+  }
+
+  async function remind(h: AdminHolding) {
+    const { ok, json } = await send("/api/admin/reminders", "POST", { holdingId: h.id });
+    if (!ok) return toast(firstError(json), "error");
+    toast(json.emailStatus === "SENT" ? `Reminder emailed to ${h.customer.name}` : `Reminder sent to ${h.customer.name}'s dashboard`);
+    log.reload();
+  }
 
   const holdings = useMemo(() => data?.holdings ?? [], [data]);
   const live = holdings.filter((h) => h.status !== "CANCELLED");
@@ -60,17 +85,22 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
   return (
     <>
       <PageHeader
-        title="Instalments & dues"
+        title="Installments & dues"
         description="The schedule behind every holding — what's overdue, what's coming, and what each customer still owes."
         actions={
-          <ExportButton kind="dues" label="Export dues" />
+          <>
+            <ExportButton kind="dues" label="Export dues" />
+            <Btn variant="primary" icon="bell" onClick={runReminders} disabled={running}>
+              {running ? "Sending…" : "Send reminders now"}
+            </Btn>
+          </>
         }
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Overdue" value={formatBDTCompact(overdue.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${overdue.length} instalments`} icon="bell" tone="red" onClick={() => setView("overdue")} />
-        <Stat label="Due in 7 days" value={formatBDTCompact(upcoming.filter((d) => d.days <= 7).reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.filter((d) => d.days <= 7).length} instalments`} icon="calendar" tone="gold" onClick={() => setView("upcoming")} />
-        <Stat label="Due in 30 days" value={formatBDTCompact(upcoming.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.length} instalments`} icon="calendar" tone="sky" onClick={() => setView("upcoming")} />
+        <Stat label="Overdue" value={formatBDTCompact(overdue.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${overdue.length} installments`} icon="bell" tone="red" onClick={() => setView("overdue")} />
+        <Stat label="Due in 7 days" value={formatBDTCompact(upcoming.filter((d) => d.days <= 7).reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.filter((d) => d.days <= 7).length} installments`} icon="calendar" tone="gold" onClick={() => setView("upcoming")} />
+        <Stat label="Due in 30 days" value={formatBDTCompact(upcoming.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.length} installments`} icon="calendar" tone="sky" onClick={() => setView("upcoming")} />
         <Stat label="Remaining balance" value={formatBDTCompact(live.reduce((s, h) => s + h.remainingBDT, 0))} sub={`${live.filter((h) => h.fullyPaid).length} of ${live.length} holdings fully paid`} icon="wallet" onClick={() => setView("holdings")} />
       </div>
 
@@ -109,7 +139,7 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
       ) : rows.length === 0 ? (
         <Card>
           <Empty icon="calendar" title={view === "overdue" ? "Nothing overdue" : "Nothing due in the next 30 days"}>
-            {view === "overdue" ? "Every instalment is on schedule." : "Upcoming instalments will appear here."}
+            {view === "overdue" ? "Every installment is on schedule." : "Upcoming installments will appear here."}
           </Empty>
         </Card>
       ) : (
@@ -118,7 +148,7 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
             <thead className="border-b border-[#EEF0EC] bg-[#FAFBF9] text-[0.6875rem] uppercase tracking-wide text-[#6B756F]">
               <tr>
                 <th className="px-5 py-3 font-medium">Customer</th>
-                <th className="py-3 font-medium">Instalment</th>
+                <th className="py-3 font-medium">Installment</th>
                 <th className="py-3 font-medium">Due</th>
                 <th className="py-3 text-right font-medium">Amount</th>
                 <th className="py-3 text-right font-medium">Holding balance</th>
@@ -138,8 +168,8 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
                     </button>
                   </td>
                   <td className="py-3">
-                    <p className="text-[#14201B]">{h.plan.name} · {s.n} of {h.steps.length}</p>
-                    <p className="text-xs text-[#8A948E]">{h.units} shares</p>
+                    <p className="text-[#14201B]">{s.part} <span className="text-[#8A948E]">· {s.n} of {h.steps.length}</span></p>
+                    <p className="text-xs text-[#8A948E]">{h.plan.name} · {h.units} shares · {h.leftCount} left</p>
                   </td>
                   <td className="py-3">
                     <p className="text-[#14201B]">{formatDate(s.dueDate)}</p>
@@ -150,6 +180,7 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
                   <td className="px-5 py-3">
                     <div className="flex justify-end gap-1.5">
                       <a href={`tel:${h.customer.phone}`} className="inline-flex h-8 items-center rounded-lg border border-[#DDE1DB] bg-white px-2.5 text-xs font-medium text-[#24312B] hover:bg-[#F5F7F3]">Call</a>
+                      <Btn size="sm" onClick={() => remind(h)}>Remind</Btn>
                       <Btn size="sm" variant="primary" onClick={() => setRecording({ holding: h, step: s.n })}>Record</Btn>
                     </div>
                   </td>
@@ -160,6 +191,8 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
         </Card>
       )}
 
+      <ReminderLogCard log={log.data} />
+
       <RecordPaymentModal
         key={recording ? `${recording.holding.id}-${recording.step ?? "next"}` : "none"}
         holding={recording?.holding ?? null}
@@ -168,5 +201,62 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
         onRecorded={refresh}
       />
     </>
+  );
+}
+
+type ReminderLog = {
+  emailConfigured: boolean;
+  notifications: { id: string; kind: string; title: string; customer: string; phone: string; emailStatus: string; read: boolean; createdAt: string }[];
+};
+
+const kindLabel: Record<string, { label: string; tone: "red" | "amber" | "blue" | "green" | "violet" }> = {
+  OVERDUE: { label: "Overdue", tone: "red" },
+  DUE_TODAY: { label: "Due today", tone: "amber" },
+  DUE_SOON: { label: "Due soon", tone: "blue" },
+  REMINDER: { label: "Manual", tone: "violet" },
+  PAYMENT_RECEIVED: { label: "Receipt", tone: "green" },
+};
+
+/** What the automatic reminders (daily at 9 AM) and manual nudges have sent, newest first. */
+function ReminderLogCard({ log }: { log: ReminderLog | null | undefined }) {
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEF0EC] px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold text-[#14201B]">Reminders &amp; receipts sent</p>
+          <p className="text-xs text-[#6B756F]">
+            Sent automatically every morning — 7 days and 3 days before a due date, on the day, then weekly while overdue — plus a receipt for every payment.
+          </p>
+        </div>
+        {log && (
+          <Badge tone={log.emailConfigured ? "green" : "amber"}>
+            {log.emailConfigured ? "Email on" : "Email off — dashboard only"}
+          </Badge>
+        )}
+      </div>
+      {!log ? (
+        <LoadingRows rows={3} />
+      ) : log.notifications.length === 0 ? (
+        <Empty icon="bell" title="Nothing sent yet">Reminders appear here as installments come due.</Empty>
+      ) : (
+        <ul className="divide-y divide-[#EEF0EC]">
+          {log.notifications.map((n) => (
+            <li key={n.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-[0.8125rem]">
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-[#14201B]">{n.title}</span>
+                <span className="block text-xs text-[#8A948E]">{n.customer} · {n.phone} · {relTime(n.createdAt)}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Badge tone={kindLabel[n.kind]?.tone ?? "blue"}>{kindLabel[n.kind]?.label ?? n.kind}</Badge>
+                <Badge tone={n.emailStatus === "SENT" ? "green" : n.emailStatus === "FAILED" ? "red" : "gray"}>
+                  {n.emailStatus === "SENT" ? "Emailed" : n.emailStatus === "FAILED" ? "Email failed" : "In-app"}
+                </Badge>
+                {n.read && <Badge tone="teal">Seen</Badge>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

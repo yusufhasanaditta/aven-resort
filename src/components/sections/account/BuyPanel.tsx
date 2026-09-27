@@ -12,28 +12,26 @@ import { calculate, formatBDT, ownershipPercent, stayDays } from "@/lib/shares";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-const MONTHS = [3, 6, 9, 12, 18, 24];
 const MAX_UNITS = 200;
 
 /**
  * The shareholder's cart. One order is one holding, priced by the plan its
  * own share count falls into — exactly what the order route charges, since
- * both use `calculate()` from `lib/shares`. Instalments already due on
+ * both use `calculate()` from `lib/shares`. Installments already due on
  * existing holdings sit alongside, so everything payable is in one place.
  */
 export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: () => void }) {
   const router = useRouter();
   const [units, setUnits] = useState(1);
   const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("FULL");
-  const [months, setMonths] = useState(6);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const plans = data.plans;
   const result = useMemo(
-    () => (plans.length ? calculate(plans, units, paymentPlan, paymentPlan === "INSTALLMENT" ? months : undefined) : null),
-    [plans, units, paymentPlan, months],
+    () => (plans.length ? calculate(plans, units, paymentPlan) : null),
+    [plans, units, paymentPlan],
   );
 
   const nextPlan = result ? plans.find((p) => p.minUnits > result.units) : undefined;
@@ -56,7 +54,6 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
           planSlug: result.plan.slug,
           units: result.units,
           paymentPlan,
-          installmentMonths: paymentPlan === "INSTALLMENT" ? months : undefined,
         }),
       });
       const json = await res.json();
@@ -112,8 +109,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
                     <span className="font-display text-lg text-cream-50">{p.name}</span>
                   </span>
                   <span className="mt-1 block text-[0.6875rem] text-cream-200/55">
-                    {p.maxUnits ? `${p.minUnits}–${p.maxUnits}` : `${p.minUnits}+`} shares ·{" "}
-                    {p.discountPercent ? `${p.discountPercent}% off` : "regular"}
+                    {p.maxUnits ? `${p.minUnits}–${p.maxUnits}` : `${p.minUnits}+`} shares · {formatBDT(p.fullPriceBDT)}/share
                   </span>
                   <span className="mt-0.5 block text-[0.6875rem] text-cream-200/40">
                     {stayDays(p.freeStayNights)} days free stay
@@ -154,7 +150,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
               +
             </button>
             <p className="ml-2 text-sm text-cream-200/60">
-              {formatBDT(result.plan.unitPriceBDT)} <span className="text-cream-200/40">/ share</span>
+              {formatBDT(result.pricePerShareBDT)} <span className="text-cream-200/40">/ share</span>
             </p>
           </div>
           <input
@@ -180,7 +176,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
                   Add {nextPlan.minUnits - result.units} more
                 </button>{" "}
                 to unlock <strong className="font-semibold">{nextPlan.name}</strong> —{" "}
-                {nextPlan.discountPercent}% off and {stayDays(nextPlan.freeStayNights)} free days a year.
+                {formatBDT(nextPlan.fullPriceBDT)} a share paid in full and {stayDays(nextPlan.freeStayNights)} free days a year.
               </motion.p>
             )}
           </AnimatePresence>
@@ -201,31 +197,20 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
                 )}
               >
                 <span className="block text-sm font-semibold text-cream-50">
-                  {p === "FULL" ? "Pay in full" : "Instalments"}
+                  {p === "FULL" ? "Pay in full" : "Installments"}
                 </span>
                 <span className="mt-0.5 block text-[0.6875rem] text-cream-200/50">
-                  {p === "FULL" ? "One payment, holding active at once" : "Spread monthly, first due today"}
+                  {p === "FULL" ? "One payment, holding active at once" : "Down payment today, then monthly"}
                 </span>
               </button>
             ))}
           </div>
-          {paymentPlan === "INSTALLMENT" && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {MONTHS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMonths(m)}
-                  aria-pressed={months === m}
-                  className={cn(
-                    "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
-                    months === m ? "bg-gold-400 text-forest-950" : "bg-white/6 text-cream-200/75 hover:bg-white/10",
-                  )}
-                >
-                  {m} months
-                </button>
-              ))}
-            </div>
+          {paymentPlan === "INSTALLMENT" && result.installments && (
+            <p className="mt-4 rounded-xl bg-gold-400/8 px-3.5 py-2.5 text-xs leading-relaxed text-cream-100">
+              {result.plan.name} terms: <strong className="font-semibold">{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment today,
+              then <strong className="font-semibold">{result.monthlyCount} monthly installments</strong> of about{" "}
+              <strong className="font-semibold">{formatBDT(result.monthlyBDT ?? 0)}</strong>.
+            </p>
           )}
         </Glass>
       </div>
@@ -266,13 +251,9 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
           <dl className="mt-6 space-y-2.5 border-t border-white/8 pt-5 text-[0.8125rem]">
             <div className="flex justify-between">
               <dt className="text-cream-200/60">
-                {result.units} × {formatBDT(result.plan.unitPriceBDT)}
+                {result.units} × {formatBDT(result.pricePerShareBDT)}
               </dt>
-              <dd className="font-numeral text-cream-100">{formatBDT(result.grossBDT)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-cream-200/60">{result.plan.name} discount ({result.discountPercent}%)</dt>
-              <dd className="font-numeral text-emerald-300">{result.savingsBDT ? `− ${formatBDT(result.savingsBDT)}` : "—"}</dd>
+              <dd className="font-numeral text-cream-100">{formatBDT(result.totalBDT)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-cream-200/60">Free stay included</dt>
@@ -283,14 +264,14 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
               <dd className="font-numeral text-2xl text-cream-50">{formatBDT(result.totalBDT)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-cream-200/60">{paymentPlan === "INSTALLMENT" ? `Due today (1 of ${months})` : "Due today"}</dt>
+              <dt className="text-cream-200/60">{paymentPlan === "INSTALLMENT" ? "Due today (down payment)" : "Due today"}</dt>
               <dd className="font-numeral font-semibold text-gold-300">{formatBDT(dueToday)}</dd>
             </div>
           </dl>
 
           {result.installments && (
             <details className="mt-4 rounded-xl border border-white/8 px-4 py-3 text-xs text-cream-200/65">
-              <summary className="cursor-pointer font-medium text-cream-100">See all {months} instalment dates</summary>
+              <summary className="cursor-pointer font-medium text-cream-100">See all {result.installments.length} payment dates</summary>
               <ul className="mt-3 max-h-44 space-y-1.5 overflow-y-auto pr-1">
                 {result.installments.map((l) => (
                   <li key={l.index} className="flex justify-between">
@@ -325,7 +306,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
                 <li key={h.id} className="flex flex-wrap items-center justify-between gap-3 py-3.5">
                   <span>
                     <span className="block text-[0.8125rem] text-cream-100">
-                      {h.plan.name} · {h.paymentPlan === "INSTALLMENT" ? `instalment ${h.nextDue!.n} of ${h.steps.length}` : "full payment"}
+                      {h.plan.name} · {h.paymentPlan === "INSTALLMENT" ? `installment ${h.nextDue!.n} of ${h.steps.length}` : "full payment"}
                     </span>
                     <span className="block text-[0.6875rem] text-cream-200/45">
                       {formatBDT(h.nextDue!.amountBDT)} · due {formatDate(h.nextDue!.dueDate)}

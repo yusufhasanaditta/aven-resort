@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (!plans.length) return NextResponse.json({ error: "Plans are unavailable right now." }, { status: 503 });
 
   // The plan follows the share count, whatever package was ticked.
-  const quote = calculate(plans, d.units, d.paymentPlan, d.installmentMonths);
+  const quote = calculate(plans, d.units, d.paymentPlan);
 
   const open = await prisma.application.count({
     where: { userId: session.sub, status: { in: ["SUBMITTED", "UNDER_REVIEW"] } },
@@ -65,7 +65,8 @@ export async function POST(request: Request) {
       planSlug: quote.plan.slug,
       units: quote.units,
       paymentPlan: d.paymentPlan,
-      installmentMonths: d.paymentPlan === "INSTALLMENT" ? d.installmentMonths : null,
+      // Monthly installments after the down payment, as quoted.
+      installmentMonths: quote.monthlyCount,
       quotedTotalBDT: quote.totalBDT,
       notes: d.notes,
     },

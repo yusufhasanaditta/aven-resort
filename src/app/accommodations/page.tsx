@@ -14,7 +14,7 @@ import {
 export const metadata: Metadata = {
   title: "Accommodations",
   description:
-    "100 exclusive suites in the luxury hotel, 20 private-pool villas — single, duplex and presidential — and tree houses raised into the canopy at Aven Eco Luxury Resort & Wellness.",
+    "140 exclusive rooms in the luxury hotel, 40 private-pool villas — single, duplex and presidential — and tree houses raised into the canopy at Aven Eco Luxury Resort & Wellness.",
 };
 
 export default async function AccommodationsPage() {
@@ -24,15 +24,15 @@ export default async function AccommodationsPage() {
     <>
       <Hero
         eyebrow="The product"
-        title="100 Suites."
-        titleAccent="20 Private-Pool Villas."
+        title="140 Rooms."
+        titleAccent="40 Private-Pool Villas."
         lede="Every key in the estate sits where the topography put it — the hotel on the highest point, the villas stepping down a slope, the nature stays lightest of all."
         image={heroImage}
         imageAlt="The Aven luxury hotel against forested hills under a clear sky"
         height="tall"
         facts={[
-          { value: "100", label: "Exclusive suites" },
-          { value: "20", label: "Luxury villas" },
+          { value: "140", label: "Exclusive rooms" },
+          { value: "40", label: "Luxury villas" },
           { value: "200", label: "Pax ballroom" },
           { value: "3", label: "Villa types" },
         ]}
@@ -51,7 +51,7 @@ export default async function AccommodationsPage() {
                 <Eyebrow>{collection}</Eyebrow>
                 <h2 className="mt-4 font-display text-display-md text-forest-900">
                   {collection === "Hotel" && "The luxury hotel"}
-                  {collection === "Villas" && "Twenty villas, twenty private pools"}
+                  {collection === "Villas" && "Forty villas, forty private pools"}
                   {collection === "Nature Stays" && "Into the canopy"}
                 </h2>
               </Reveal>

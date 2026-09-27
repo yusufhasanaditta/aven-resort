@@ -4,7 +4,7 @@ export const ADMIN_TABS = [
   { id: "leads", label: "Leads CRM", icon: "users", group: "Sales" },
   { id: "applications", label: "Applications", icon: "invoice", group: "Sales" },
   { id: "customers", label: "Shareholders", icon: "user", group: "Investors" },
-  { id: "installments", label: "Instalments & dues", icon: "calendar", group: "Investors" },
+  { id: "installments", label: "Installments & dues", icon: "calendar", group: "Investors" },
   { id: "payments", label: "Payments & receipts", icon: "wallet", group: "Investors" },
   { id: "packages", label: "Packages", icon: "tag", group: "Catalogue" },
   { id: "content", label: "Website content", icon: "layers", group: "Website" },

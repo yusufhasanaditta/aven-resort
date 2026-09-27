@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { notifyPaymentReceived } from "@/lib/notify";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { formatBDT } from "@/lib/shares";
 
@@ -32,7 +33,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const alreadyPaid = await prisma.payment.count({
       where: { holdingId: payment.holdingId, installmentNo: payment.installmentNo, status: "SUCCESS" },
     });
-    if (alreadyPaid) return NextResponse.json({ error: "That instalment is already paid." }, { status: 409 });
+    if (alreadyPaid) return NextResponse.json({ error: "That installment is already paid." }, { status: 409 });
   }
 
   await prisma.$transaction([
@@ -50,6 +51,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       : []),
   ]);
 
+  if (parsed.data.status === "SUCCESS") await notifyPaymentReceived(id);
   await logActivity(
     guard.name,
     parsed.data.status === "SUCCESS" ? "Confirmed payment" : "Voided payment",

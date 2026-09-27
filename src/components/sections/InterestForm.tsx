@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ownershipTiers } from "@/data/ownership";
-import { PLACEHOLDER_UNIT_PRICE_BDT } from "@/data/planFallback";
 import { formatBDT } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +43,7 @@ export function InterestForm({ source = "interest-form", tone = "light" }: { sou
       ...x,
       packageSlug: slug,
       units: t ? String(t.minUnits) : x.units,
-      investmentBDT: t ? String(Math.round(t.minUnits * PLACEHOLDER_UNIT_PRICE_BDT * (1 - t.discountPercent / 100))) : x.investmentBDT,
+      investmentBDT: t ? String(t.minUnits * t.fullPriceBDT) : x.investmentBDT,
     }));
   }
 
@@ -55,7 +54,7 @@ export function InterestForm({ source = "interest-form", tone = "light" }: { sou
       ...x,
       units: v,
       packageSlug: t ? t.id : x.packageSlug,
-      investmentBDT: t ? String(Math.round(n * PLACEHOLDER_UNIT_PRICE_BDT * (1 - t.discountPercent / 100))) : x.investmentBDT,
+      investmentBDT: t ? String(n * t.fullPriceBDT) : x.investmentBDT,
     }));
   }
 
@@ -161,7 +160,7 @@ export function InterestForm({ source = "interest-form", tone = "light" }: { sou
           <div className="mt-2 flex flex-wrap gap-2">
             {[
               ["FULL", "In full"],
-              ["INSTALLMENT", "Instalments"],
+              ["INSTALLMENT", "Installments"],
               ["UNDECIDED", "Not sure yet"],
             ].map(([v, l]) => (
               <button

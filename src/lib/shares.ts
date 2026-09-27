@@ -14,9 +14,15 @@ export type PlanLike = {
   slug: string;
   minUnits: number;
   maxUnits: number | null;
+  /** Per-share price when paying by installment. */
   unitPriceBDT: number;
+  /** Per-share price when paying in full. */
+  fullPriceBDT: number;
+  /** Down payment for the plan's package size (`minUnits` shares). */
+  downPaymentBDT: number;
+  /** Monthly installments after the down payment. */
+  installmentCount: number;
   freeStayNights: number;
-  discountPercent: number;
 };
 
 export type InstallmentLine = {
@@ -29,26 +35,30 @@ export type InstallmentLine = {
 export type CalculatorResult<T extends PlanLike = PlanLike> = {
   plan: T;
   units: number;
-  /** Units × unit price, before the plan discount. */
-  grossBDT: number;
-  /** What the plan discount takes off `grossBDT`. */
-  savingsBDT: number;
+  paymentPlan: "FULL" | "INSTALLMENT";
+  /** Per-share price for the chosen way of paying. */
+  pricePerShareBDT: number;
   /** The amount actually charged. */
   totalBDT: number;
   freeStayNights: number;
-  discountPercent: number;
+  /** Installment plans only: the first payment. */
+  downPaymentBDT: number | null;
+  /** Installment plans only: how many monthly installments follow the down payment. */
+  monthlyCount: number | null;
+  /** Installment plans only: the regular monthly amount. */
+  monthlyBDT: number | null;
   installments: InstallmentLine[] | null;
 };
 
-/** Total unit shares issued for the project, per the brochure fact sheet. */
+/** Total unit shares issued for the project. */
 export const TOTAL_SHARES = 2700;
 
 /**
- * Which tier a given unit count falls into.
+ * Which plan a given unit count falls into.
  *
- * Plans are contiguous ranges (1–2, 3–4, 5–9, 10–19, 20–29, 30+), so the match is whichever
- * range contains `units`; below the lowest range, the lowest tier applies —
- * above the highest (unbounded) range, the highest tier applies.
+ * Plans are contiguous ranges (1–4, 5–9, 10–19, 20–29, 30+), so the match is
+ * whichever range contains `units`; below the lowest range, the lowest plan
+ * applies — above the highest (unbounded) range, the highest plan applies.
  */
 export function planForUnits<T extends PlanLike>(plans: T[], units: number): T {
   const sorted = [...plans].sort((a, b) => a.minUnits - b.minUnits);
@@ -59,55 +69,90 @@ export function planForUnits<T extends PlanLike>(plans: T[], units: number): T {
   return units < sorted[0].minUnits ? sorted[0] : sorted[sorted.length - 1];
 }
 
+/**
+ * The amount of each scheduled payment.
+ *
+ * With a down payment, payment 1 is the down payment and the balance is split
+ * evenly over the remaining `steps - 1` monthly installments (any rounding
+ * remainder lands on the last). Without one — holdings opened before the
+ * price chart — the total is split evenly over all `steps`.
+ */
+export function scheduleAmounts(totalBDT: number, steps: number, downPaymentBDT?: number | null): number[] {
+  const split = (amount: number, n: number) => {
+    const base = Math.floor(amount / n);
+    return Array.from({ length: n }, (_, i) => (i === n - 1 ? amount - base * (n - 1) : base));
+  };
+  if (downPaymentBDT && steps > 1) return [downPaymentBDT, ...split(totalBDT - downPaymentBDT, steps - 1)];
+  return split(totalBDT, Math.max(1, steps));
+}
+
 export function buildInstallmentSchedule(
   totalBDT: number,
-  months: number,
+  steps: number,
   start: Date = new Date(),
+  downPaymentBDT?: number | null,
 ): InstallmentLine[] {
-  const now = start;
-  const base = Math.floor(totalBDT / months);
-  const remainder = totalBDT - base * months;
-
-  return Array.from({ length: months }, (_, i) => {
-    const due = new Date(now.getFullYear(), now.getMonth() + i, 1);
+  return scheduleAmounts(totalBDT, steps, downPaymentBDT).map((amountBDT, i) => {
+    const due = installmentDueDate(start, i + 1);
     return {
       index: i + 1,
-      label: i === 0 ? "Booking installment" : `Installment ${i + 1}`,
-      amountBDT: i === months - 1 ? base + remainder : base,
-      dueLabel: due.toLocaleDateString("en-GB", {
-        month: "long",
-        year: "numeric",
-      }),
+      label: downPaymentBDT ? (i === 0 ? "Down payment" : `${ordinal(i)} installment`) : `${ordinal(i + 1)} installment`,
+      amountBDT,
+      dueLabel: due.toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
     };
   });
+}
+
+/** 1 → "1st", 2 → "2nd", 11 → "11th", 23 → "23rd". */
+export function ordinal(n: number): string {
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 13) return `${n}th`;
+  return `${n}${["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
+}
+
+/** Label for scheduled payment `n` (1-based) of a holding: "Down payment", "3rd installment of 15". */
+export function installmentLabelFor(n: number, steps: number, hasDownPayment: boolean): string {
+  if (!hasDownPayment) return `${ordinal(n)} installment of ${steps}`;
+  return n === 1 ? "Down payment" : `${ordinal(n - 1)} installment of ${steps - 1}`;
+}
+
+/** Just the part name, without the "of N": "Down payment", "3rd installment". */
+export function installmentPartName(n: number, hasDownPayment: boolean): string {
+  if (hasDownPayment) return n === 1 ? "Down payment" : `${ordinal(n - 1)} installment`;
+  return `${ordinal(n)} installment`;
+}
+
+/** The down payment for `units` shares — the chart's package figure, prorated per share. */
+export function downPaymentFor(plan: PlanLike, units: number): number {
+  return Math.round((plan.downPaymentBDT / Math.max(1, plan.minUnits)) * units);
 }
 
 export function calculate<T extends PlanLike>(
   plans: T[],
   units: number,
   paymentPlan: "FULL" | "INSTALLMENT",
-  installmentMonths?: number,
 ): CalculatorResult<T> {
   const safeUnits = Math.max(1, Math.round(units));
   const plan = planForUnits(plans, safeUnits);
-  // The brochure prices each plan against the regular share price —
-  // "1–2 Shares | Regular Price", "3 Shares | 5% Discount" and so on — so the
-  // plan discount comes off the share total itself.
-  const grossBDT = plan.unitPriceBDT * safeUnits;
-  const totalBDT = Math.round(grossBDT * (1 - plan.discountPercent / 100));
+  const installment = paymentPlan === "INSTALLMENT";
+  const pricePerShareBDT = installment ? plan.unitPriceBDT : plan.fullPriceBDT || plan.unitPriceBDT;
+  const totalBDT = pricePerShareBDT * safeUnits;
+
+  const monthlyCount = installment ? Math.max(1, plan.installmentCount) : null;
+  const downPaymentBDT = installment ? Math.min(downPaymentFor(plan, safeUnits), totalBDT) : null;
+  const installments = installment ? buildInstallmentSchedule(totalBDT, monthlyCount! + 1, new Date(), downPaymentBDT) : null;
 
   return {
     plan,
     units: safeUnits,
-    grossBDT,
-    savingsBDT: grossBDT - totalBDT,
+    paymentPlan,
+    pricePerShareBDT,
     totalBDT,
     freeStayNights: plan.freeStayNights,
-    discountPercent: plan.discountPercent,
-    installments:
-      paymentPlan === "INSTALLMENT" && installmentMonths
-        ? buildInstallmentSchedule(totalBDT, installmentMonths)
-        : null,
+    downPaymentBDT,
+    monthlyCount,
+    monthlyBDT: installments ? installments[1]?.amountBDT ?? null : null,
+    installments,
   };
 }
 
@@ -129,8 +174,10 @@ export function ownershipPercent(units: number): number {
   return (units / TOTAL_SHARES) * 100;
 }
 
-/** Due date of instalment `n` (1-based) for a holding opened on `openedAt`. */
+/** Due date of installment `n` (1-based) for a holding opened on `openedAt`. */
 export function installmentDueDate(openedAt: Date, n: number): Date {
+  // The first payment is due the day the holding opens; the rest on the 1st of each following month.
+  if (n <= 1) return openedAt;
   return new Date(openedAt.getFullYear(), openedAt.getMonth() + n - 1, 1);
 }
 

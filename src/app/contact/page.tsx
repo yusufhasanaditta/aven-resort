@@ -34,6 +34,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
     {
       label: "Resort location",
       value: contact.resortAddress,
+      href: contact.mapUrl,
       detail: "In the Radhanagar tea hills",
     },
     {
@@ -78,7 +79,8 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                       {row.href ? (
                         <a
                           href={row.href}
-                          className="mt-1.5 block text-[0.9375rem] font-medium text-forest-800 transition-colors hover:text-forest-600"
+                          {...(/^https?:/.test(row.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className="mt-1.5 block text-[0.9375rem] font-medium leading-relaxed text-forest-800 transition-colors hover:text-forest-600"
                         >
                           {row.value}
                         </a>
@@ -97,14 +99,24 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
 
               {/* Location card */}
               <Reveal delay={0.12}>
-                <div className="relative mt-8 aspect-4/3 overflow-hidden rounded-2xl shadow-lift">
+                <a
+                  href={contact.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open the resort location in Google Maps"
+                  className="group relative mt-8 block aspect-4/3 overflow-hidden rounded-2xl shadow-lift"
+                >
                   <Image
                     src="/brochure/location-map-aven.jpg"
                     alt="Satellite map of Sreemangal with the Aven resort pinned among the tea gardens"
                     fill
                     sizes="(min-width: 1024px) 34vw, 92vw"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                   />
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-cream-50/95 px-3 py-1.5 text-xs font-medium text-forest-800 shadow-lift transition-transform duration-300 group-hover:-translate-y-0.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-3.5 w-3.5"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Zm0-8.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                    Open in Google Maps
+                  </span>
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-950/85 to-transparent p-4">
                     <p className="text-[0.8125rem] font-medium text-cream-50">
                       Aven Eco Luxury Resort &amp; Wellness
@@ -113,7 +125,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                       {contact.resortAddress}
                     </p>
                   </div>
-                </div>
+                </a>
               </Reveal>
             </div>
 

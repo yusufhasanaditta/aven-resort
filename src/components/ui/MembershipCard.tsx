@@ -1,5 +1,5 @@
 import { LogoMark } from "@/components/ui/Logo";
-import { stayDays } from "@/lib/shares";
+import { formatBDT, stayDays } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
 export type MembershipCardData = {
@@ -9,8 +9,10 @@ export type MembershipCardData = {
   minUnits: number;
   maxUnits: number | null;
   unitPriceBDT: number;
+  fullPriceBDT: number;
+  downPaymentBDT: number;
+  installmentCount: number;
   freeStayNights: number;
-  discountPercent: number;
   accentColor: string;
   featured: boolean;
 };
@@ -37,7 +39,6 @@ const patterns = {
 
 const themes: Record<string, CardTheme> = {
   executive: { bg: "#2E5A3F", ink: "#D6E6BF", strip: "#6F8F63", patternStroke: "rgba(214,230,191,0.22)", pattern: "swirl" },
-  silver: { bg: "#8C8D90", ink: "#17181A", strip: "#B9BABC", patternStroke: "rgba(20,20,22,0.2)", pattern: "swirl" },
   gold: { bg: "#A57A4B", ink: "#F6E7A8", strip: "#E6CF88", patternStroke: "rgba(246,231,168,0.26)", pattern: "chevron" },
   platinum: { bg: "#2B2B2B", ink: "#F5F5F5", strip: "#8E8E8E", patternStroke: "rgba(255,255,255,0.12)", pattern: "cube" },
   diamond: { bg: "#A33D3A", ink: "#F6E3B0", strip: "#D9A68C", patternStroke: "rgba(246,227,176,0.22)", pattern: "lattice", glyph: "diamond" },
@@ -61,10 +62,10 @@ function patternUrl(theme: CardTheme) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
+/** The chart sells each plan as a package: 1, 5, 10, 20 and 30+ shares. */
 function sharesLabel(plan: MembershipCardData) {
   if (plan.maxUnits === null) return `${plan.minUnits}+ Shares`;
-  if (plan.maxUnits - plan.minUnits <= 1) return `${plan.minUnits}–${plan.maxUnits} Shares`;
-  return `${plan.minUnits} Shares`;
+  return `${plan.minUnits} Share${plan.minUnits > 1 ? "s" : ""}`;
 }
 
 /**
@@ -112,6 +113,9 @@ export function MembershipCard({
 
         <p className="mt-3 text-[0.6875rem] font-medium sm:text-xs">
           {sharesLabel(plan)}
+        </p>
+        <p className="text-[0.6875rem] opacity-85 sm:text-xs">
+          <span className="font-numeral">{formatBDT(plan.unitPriceBDT)}</span> / share
         </p>
         {t.perk && <p className="text-[0.6875rem] font-medium sm:text-xs">{t.perk}</p>}
 

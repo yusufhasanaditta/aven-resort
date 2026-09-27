@@ -120,7 +120,7 @@ export default function LoginPage() {
           </h1>
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-forest-900/55">
             Access your shareholder account to view holdings, payments and
-            instalments.
+            installments.
           </p>
 
           <Suspense>

@@ -19,6 +19,8 @@ export const site = {
     country: "Bangladesh",
     label: "Radhanagar, Sreemangal, Bangladesh",
     full: "Begunbari, Radhanagar, Sreemangal, Moulvibazar-3210",
+    /** Google Maps pin for the resort. */
+    mapUrl: "https://share.google/XKsKUXYUTOqH4CB32",
   },
   contact: {
     phone: "+880 1619-788921",
@@ -45,10 +47,10 @@ export const projectFacts = {
   landBigha: "15.15",
   landSqft: "2,17,800",
   totalShares: 2700,
-  timelineMonths: 30,
+  timelineMonths: 36,
   amenities: 20,
-  hotelSuites: 100,
-  villas: 20,
+  hotelRooms: 140,
+  villas: 40,
 } as const;
 
 export type NavItem = {
@@ -62,7 +64,7 @@ export const navigation: NavItem[] = [
   {
     label: "Ownership",
     href: "/ownership",
-    description: "Six membership plans, calculator & payment",
+    description: "Five membership plans, calculator & payment",
   },
   {
     label: "Wellness",
@@ -77,7 +79,7 @@ export const navigation: NavItem[] = [
   {
     label: "Stay",
     href: "/accommodations",
-    description: "100-suite hotel and 20 private-pool villas",
+    description: "140-room hotel and 40 private-pool villas",
   },
   {
     label: "Masterplan",

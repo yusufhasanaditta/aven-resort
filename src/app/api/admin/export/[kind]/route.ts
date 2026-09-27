@@ -43,7 +43,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ kind: stri
     if (kind === "payments") {
       const payments = holdings.flatMap(toAdminPayments).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       rows = [
-        ["Receipt", "Created", "Paid", "Customer", "Phone", "Plan", "Shares", "Instalment", "Amount (BDT)", "Method", "Transaction", "Reference", "Status", "Recorded by"],
+        ["Receipt", "Created", "Paid", "Customer", "Phone", "Plan", "Shares", "Installment", "Amount (BDT)", "Method", "Transaction", "Reference", "Status", "Recorded by"],
         ...payments.map((p) => [
           p.receiptNo, p.createdAt, p.paidAt, p.customer.name, p.customer.phone, p.planName, p.units, p.installmentLabel,
           p.amountBDT, p.method, p.tranId, p.reference, p.status, p.recordedBy,
@@ -52,7 +52,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ kind: stri
     } else if (kind === "dues") {
       const ledgers = holdings.filter((h) => h.status !== "CANCELLED").map(toAdminHolding);
       rows = [
-        ["Customer", "Phone", "Plan", "Instalment", "Due date", "Amount (BDT)", "Status"],
+        ["Customer", "Phone", "Plan", "Installment", "Due date", "Amount (BDT)", "Status"],
         ...ledgers.flatMap((h) =>
           h.steps
             .filter((s) => s.status !== "SUCCESS")
@@ -65,7 +65,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ kind: stri
         toAdminCustomer(u, holdings.filter((h) => h.userId === u.id).map(toAdminHolding)),
       );
       rows = [
-        ["Member ID", "Name", "Email", "Phone", "Location", "Joined", "Active shares", "Committed (BDT)", "Paid (BDT)", "Remaining (BDT)", "Overdue instalments"],
+        ["Member ID", "Name", "Email", "Phone", "Location", "Joined", "Active shares", "Committed (BDT)", "Paid (BDT)", "Remaining (BDT)", "Overdue installments"],
         ...customers.map((c) => [c.memberId, c.name, c.email, c.phone, c.location, c.createdAt, c.units, c.committedBDT, c.paidBDT, c.remainingBDT, c.overdueCount]),
       ];
     }

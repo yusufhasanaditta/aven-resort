@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { buildInstallmentSchedule } from "@/lib/shares";
+import { installmentLabelFor, scheduleAmounts } from "@/lib/shares";
 import { initiatePayment, isConfigured } from "@/lib/sslcommerz";
 
 /**
- * Starts the next payment due on a holding — the next instalment if it's on
+ * Starts the next payment due on a holding — the next installment if it's on
  * a schedule, or a retry of the single payment if it's a full-payment holding
  * whose first attempt never completed.
  */
@@ -48,10 +48,10 @@ export async function POST(
     if (successfulCount >= holding.installmentMonths) {
       return NextResponse.json({ error: "This holding is fully paid." }, { status: 400 });
     }
-    const schedule = buildInstallmentSchedule(holding.totalAmountBDT, holding.installmentMonths);
-    amountBDT = schedule[successfulCount].amountBDT;
+    const schedule = scheduleAmounts(holding.totalAmountBDT, holding.installmentMonths, holding.downPaymentBDT);
+    amountBDT = schedule[successfulCount];
     installmentNo = successfulCount + 1;
-    label = `instalment ${installmentNo}/${holding.installmentMonths}`;
+    label = installmentLabelFor(installmentNo, holding.installmentMonths, !!holding.downPaymentBDT).toLowerCase();
   } else {
     if (successfulCount >= 1) {
       return NextResponse.json({ error: "This holding is fully paid." }, { status: 400 });

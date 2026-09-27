@@ -9,10 +9,12 @@
  */
 import type { MembershipCardData } from "@/components/ui/MembershipCard";
 import {
-  buildInstallmentSchedule,
   installmentDueDate,
+  installmentLabelFor,
+  installmentPartName,
   ownershipPercent,
   planForUnits,
+  scheduleAmounts,
   stayDays,
 } from "@/lib/shares";
 
@@ -39,6 +41,7 @@ export type HoldingRow = {
   totalAmountBDT: number;
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
+  downPaymentBDT?: number | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
   createdAt: Date;
   plan: PlanRow;
@@ -59,6 +62,8 @@ export type StepStatus = PaymentStatus | "UPCOMING";
 export type DashStep = {
   n: number;
   label: string;
+  /** Short name of this part: "Down payment", "3rd installment", "Full payment". */
+  part: string;
   amountBDT: number;
   dueDate: string;
   status: StepStatus;
@@ -88,10 +93,14 @@ export type DashHolding = {
   totalAmountBDT: number;
   paidBDT: number;
   remainingBDT: number;
-  /** Past-due instalments not yet paid, in Bangladesh calendar days. */
+  /** Past-due installments not yet paid, in Bangladesh calendar days. */
   overdueCount: number;
+  /** Parts of the schedule paid, and still to pay. */
+  paidCount: number;
+  leftCount: number;
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
+  downPaymentBDT: number | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
   openedAt: string;
   steps: DashStep[];
@@ -161,12 +170,20 @@ export function invoiceNumberFor(payment: { id: string; createdAt: Date }) {
 
 /** Label for one payment line on a holding. */
 export function paymentLabel(
-  holding: { paymentPlan: "FULL" | "INSTALLMENT"; installmentMonths: number | null },
+  holding: { paymentPlan: "FULL" | "INSTALLMENT"; installmentMonths: number | null; downPaymentBDT?: number | null },
   installmentNo: number,
 ) {
   return holding.paymentPlan === "INSTALLMENT" && holding.installmentMonths
-    ? `Instalment ${installmentNo} of ${holding.installmentMonths}`
+    ? installmentLabelFor(installmentNo, holding.installmentMonths, !!holding.downPaymentBDT)
     : "Full payment";
+}
+
+/** "Down payment + 12 monthly" / "6 installments" / "Full payment". */
+export function paymentPlanLabel(holding: { paymentPlan: "FULL" | "INSTALLMENT"; installmentMonths: number | null; downPaymentBDT?: number | null }) {
+  if (holding.paymentPlan !== "INSTALLMENT" || !holding.installmentMonths) return "Full payment";
+  return holding.downPaymentBDT
+    ? `Down payment + ${holding.installmentMonths - 1} monthly`
+    : `${holding.installmentMonths}-month plan`;
 }
 
 function toCard(plan: PlanRow): MembershipCardData {
@@ -177,14 +194,16 @@ function toCard(plan: PlanRow): MembershipCardData {
     minUnits: plan.minUnits,
     maxUnits: plan.maxUnits,
     unitPriceBDT: plan.unitPriceBDT,
+    fullPriceBDT: plan.fullPriceBDT,
+    downPaymentBDT: plan.downPaymentBDT,
+    installmentCount: plan.installmentCount,
     freeStayNights: plan.freeStayNights,
-    discountPercent: plan.discountPercent,
     accentColor: plan.accentColor,
     featured: plan.featured,
   };
 }
 
-/** The attempt that best represents an instalment: a success, else an in-flight one, else the latest. */
+/** The attempt that best represents an installment: a success, else an in-flight one, else the latest. */
 function representative(payments: PaymentRow[]) {
   return (
     payments.find((p) => p.status === "SUCCESS") ??
@@ -194,7 +213,7 @@ function representative(payments: PaymentRow[]) {
 }
 
 /**
- * One holding's ledger: its dated instalment schedule, what's been paid, what
+ * One holding's ledger: its dated installment schedule, what's been paid, what
  * remains and what's due next. Shared by the shareholder dashboard and the
  * admin panel so both always show the same numbers.
  */
@@ -202,7 +221,7 @@ export function holdingLedger(h: HoldingRow): DashHolding {
   const months = h.paymentPlan === "INSTALLMENT" ? h.installmentMonths ?? 1 : 1;
   const amounts =
     h.paymentPlan === "INSTALLMENT" && h.installmentMonths
-      ? buildInstallmentSchedule(h.totalAmountBDT, h.installmentMonths, h.createdAt).map((l) => l.amountBDT)
+      ? scheduleAmounts(h.totalAmountBDT, h.installmentMonths, h.downPaymentBDT)
       : [h.totalAmountBDT];
 
   const steps: DashStep[] = Array.from({ length: months }, (_, i) => {
@@ -211,6 +230,7 @@ export function holdingLedger(h: HoldingRow): DashHolding {
     return {
       n,
       label: paymentLabel(h, n),
+      part: h.paymentPlan === "INSTALLMENT" && h.installmentMonths ? installmentPartName(n, !!h.downPaymentBDT) : "Full payment",
       amountBDT: amounts[i],
       dueDate: installmentDueDate(h.createdAt, n).toISOString(),
       status: attempt?.status ?? "UPCOMING",
@@ -236,8 +256,11 @@ export function holdingLedger(h: HoldingRow): DashHolding {
     paidBDT,
     remainingBDT: h.status === "CANCELLED" ? 0 : h.totalAmountBDT - paidBDT,
     overdueCount,
+    paidCount: steps.filter((s) => s.status === "SUCCESS").length,
+    leftCount: h.status === "CANCELLED" ? 0 : steps.filter((s) => s.status !== "SUCCESS").length,
     paymentPlan: h.paymentPlan,
     installmentMonths: h.installmentMonths,
+    downPaymentBDT: h.downPaymentBDT ?? null,
     status: h.status,
     openedAt: h.createdAt.toISOString(),
     steps,
@@ -310,7 +333,7 @@ export function buildDashboard(user: UserRow, holdings: HoldingRow[], plans: Pla
       at: h.createdAt.toISOString(),
       kind: "holding" as const,
       title: `${h.plan.name} holding opened`,
-      detail: `${h.units} unit share${h.units > 1 ? "s" : ""} · ${h.paymentPlan === "INSTALLMENT" ? `${h.installmentMonths}-month plan` : "full payment"}`,
+      detail: `${h.units} unit share${h.units > 1 ? "s" : ""} · ${paymentPlanLabel(h).toLowerCase()}`,
     })),
     ...invoices.map((inv) => ({
       id: `p-${inv.id}`,

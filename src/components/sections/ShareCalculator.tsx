@@ -10,12 +10,12 @@ import { ButtonAction, Button, ArrowRight } from "@/components/ui/Button";
 import { MembershipBadge } from "@/components/ui/MembershipCard";
 import {
   calculate,
-  buildInstallmentSchedule,
   formatBDT,
   ownershipPercent,
   stayDays,
 } from "@/lib/shares";
 import { fallbackPlans, type FallbackPlan } from "@/data/planFallback";
+import { PRICE_CHART_VALID_UNTIL } from "@/data/ownership";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { MembershipPlan } from "@prisma/client";
@@ -24,7 +24,6 @@ type Session = { name: string } | null;
 type PlanRow = MembershipPlan | FallbackPlan;
 type PlansStatus = "loading" | "live" | "fallback";
 
-const INSTALLMENT_OPTIONS = [3, 6, 9, 12, 18, 24];
 
 /**
  * The interactive Share Calculator & Ownership Plan — the "own your share"
@@ -47,7 +46,6 @@ export function ShareCalculator() {
   const [plansStatus, setPlansStatus] = useState<PlansStatus>("loading");
   const [units, setUnits] = useState(1);
   const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("FULL");
-  const [months, setMonths] = useState(6);
   const [session, setSession] = useState<Session>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,14 +94,10 @@ export function ShareCalculator() {
   }, []);
 
   const result = useMemo(
-    () => calculate(plans, units, paymentPlan, paymentPlan === "INSTALLMENT" ? months : undefined),
-    [plans, units, paymentPlan, months],
+    () => calculate(plans, units, paymentPlan),
+    [plans, units, paymentPlan],
   );
-
-  const schedule = useMemo(() => {
-    if (!result || paymentPlan !== "INSTALLMENT") return null;
-    return buildInstallmentSchedule(result.totalBDT, months);
-  }, [result, paymentPlan, months]);
+  const schedule = result.installments;
 
   async function purchase() {
     if (!result) return;
@@ -119,7 +113,6 @@ export function ShareCalculator() {
           planSlug: result.plan.slug,
           units: result.units,
           paymentPlan,
-          installmentMonths: paymentPlan === "INSTALLMENT" ? months : undefined,
         }),
       });
       const json = await res.json();
@@ -155,9 +148,9 @@ export function ShareCalculator() {
         </h2>
         <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
           Enter a unit count to see the plan it falls into — Executive through
-          Royal — the discount and free stay that come with it, and, if you
-          choose instalments, exactly what&rsquo;s due and when. Pricing is
-          indicative until Aven confirms a final unit price.
+          Royal — its share price, what you save and the free stay that come
+          with it, and, if you choose installments, the down payment and exactly
+          what&rsquo;s due each month.
         </p>
 
         {plansStatus === "fallback" && (
@@ -234,29 +227,17 @@ export function ShareCalculator() {
                       : "bg-forest-600/7 text-forest-800/70 hover:bg-forest-600/12",
                   )}
                 >
-                  {p === "FULL" ? "Full payment" : "Instalments"}
+                  {p === "FULL" ? "Full payment" : "Installments"}
                 </button>
               ))}
             </div>
 
-            {paymentPlan === "INSTALLMENT" && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {INSTALLMENT_OPTIONS.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMonths(m)}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                      months === m
-                        ? "bg-gold-500 text-forest-950"
-                        : "bg-forest-600/7 text-forest-800/70 hover:bg-forest-600/12",
-                    )}
-                  >
-                    {m} months
-                  </button>
-                ))}
-              </div>
+            {paymentPlan === "INSTALLMENT" && result?.installments && (
+              <p className="mt-4 rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-forest-900/75">
+                {result.plan.name} terms: <strong>{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment, then{" "}
+                <strong>{result.monthlyCount} monthly installments</strong> of about{" "}
+                <strong>{formatBDT(result.monthlyBDT ?? 0)}</strong>.
+              </p>
             )}
           </div>
         </Reveal>
@@ -288,21 +269,12 @@ export function ShareCalculator() {
                 >
                   {formatBDT(result.totalBDT)}
                 </motion.p>
-                {result.savingsBDT > 0 ? (
-                  <p className="mt-1 text-xs text-cream-200/50">
-                    <span className="line-through opacity-70">{formatBDT(result.grossBDT)}</span>{" "}
-                    <span className="font-semibold text-gold-300">
-                      You save {formatBDT(result.savingsBDT)}
-                    </span>{" "}
-                    with {result.plan.name}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-cream-200/40">
-                    Regular price — plan discounts start at 3 shares.
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-cream-200/50">
+                  {result.units} × {formatBDT(result.pricePerShareBDT)} per share ·{" "}
+                  {paymentPlan === "FULL" ? "full payment" : "installment price"}
+                </p>
                 <p className="mt-1 text-[0.6875rem] text-cream-200/35">
-                  Indicative — final unit price confirmed by Aven Limited.
+                  Prices valid until {PRICE_CHART_VALID_UNTIL}.
                 </p>
 
                 <dl className="mt-6 grid grid-cols-3 gap-4 border-t border-cream-50/10 pt-5">
@@ -314,11 +286,9 @@ export function ShareCalculator() {
                   </div>
                   <div>
                     <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
-                      Plan discount
+                      Per share
                     </dt>
-                    <dd className="mt-1 font-numeral text-lg">
-                      {result.discountPercent > 0 ? `${result.discountPercent}%` : "—"}
-                    </dd>
+                    <dd className="mt-1 font-numeral text-lg">{formatBDT(result.pricePerShareBDT)}</dd>
                   </div>
                   <div>
                     <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
@@ -333,7 +303,7 @@ export function ShareCalculator() {
                 {schedule && (
                   <div className="mt-6 border-t border-cream-50/10 pt-5">
                     <p className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
-                      Instalment schedule
+                      Installment schedule
                     </p>
                     <ul className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1 text-[0.8125rem]">
                       {schedule.map((line) => (
@@ -362,7 +332,7 @@ export function ShareCalculator() {
                       >
                         {busy
                           ? "Starting…"
-                          : `Reserve & pay ${paymentPlan === "INSTALLMENT" ? "first instalment" : "in full"}`}
+                          : `Reserve & pay ${paymentPlan === "INSTALLMENT" ? "down payment" : "in full"}`}
                       </ButtonAction>
                       <p className="mt-2 text-center text-[0.6875rem] text-cream-200/40">
                         via SSLCommerz — Bangladesh&rsquo;s national payment gateway

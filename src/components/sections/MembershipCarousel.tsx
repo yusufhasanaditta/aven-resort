@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { CardCarousel3D } from "@/components/ui/CardCarousel3D";
 import { MembershipCard, type MembershipCardData } from "@/components/ui/MembershipCard";
 import { Container, Eyebrow } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { fallbackPlans } from "@/data/planFallback";
-import { formatBDT, stayDays } from "@/lib/shares";
+import { PlanDetails } from "@/components/sections/PlanDetails";
+import { easeOutExpo } from "@/lib/motion";
 
 /**
  * The homepage / membership-page 3D card carousel. Loads live plan data from
@@ -18,8 +19,8 @@ import { formatBDT, stayDays } from "@/lib/shares";
 export function MembershipCarousel({
   tone = "forest",
   eyebrow = "Membership Plans",
-  title = "Six plans. One rotating deck.",
-  lede = "Executive to Royal — click a side card, or just wait and the deck advances on its own. Each plan pulls its terms live from Aven's membership records.",
+  title = "Five plans. One rotating deck.",
+  lede = "Executive to Royal — click a side card, or just wait and the deck advances on its own. The full price, down payment and installment schedule of the card in front appear below it.",
 }: {
   tone?: "forest" | "cream";
   eyebrow?: string;
@@ -27,6 +28,8 @@ export function MembershipCarousel({
   lede?: string;
 }) {
   const [plans, setPlans] = useState<MembershipCardData[]>(fallbackPlans);
+  const [active, setActive] = useState(0);
+  const current = plans[active] ?? plans[0];
 
   useEffect(() => {
     fetch("/api/plans")
@@ -42,7 +45,9 @@ export function MembershipCarousel({
               maxUnits: p.maxUnits,
               unitPriceBDT: p.unitPriceBDT,
               freeStayNights: p.freeStayNights,
-              discountPercent: p.discountPercent,
+              fullPriceBDT: p.fullPriceBDT,
+              downPaymentBDT: p.downPaymentBDT,
+              installmentCount: p.installmentCount,
               accentColor: p.accentColor,
               featured: p.featured,
             })),
@@ -92,32 +97,27 @@ export function MembershipCarousel({
         <CardCarousel3D
           items={plans}
           className="h-full w-full"
-          renderCard={(plan, isActive) => (
-            <div className="flex flex-col items-center">
-              <MembershipCard plan={plan} isActive={isActive} />
-              <div
-                className={
-                  "mt-5 flex items-center gap-4 text-center transition-opacity duration-500 " +
-                  (isActive ? "opacity-100" : "pointer-events-none opacity-0")
-                }
-              >
-                <p className={light ? "text-[0.8125rem] text-cream-200/70" : "text-[0.8125rem] text-forest-900/60"}>
-                  {stayDays(plan.freeStayNights)} days free stay ·{" "}
-                  <span className="font-numeral">{formatBDT(plan.unitPriceBDT)}</span>
-                  <span className="opacity-60"> / share, indicative</span>
-                </p>
-                <Link
-                  href={`/ownership?plan=${plan.slug}#calculator`}
-                  tabIndex={isActive ? 0 : -1}
-                  className="rounded-full bg-gold-400 px-4 py-1.5 text-xs font-semibold text-forest-950 transition-colors hover:bg-gold-300"
-                >
-                  Choose {plan.name}
-                </Link>
-              </div>
-            </div>
-          )}
+          onActiveChange={setActive}
+          renderCard={(plan, isActive) => <MembershipCard plan={plan} isActive={isActive} />}
         />
       </div>
+
+      <Container>
+        <div className="mx-auto mt-6 max-w-3xl" aria-live="polite">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current.slug}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.45, ease: easeOutExpo }}
+              className={light ? "rounded-3xl bg-forest-900/60 p-6 ring-1 ring-cream-50/10 backdrop-blur-md sm:p-8" : "rounded-3xl bg-cream-50 p-6 shadow-lift ring-1 ring-forest-600/8 sm:p-8"}
+            >
+              <PlanDetails plan={current} tone={light ? "dark" : "light"} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Container>
 
       <Container>
         <div className="mt-10 flex justify-center">

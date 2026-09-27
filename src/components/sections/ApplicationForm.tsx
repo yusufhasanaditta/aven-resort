@@ -12,7 +12,6 @@ type Plan = MembershipCardData & { id: string };
 type Prefill = { name: string; email: string; phone: string; location: string };
 
 const STEPS = ["Package", "Your details", "Nominee", "Review"] as const;
-const MONTHS = [3, 6, 9, 12, 18, 24];
 
 const inputCls =
   "h-12 w-full rounded-xl border border-forest-600/15 bg-white px-4 text-[0.9375rem] text-forest-900 outline-none transition-shadow placeholder:text-forest-900/35 focus:border-forest-500 focus:ring-4 focus:ring-forest-500/10";
@@ -28,7 +27,6 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
   const [f, setF] = useState({
     units: start?.minUnits ?? 1,
     paymentPlan: "FULL" as "FULL" | "INSTALLMENT",
-    installmentMonths: 6,
     fullName: prefill.name,
     fatherName: "",
     email: prefill.email,
@@ -49,8 +47,8 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
   const [serverError, setServerError] = useState<string | null>(null);
 
   const quote = useMemo(
-    () => calculate(plans, f.units, f.paymentPlan, f.paymentPlan === "INSTALLMENT" ? f.installmentMonths : undefined),
-    [plans, f.units, f.paymentPlan, f.installmentMonths],
+    () => calculate(plans, f.units, f.paymentPlan),
+    [plans, f.units, f.paymentPlan],
   );
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -167,7 +165,7 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
                         <span className="font-display text-xl text-forest-900">{p.name}</span>
                       </span>
                       <span className="mt-1 block text-xs text-forest-900/55">
-                        {p.maxUnits ? `${p.minUnits}–${p.maxUnits}` : `${p.minUnits}+`} shares · {p.discountPercent ? `${p.discountPercent}% off` : "regular price"}
+                        {p.maxUnits ? `${p.minUnits}–${p.maxUnits}` : `${p.minUnits}+`} shares · {stayDays(p.freeStayNights)} free days a year
                       </span>
                     </button>
                   ))}
@@ -193,26 +191,17 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
                           aria-pressed={f.paymentPlan === p}
                           className={cn("h-12 rounded-xl border text-sm font-medium", f.paymentPlan === p ? "border-forest-600 bg-forest-600 text-cream-50" : "border-forest-600/15 bg-white text-forest-800")}
                         >
-                          {p === "FULL" ? "Full payment" : "Instalments"}
+                          {p === "FULL" ? "Full payment" : "Installments"}
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
-                {f.paymentPlan === "INSTALLMENT" && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {MONTHS.map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => set("installmentMonths", m)}
-                        aria-pressed={f.installmentMonths === m}
-                        className={cn("rounded-full px-4 py-2 text-xs font-medium", f.installmentMonths === m ? "bg-gold-500 text-forest-950" : "bg-forest-600/8 text-forest-800")}
-                      >
-                        {m} months
-                      </button>
-                    ))}
-                  </div>
+                {f.paymentPlan === "INSTALLMENT" && quote.installments && (
+                  <p className="mt-4 rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-forest-900/75">
+                    {quote.plan.name} installment terms: <strong>{formatBDT(quote.downPaymentBDT ?? 0)}</strong> down payment, then{" "}
+                    <strong>{quote.monthlyCount} monthly installments</strong> of about <strong>{formatBDT(quote.monthlyBDT ?? 0)}</strong>.
+                  </p>
                 )}
               </div>
             )}
@@ -256,7 +245,7 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
                 <dl className="mt-6 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
                   {[
                     ["Package", `${quote.plan.name} · ${quote.units} shares`],
-                    ["Payment", f.paymentPlan === "INSTALLMENT" ? `${f.installmentMonths} monthly instalments` : "Full payment"],
+                    ["Payment", f.paymentPlan === "INSTALLMENT" ? `${formatBDT(quote.downPaymentBDT ?? 0)} down + ${quote.monthlyCount} monthly` : "Full payment"],
                     ["Name", f.fullName],
                     ["NID", f.nid],
                     ["Phone", f.phone],
@@ -312,8 +301,7 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
             </div>
           </div>
           <dl className="mt-2 space-y-2.5 text-sm">
-            <Row k={`${quote.units} × ${formatBDT(quote.plan.unitPriceBDT)}`} v={formatBDT(quote.grossBDT)} />
-            <Row k={`${quote.plan.name} discount`} v={quote.savingsBDT ? `− ${formatBDT(quote.savingsBDT)}` : "—"} accent />
+            <Row k={`${quote.units} × ${formatBDT(quote.pricePerShareBDT)}`} v={formatBDT(quote.totalBDT)} />
             <Row k="Free stay" v={`${stayDays(quote.freeStayNights)} days / year`} />
             <Row k="Of the resort" v={`${ownershipPercent(quote.units).toFixed(2)}%`} />
             <div className="flex items-baseline justify-between border-t border-cream-50/10 pt-3">
@@ -321,7 +309,10 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
               <dd className="font-numeral text-2xl">{formatBDT(quote.totalBDT)}</dd>
             </div>
             {quote.installments && (
-              <Row k={`${quote.installments.length} × monthly`} v={`≈ ${formatBDT(quote.installments[0].amountBDT)}`} />
+              <>
+                <Row k="Down payment" v={formatBDT(quote.downPaymentBDT ?? 0)} />
+                <Row k={`${quote.monthlyCount} × monthly`} v={`≈ ${formatBDT(quote.monthlyBDT ?? 0)}`} />
+              </>
             )}
           </dl>
           <p className="mt-4 text-[0.6875rem] text-cream-200/45">Indicative until confirmed by Aven Limited. Nothing is charged when you apply.</p>

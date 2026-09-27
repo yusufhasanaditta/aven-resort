@@ -1,11 +1,13 @@
 /**
- * Fractional ownership: the six membership plans and what every share carries.
+ * Fractional ownership: the membership plans and what every share carries.
  *
- * Transcribed from the "Membership Plans", "Why Own With Us?" and Bengali
- * fact-sheet pages of the AVEN brochure (`new ui design/`). The brochure
- * states share counts, discounts and free-stay days per plan but no unit
- * price — pricing is confirmed with the Aven team, and the calculator marks
- * its figures as indicative for that reason.
+ * Plans and pricing are transcribed from the "Share Price & Membership
+ * Chart" in `new ui design/share price and membership chart/` (valid until
+ * 30 September 2026). Each plan is priced two ways per share: an installment
+ * price (a down payment, then equal monthly installments) and a lower
+ * full-payment price. Plan names follow Aven's naming: the chart's "Silver"
+ * (5 shares) is sold as Gold and its "Gold" (10 shares) as Platinum. The
+ * chart's "Save" column is deliberately not shown anywhere on the site.
  */
 
 export type OwnershipTier = {
@@ -14,14 +16,23 @@ export type OwnershipTier = {
   subtitle: string;
   minUnits: number;
   maxUnits: number | null;
-  /** Free stay per year, in days, as the brochure prints it. */
+  /** Free stay per year, in days, as the chart prints it. */
   freeStayDays: number;
-  /** Discount on the share price; 0 means regular price. */
-  discountPercent: number;
+  /** Per-share price when paying by installment. */
+  installmentPriceBDT: number;
+  /** Per-share price when paying in full. */
+  fullPriceBDT: number;
+  /** Down payment for the plan's package size (`minUnits` shares). */
+  downPaymentBDT: number;
+  /** Monthly installments after the down payment. */
+  installmentCount: number;
   featured: boolean;
   accent: string;
   perk?: string;
 };
+
+/** Last day the chart's prices apply. */
+export const PRICE_CHART_VALID_UNTIL = "30 September 2026";
 
 export const ownershipTiers: OwnershipTier[] = [
   {
@@ -29,22 +40,14 @@ export const ownershipTiers: OwnershipTier[] = [
     name: "Executive",
     subtitle: "Enter the Aven community",
     minUnits: 1,
-    maxUnits: 2,
+    maxUnits: 4,
     freeStayDays: 3,
-    discountPercent: 0,
+    installmentPriceBDT: 350_000,
+    fullPriceBDT: 320_000,
+    downPaymentBDT: 100_000,
+    installmentCount: 12,
     featured: false,
     accent: "#2E5A3F",
-  },
-  {
-    id: "silver",
-    name: "Silver",
-    subtitle: "A stronger stake, a longer stay",
-    minUnits: 3,
-    maxUnits: 4,
-    freeStayDays: 6,
-    discountPercent: 5,
-    featured: false,
-    accent: "#8C8D90",
   },
   {
     id: "gold",
@@ -53,29 +56,38 @@ export const ownershipTiers: OwnershipTier[] = [
     minUnits: 5,
     maxUnits: 9,
     freeStayDays: 10,
-    discountPercent: 10,
+    installmentPriceBDT: 330_000,
+    fullPriceBDT: 320_000,
+    downPaymentBDT: 450_000,
+    installmentCount: 15,
     featured: true,
     accent: "#A57A4B",
   },
   {
     id: "platinum",
     name: "Platinum",
-    subtitle: "Premium lifestyle, higher returns",
+    subtitle: "Premium lifestyle, a longer stay",
     minUnits: 10,
     maxUnits: 19,
     freeStayDays: 18,
-    discountPercent: 15,
+    installmentPriceBDT: 320_000,
+    fullPriceBDT: 300_000,
+    downPaymentBDT: 1_000_000,
+    installmentCount: 18,
     featured: false,
     accent: "#2B2B2B",
   },
   {
     id: "diamond",
     name: "Diamond",
-    subtitle: "A month in the hills, every year",
+    subtitle: "Almost a month in the hills, every year",
     minUnits: 20,
     maxUnits: 29,
-    freeStayDays: 30,
-    discountPercent: 20,
+    freeStayDays: 26,
+    installmentPriceBDT: 300_000,
+    fullPriceBDT: 280_000,
+    downPaymentBDT: 1_500_000,
+    installmentCount: 20,
     featured: false,
     accent: "#A33D3A",
   },
@@ -85,8 +97,11 @@ export const ownershipTiers: OwnershipTier[] = [
     subtitle: "100% villa ownership",
     minUnits: 30,
     maxUnits: null,
-    freeStayDays: 30,
-    discountPercent: 28,
+    freeStayDays: 35,
+    installmentPriceBDT: 300_000,
+    fullPriceBDT: 280_000,
+    downPaymentBDT: 2_000_000,
+    installmentCount: 24,
     featured: false,
     accent: "#1F1C3D",
     perk: "100% Villa Ownership",
@@ -134,13 +149,13 @@ export const ownershipBenefits = [
   {
     id: "stay",
     title: "Free Stay",
-    description: "Yearly 3 days per unit.",
+    description: "3 to 35 free days a year, by plan.",
     icon: "key",
   },
   {
-    id: "discount",
-    title: "Discount",
-    description: "40% to 50% off accommodation all over the year.",
+    id: "installments",
+    title: "Easy Installments",
+    description: "A down payment, then 12 to 24 monthly installments.",
     icon: "tag",
   },
 ];

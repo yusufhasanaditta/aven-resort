@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Badge, Btn, Card, StatusBadge, firstError, send, useToast } from "./kit";
 import type { AdminHolding } from "@/lib/admin-types";
-import { daysUntil, formatDate } from "@/lib/account";
+import { daysUntil, formatDate, paymentPlanLabel } from "@/lib/account";
 import { formatBDT } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
-/** A holding's full instalment ledger with the actions the team takes on it. */
+/** A holding's full installment ledger with the actions the team takes on it. */
 export function HoldingLedger({
   holding: h,
   now,
@@ -39,7 +39,7 @@ export function HoldingLedger({
             {h.plan.name} · {h.units} share{h.units > 1 ? "s" : ""}
           </p>
           <p className="text-xs text-[#6B756F]">
-            Opened {formatDate(h.openedAt)} · {h.paymentPlan === "INSTALLMENT" ? `${h.installmentMonths}-month plan` : "Full payment"}
+            Opened {formatDate(h.openedAt)} · {paymentPlanLabel(h)}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export function HoldingLedger({
       <div className="px-5 pt-4">
         <div className="flex items-center justify-between text-[0.6875rem] text-[#6B756F]">
           <span>{pct}% paid</span>
-          <span>{h.steps.filter((s) => s.status === "SUCCESS").length} of {h.steps.length} instalments</span>
+          <span>{h.steps.filter((s) => s.status === "SUCCESS").length} of {h.steps.length} installments</span>
         </div>
         <div className="mt-1.5 flex gap-1">
           {h.steps.map((s) => {

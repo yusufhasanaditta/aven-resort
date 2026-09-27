@@ -152,7 +152,7 @@ export function OverviewTab({ data, error, nav }: { data: OverviewData | null; e
         <Card>
           <CardHeader
             title="Dues — next 30 days"
-            subtitle="Unpaid instalments, overdue first"
+            subtitle="Unpaid installments, overdue first"
             action={
               <button type="button" onClick={() => nav("installments")} className="text-xs font-medium text-forest-700 hover:underline">
                 All dues
@@ -160,7 +160,7 @@ export function OverviewTab({ data, error, nav }: { data: OverviewData | null; e
             }
           />
           {data.upcomingDues.length === 0 ? (
-            <Empty icon="calendar" title="Nothing due">No instalments fall due in the next 30 days.</Empty>
+            <Empty icon="calendar" title="Nothing due">No installments fall due in the next 30 days.</Empty>
           ) : (
             <ul className="divide-y divide-[#EEF0EC]">
               {data.upcomingDues.slice(0, 6).map((d) => (

@@ -158,8 +158,10 @@ export type AdminPlan = {
   minUnits: number;
   maxUnits: number | null;
   unitPriceBDT: number;
+  fullPriceBDT: number;
+  downPaymentBDT: number;
+  installmentCount: number;
   freeStayNights: number;
-  discountPercent: number;
   accentColor: string;
   featured: boolean;
   sortOrder: number;

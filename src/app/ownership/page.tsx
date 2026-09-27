@@ -9,7 +9,8 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { TierIcon } from "@/components/ui/TierIcon";
 import { AmenityIcon } from "@/components/ui/AmenityIcon";
-import { businessModel, ownershipTiers, shareOwnership } from "@/data/ownership";
+import { PRICE_CHART_VALID_UNTIL, businessModel, ownershipTiers, shareOwnership } from "@/data/ownership";
+import { formatBDT } from "@/lib/shares";
 import { projectFacts } from "@/data/site";
 import { about } from "@/data/about";
 import { getAsset, getContent } from "@/lib/cms";
@@ -18,8 +19,13 @@ import { InterestForm } from "@/components/sections/InterestForm";
 export const metadata: Metadata = {
   title: "Ownership & Membership",
   description:
-    "Six membership plans — Executive, Silver, Gold, Platinum, Diamond and Royal — of fractional share ownership in Aven Eco Luxury Resort & Wellness, with Saf-Kabla registered land, annual halal profits, free stays and an interactive share calculator.",
+    "Five membership plans — Executive, Gold, Platinum, Diamond and Royal — of fractional share ownership in Aven Eco Luxury Resort & Wellness, with Saf-Kabla registered land, annual halal profits, free stays, installment plans and an interactive share calculator.",
 };
+
+/** "৳2.8 Lac" — the chart's own notation. */
+function lac(amount: number) {
+  return `৳${Number((amount / 100_000).toFixed(2))} Lac`;
+}
 
 function unitsLabel(min: number, max: number | null) {
   if (max === null) return `${min} & above`;
@@ -38,14 +44,14 @@ export default async function OwnershipPage() {
         eyebrow="Ownership & membership"
         title="Own a Piece"
         titleAccent="of the Hills"
-        lede="Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — six membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
+        lede="Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — five membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
         image={heroImage}
         imageAlt="An eco-luxury villa with infinity pool at sunrise, surrounded by tea hills"
         height="tall"
         facts={[
-          { value: "6", label: "Membership plans" },
+          { value: String(ownershipTiers.length), label: "Membership plans" },
           { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares issued" },
-          { value: "Up to 28%", label: "Plan discount" },
+          { value: lac(Math.min(...ownershipTiers.map((t) => t.fullPriceBDT))), label: "From, per share" },
           { value: "Halal", label: "Lifetime income" },
         ]}
         actions={[
@@ -66,72 +72,86 @@ export default async function OwnershipPage() {
       <Section tone="white" id="compare" className="scroll-mt-16">
         <Container>
           <Reveal className="max-w-2xl">
-            <Eyebrow>Compare plans</Eyebrow>
+            <Eyebrow>Share price &amp; membership chart</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Your plan is set by the shares you hold.
+              Pay by installment, or pay in full.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              Every step up the ladder adds a larger discount on the share
-              price and more free days at the resort each year.
+              Every plan has two prices per share. An installment plan starts with
+              a down payment, followed by equal monthly installments — 1st, 2nd,
+              3rd and on to the last. Paying in full is a single payment at the
+              full-payment price.
             </p>
           </Reveal>
 
           <Reveal delay={0.08}>
-            <div className="mt-10 overflow-x-auto">
-              <table className="w-full min-w-[42rem] border-collapse text-left">
-                <caption className="sr-only">Comparison of the six membership plans</caption>
+            <div className="mt-10 overflow-x-auto rounded-2xl border border-forest-600/10 bg-cream-50">
+              <table className="w-full min-w-[58rem] border-collapse text-left">
+                <caption className="sr-only">Share price and membership chart</caption>
                 <thead>
-                  <tr className="border-b border-forest-600/15">
-                    {["Plan", "Shares", "Discount", "Free stay / year"].map((h) => (
+                  <tr className="border-b border-forest-600/15 bg-forest-600/[0.04]">
+                    {["Plan", "Package", "Installment plan", "Full payment", "Free stay / year"].map((h) => (
                       <th
                         key={h}
                         scope="col"
-                        className="pb-4 pr-6 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
+                        className="px-5 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-forest-900/45"
                       >
                         {h}
                       </th>
                     ))}
-                    <th scope="col" className="pb-4">
+                    <th scope="col" className="px-5 py-4">
                       <span className="sr-only">Calculate</span>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ownershipTiers.map((tier) => (
-                    <tr
-                      key={tier.id}
-                      className="border-b border-forest-600/8 transition-colors hover:bg-forest-600/4"
-                    >
-                      <th scope="row" className="py-5 pr-6">
-                        <span className="flex items-center gap-3">
-                          <TierIcon tierId={tier.id} color={tier.accent} size="sm" />
-                          <span>
-                            <span className="block font-display text-xl text-forest-900">
-                              {tier.name}
-                            </span>
-                            <span className="block text-[0.6875rem] font-normal text-forest-900/45">
-                              {tier.perk ?? tier.subtitle}
+                  {ownershipTiers.map((tier) => {
+                    const n = tier.minUnits;
+                    const instTotal = tier.installmentPriceBDT * n;
+                    const fullTotal = tier.fullPriceBDT * n;
+                    return (
+                      <tr key={tier.id} className="border-b border-forest-600/8 align-top transition-colors last:border-0 hover:bg-forest-600/4">
+                        <th scope="row" className="px-5 py-5">
+                          <span className="flex items-center gap-3">
+                            <TierIcon tierId={tier.id} color={tier.accent} size="sm" />
+                            <span>
+                              <span className="block font-display text-xl text-forest-900">{tier.name}</span>
+                              <span className="block text-[0.6875rem] font-normal text-forest-900/45">
+                                {unitsLabel(tier.minUnits, tier.maxUnits)} shares
+                              </span>
                             </span>
                           </span>
-                        </span>
-                      </th>
-                      <td className="py-5 pr-6 font-numeral text-sm text-forest-900/75">
-                        {unitsLabel(tier.minUnits, tier.maxUnits)}
-                      </td>
-                      <td className="py-5 pr-6 text-sm font-semibold text-forest-700">
-                        {tier.discountPercent > 0 ? `${tier.discountPercent}%` : "Regular price"}
-                      </td>
-                      <td className="py-5 pr-6 font-numeral text-sm text-forest-900/75">
-                        {tier.freeStayDays} days
-                      </td>
-                      <td className="py-5 text-right">
-                        <Button href={`/ownership?plan=${tier.id}#calculator`} variant="secondary" size="sm">
-                          Calculate
-                          <ArrowRight />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                        </th>
+                        <td className="px-5 py-5 font-numeral text-sm text-forest-900/75">
+                          {n} share{n > 1 ? "s" : ""}
+                        </td>
+                        <td className="px-5 py-5 text-sm text-forest-900/75">
+                          <span className="block font-numeral text-forest-900">
+                            {formatBDT(tier.installmentPriceBDT)} × {n} = {formatBDT(instTotal)}
+                          </span>
+                          <span className="mt-1 block text-xs text-forest-900/55">
+                            {formatBDT(tier.downPaymentBDT)} down · {tier.installmentCount} monthly
+                          </span>
+                        </td>
+                        <td className="px-5 py-5 text-sm text-forest-900/75">
+                          <span className="block font-numeral text-forest-900">
+                            {formatBDT(tier.fullPriceBDT)} × {n} = {formatBDT(fullTotal)}
+                          </span>
+                          <span className="mt-1 block text-xs text-forest-900/55">One payment</span>
+                        </td>
+                        <td className="px-5 py-5 font-numeral text-sm text-forest-900/75">
+                          {tier.freeStayDays} days
+                          {tier.perk && <span className="mt-1 block font-sans text-xs font-semibold text-forest-700">{tier.perk}</span>}
+                        </td>
+                        <td className="px-5 py-5 text-right">
+                          <Button href={`/ownership?plan=${tier.id}#calculator`} variant="secondary" size="sm">
+                            Calculate
+                            <ArrowRight />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -139,9 +159,9 @@ export default async function OwnershipPage() {
 
           <Reveal delay={0.12}>
             <p className="mt-6 text-xs leading-relaxed text-forest-900/45">
-              Plan discounts apply to the share price. On top of your plan&rsquo;s
-              free stay, every shareholder receives 40% to 50% off
-              accommodation all year round.
+              This chart is valid until {PRICE_CHART_VALID_UNTIL}. A share count
+              between packages uses that plan&rsquo;s per-share price, with the down
+              payment prorated per share.
             </p>
           </Reveal>
         </Container>
@@ -161,7 +181,7 @@ export default async function OwnershipPage() {
               </h2>
               <p className="mt-5 max-w-md text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
                 Share your preferred package and budget. A member of the Aven team
-                will walk you through pricing, instalments and a site visit — no
+                will walk you through pricing, installments and a site visit — no
                 obligation.
               </p>
               <ul className="mt-8 space-y-3 text-sm text-forest-900/70">
@@ -196,24 +216,22 @@ export default async function OwnershipPage() {
           <Reveal className="max-w-2xl">
             <Eyebrow>At a glance · এক নজরে</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              The project, in four numbers.
+              The land and the shares.
             </h2>
           </Reveal>
 
-          <RevealGroup className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <RevealGroup className="mt-10 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             {[
-              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} acres`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর" },
+              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর · ১৫.১৫ বিঘা" },
               { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২৭০০" },
-              { bn: "প্রকল্প সময়সীমা", en: "Timeline", value: `${projectFacts.timelineMonths} months`, sub: "Project delivery", bnValue: "৩০ মাস" },
-              { bn: "সুবিধা", en: "Amenities", value: String(projectFacts.amenities), sub: "Features, all shareholder-owned", bnValue: "২০" },
             ].map((f) => (
               <RevealItem key={f.en}>
                 <div className="h-full rounded-2xl border border-forest-600/10 bg-cream-50/80 p-6 backdrop-blur-sm">
                   <p className="font-bangla text-sm text-forest-900/55">{f.bn}</p>
-                  <p className="mt-3 inline-block rounded-xl bg-[#E9E3C4] px-3.5 py-1.5 font-bangla text-2xl font-medium text-forest-700">
+                  <p className="mt-3 inline-block whitespace-nowrap rounded-xl bg-[#E9E3C4] px-3.5 py-1.5 font-bangla text-2xl font-medium text-forest-700">
                     {f.bnValue}
                   </p>
-                  <p className="mt-4 font-numeral text-2xl text-forest-900">{f.value}</p>
+                  <p className="mt-4 whitespace-nowrap font-numeral text-2xl text-forest-900">{f.value}</p>
                   <p className="mt-0.5 text-xs text-forest-900/50">
                     {f.en} · {f.sub}
                   </p>

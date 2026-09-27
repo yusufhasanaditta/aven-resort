@@ -30,7 +30,7 @@ export function ApplicationsPanel({ applications, onHoldings }: { applications: 
       <Glass className="py-14 text-center">
         <p className="font-display text-3xl text-cream-50">No applications yet.</p>
         <p className="mx-auto mt-3 max-w-sm text-sm text-cream-200/60">
-          Apply formally with your NID and nominee details — the team reviews it and your instalment schedule appears here once approved.
+          Apply formally with your NID and nominee details — the team reviews it and your installment schedule appears here once approved.
         </p>
         <Link href="/apply" className="mt-6 inline-flex h-11 items-center rounded-full bg-gold-400 px-6 text-sm font-semibold text-forest-950 hover:bg-gold-300">
           Start an application
@@ -59,7 +59,7 @@ export function ApplicationsPanel({ applications, onHoldings }: { applications: 
                   {a.planSlug} · {a.units} share{a.units > 1 ? "s" : ""}
                 </p>
                 <p className="text-xs text-cream-200/55">
-                  {formatBDT(a.quotedTotalBDT)} · {a.paymentPlan === "INSTALLMENT" ? `${a.installmentMonths} monthly instalments` : "full payment"}
+                  {formatBDT(a.quotedTotalBDT)} · {a.paymentPlan === "INSTALLMENT" ? `down payment + ${a.installmentMonths} monthly` : "full payment"}
                 </p>
               </div>
               <span

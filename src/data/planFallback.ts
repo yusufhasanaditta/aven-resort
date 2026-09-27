@@ -16,15 +16,14 @@ export type FallbackPlan = {
   minUnits: number;
   maxUnits: number | null;
   unitPriceBDT: number;
+  fullPriceBDT: number;
+  downPaymentBDT: number;
+  installmentCount: number;
   freeStayNights: number;
-  discountPercent: number;
   accentColor: string;
   featured: boolean;
   sortOrder: number;
 };
-
-/** Placeholder until Aven Limited confirms unit pricing — mirrors `prisma/seed.ts`. */
-export const PLACEHOLDER_UNIT_PRICE_BDT = 500_000;
 
 export const fallbackPlans: FallbackPlan[] = ownershipTiers.map((t, i) => ({
   id: `fallback-${t.id}`,
@@ -33,10 +32,12 @@ export const fallbackPlans: FallbackPlan[] = ownershipTiers.map((t, i) => ({
   subtitle: t.subtitle,
   minUnits: t.minUnits,
   maxUnits: t.maxUnits,
-  unitPriceBDT: PLACEHOLDER_UNIT_PRICE_BDT,
-  // The brochure counts free stay in days; the schema stores nights.
+  unitPriceBDT: t.installmentPriceBDT,
+  fullPriceBDT: t.fullPriceBDT,
+  downPaymentBDT: t.downPaymentBDT,
+  installmentCount: t.installmentCount,
+  // The chart counts free stay in days; the schema stores nights.
   freeStayNights: t.freeStayDays - 1,
-  discountPercent: t.discountPercent,
   accentColor: t.accent,
   featured: t.featured,
   sortOrder: i,

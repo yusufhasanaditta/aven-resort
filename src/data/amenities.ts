@@ -34,8 +34,8 @@ export const amenityGroups: {
   {
     id: "stay",
     eyebrow: "Stay",
-    title: "A hotel, twenty villas and water everywhere.",
-    lede: "100 exclusive suites in the main hotel, twenty private-pool villas on the slopes, and a luxurious common pool between them.",
+    title: "A hotel, forty villas and water everywhere.",
+    lede: "140 exclusive rooms in the main hotel, forty private-pool villas on the slopes, and a luxurious common pool between them.",
   },
   {
     id: "wellness",
@@ -71,17 +71,25 @@ export const amenityGroups: {
     id: "arrival",
     eyebrow: "Arrival",
     title: "Arrive by road — or by air.",
-    lede: "A private helipad above the estate and organised parking at its edge, keeping the resort itself car-free.",
+    lede: "A 24-hour reception to welcome you, a private helipad above the estate and organised parking at its edge, keeping the resort itself car-free.",
   },
 ];
 
 export const amenities: Amenity[] = [
   {
+    id: "receptionist",
+    name: "Receptionist",
+    icon: "reception",
+    group: "arrival",
+    description: "A 24-hour reception and concierge desk at the hotel lobby — check-in, guest services, transfers and every request during your stay.",
+    image: "/renders/hotel-facade.jpg",
+  },
+  {
     id: "hotel",
     name: "Luxury Hotel",
     icon: "hotel",
     group: "stay",
-    description: "100 exclusive suites, presidential and royal suites, a 200-pax grand ballroom, a 50-pax seminar room and meeting rooms.",
+    description: "140 exclusive rooms, presidential and royal suites, a 200-pax grand ballroom, a 50-pax seminar room and meeting rooms.",
     image: "/renders/hotel-facade.jpg",
   },
   {
@@ -89,7 +97,7 @@ export const amenities: Amenity[] = [
     name: "Luxury Villas",
     icon: "villa",
     group: "stay",
-    description: "20 exclusive villas — single, duplex and presidential — with luxurious private pools and a tranquil, serene hill view.",
+    description: "40 exclusive villas — super deluxe residential, single, duplex and presidential — with private pool and a tranquil, serene hill view.",
     image: "/renders/hillside-villas-valley.jpg",
   },
   {
@@ -147,14 +155,6 @@ export const amenities: Amenity[] = [
     group: "gatherings",
     description: "An open-air expanse designed for evening galas beneath starry skies.",
     image: "/renders/event-lawn-dinner.jpg",
-  },
-  {
-    id: "mukto-moncho",
-    name: "Mukto Moncho",
-    icon: "stage",
-    group: "gatherings",
-    description: "An open-air stage in a terraced amphitheatre — for performances, ceremonies and cultural evenings.",
-    image: "/renders/amphitheatre-event-lawn.jpg",
   },
   {
     id: "prayer",

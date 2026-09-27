@@ -29,8 +29,8 @@ export const shareOrderSchema = z.object({
   // Plans are admin-editable rows, so the slug is checked against the database in the route.
   planSlug: z.string().trim().min(1).max(40),
   units: z.coerce.number().int().min(1).max(500),
+  // The installment count and down payment are fixed by the plan.
   paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
-  installmentMonths: z.coerce.number().int().min(2).max(24).optional(),
 });
 
 const phone = z
@@ -105,13 +105,8 @@ export const applicationSchema = z
     planSlug: z.string().trim().min(1).max(40),
     units: z.coerce.number().int().min(1).max(500),
     paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
-    installmentMonths: z.coerce.number().int().min(2).max(24).optional(),
     notes: optionalText(2000),
     agree: z.literal(true, { message: "Please accept the terms to continue." }),
-  })
-  .refine((v) => v.paymentPlan === "FULL" || !!v.installmentMonths, {
-    message: "Choose an instalment period.",
-    path: ["installmentMonths"],
   });
 
 /** An offline payment recorded by the team: cash, bank transfer, bKash… */

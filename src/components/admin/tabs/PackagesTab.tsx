@@ -4,7 +4,7 @@ import { useState } from "react";
 import { MembershipCard } from "@/components/ui/MembershipCard";
 import { Btn, Card, ErrorNote, Field, LoadingRows, PageHeader, TextInput, Toggle, firstError, send, useAdminFetch, useToast } from "../kit";
 import type { AdminPlan } from "@/lib/admin-types";
-import { formatBDT, stayDays } from "@/lib/shares";
+import { formatBDTCompact, stayDays } from "@/lib/shares";
 
 type Plan = AdminPlan & { _count?: { holdings: number } };
 
@@ -14,7 +14,7 @@ export function PackagesTab() {
     <>
       <PageHeader
         title="Investment packages"
-        description="The six membership plans. Changes apply to new purchases and refresh the website immediately; existing holdings keep the price they were bought at."
+        description="The membership plans from the share price chart. Changes apply to new purchases and refresh the website immediately; existing holdings keep the price and schedule they were bought on."
       />
       {error ? (
         <ErrorNote>{error}</ErrorNote>
@@ -35,10 +35,12 @@ function PlanEditor({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
     name: plan.name,
     subtitle: plan.subtitle,
     unitPriceBDT: String(plan.unitPriceBDT),
+    fullPriceBDT: String(plan.fullPriceBDT),
+    downPaymentBDT: String(plan.downPaymentBDT),
+    installmentCount: String(plan.installmentCount),
     minUnits: String(plan.minUnits),
     maxUnits: plan.maxUnits === null ? "" : String(plan.maxUnits),
     stayDays: String(stayDays(plan.freeStayNights)),
-    discountPercent: String(plan.discountPercent),
     accentColor: plan.accentColor,
     featured: plan.featured,
   });
@@ -51,20 +53,24 @@ function PlanEditor({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
     name: f.name || plan.name,
     subtitle: f.subtitle,
     unitPriceBDT: Number(f.unitPriceBDT) || 0,
+    fullPriceBDT: Number(f.fullPriceBDT) || 0,
+    downPaymentBDT: Number(f.downPaymentBDT) || 0,
+    installmentCount: Number(f.installmentCount) || 1,
     minUnits: Number(f.minUnits) || 1,
     maxUnits: f.maxUnits ? Number(f.maxUnits) : null,
     freeStayNights: Math.max(0, (Number(f.stayDays) || 1) - 1),
-    discountPercent: Number(f.discountPercent) || 0,
     featured: f.featured,
   };
   const dirty =
     preview.name !== plan.name ||
     preview.subtitle !== plan.subtitle ||
     preview.unitPriceBDT !== plan.unitPriceBDT ||
+    preview.fullPriceBDT !== plan.fullPriceBDT ||
+    preview.downPaymentBDT !== plan.downPaymentBDT ||
+    preview.installmentCount !== plan.installmentCount ||
     preview.minUnits !== plan.minUnits ||
     preview.maxUnits !== plan.maxUnits ||
     preview.freeStayNights !== plan.freeStayNights ||
-    preview.discountPercent !== plan.discountPercent ||
     f.accentColor !== plan.accentColor ||
     f.featured !== plan.featured;
 
@@ -75,10 +81,12 @@ function PlanEditor({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
       name: preview.name,
       subtitle: preview.subtitle,
       unitPriceBDT: preview.unitPriceBDT,
+      fullPriceBDT: preview.fullPriceBDT,
+      downPaymentBDT: preview.downPaymentBDT,
+      installmentCount: preview.installmentCount,
       minUnits: preview.minUnits,
       maxUnits: preview.maxUnits,
       freeStayNights: preview.freeStayNights,
-      discountPercent: preview.discountPercent,
       accentColor: f.accentColor,
       featured: f.featured,
     });
@@ -103,14 +111,17 @@ function PlanEditor({ plan, onSaved }: { plan: Plan; onSaved: () => void }) {
           </div>
           <p className="text-center text-xs text-[#6B756F]">
             {plan._count?.holdings ?? 0} holding{plan._count?.holdings === 1 ? "" : "s"} ·{" "}
-            {formatBDT(Math.round(preview.unitPriceBDT * (1 - preview.discountPercent / 100)))} / share after discount
+            {preview.minUnits} share{preview.minUnits > 1 ? "s" : ""}: {formatBDTCompact(preview.unitPriceBDT * preview.minUnits)} by installment ·{" "}
+            {formatBDTCompact(preview.fullPriceBDT * preview.minUnits)} in full
           </p>
         </div>
         <div className="grid content-start gap-3 p-5 sm:grid-cols-2">
           <Field label="Name" error={errors.name}>{(id) => <TextInput id={id} value={f.name} onChange={set("name")} />}</Field>
           <Field label="Subtitle">{(id) => <TextInput id={id} value={f.subtitle} onChange={set("subtitle")} />}</Field>
-          <Field label="Unit price (৳)" error={errors.unitPriceBDT}>{(id) => <TextInput id={id} inputMode="numeric" value={f.unitPriceBDT} onChange={set("unitPriceBDT")} />}</Field>
-          <Field label="Discount (%)" error={errors.discountPercent}>{(id) => <TextInput id={id} inputMode="numeric" value={f.discountPercent} onChange={set("discountPercent")} />}</Field>
+          <Field label="Installment price / share (৳)" error={errors.unitPriceBDT}>{(id) => <TextInput id={id} inputMode="numeric" value={f.unitPriceBDT} onChange={set("unitPriceBDT")} />}</Field>
+          <Field label="Full-payment price / share (৳)" error={errors.fullPriceBDT}>{(id) => <TextInput id={id} inputMode="numeric" value={f.fullPriceBDT} onChange={set("fullPriceBDT")} />}</Field>
+          <Field label="Down payment (৳)" hint="For the package size (min shares); prorated per share" error={errors.downPaymentBDT}>{(id) => <TextInput id={id} inputMode="numeric" value={f.downPaymentBDT} onChange={set("downPaymentBDT")} />}</Field>
+          <Field label="Monthly installments" hint="After the down payment" error={errors.installmentCount}>{(id) => <TextInput id={id} inputMode="numeric" value={f.installmentCount} onChange={set("installmentCount")} />}</Field>
           <Field label="Min shares" error={errors.minUnits}>{(id) => <TextInput id={id} inputMode="numeric" value={f.minUnits} onChange={set("minUnits")} />}</Field>
           <Field label="Max shares" hint="Blank = no upper limit" error={errors.maxUnits}>{(id) => <TextInput id={id} inputMode="numeric" value={f.maxUnits} onChange={set("maxUnits")} />}</Field>
           <Field label="Free stay (days / year)" error={errors.freeStayNights}>{(id) => <TextInput id={id} inputMode="numeric" value={f.stayDays} onChange={set("stayDays")} />}</Field>

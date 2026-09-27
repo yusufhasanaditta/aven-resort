@@ -22,9 +22,9 @@ function todayDhaka() {
 }
 
 /**
- * Records money received outside the gateway against one instalment of a
- * holding. The amount is fixed to the instalment's scheduled amount (the
- * ledger settles whole instalments), so the team can't mistype a figure.
+ * Records money received outside the gateway against one installment of a
+ * holding. The amount is fixed to the installment's scheduled amount (the
+ * ledger settles whole installments), so the team can't mistype a figure.
  */
 export function RecordPaymentModal({
   holding,
@@ -108,7 +108,7 @@ export function RecordPaymentModal({
           <div className="text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl text-emerald-600">✓</span>
             <p className="mt-4 text-sm text-[#3D4A44]">
-              The instalment is marked paid, the holding is active and a money receipt has been generated for{" "}
+              The installment is marked paid, the holding is active and a money receipt has been generated for{" "}
               <strong>{holding.customer.name}</strong>.
             </p>
           </div>
@@ -124,7 +124,7 @@ export function RecordPaymentModal({
               <p className="text-sm text-emerald-700">This holding is fully paid.</p>
             ) : (
               <>
-                <Field label="Instalment">
+                <Field label="Installment">
                   {(id) => (
                     <SelectInput id={id} value={step?.n} onChange={(e) => setN(Number(e.target.value))}>
                       {unpaid.map((s) => (

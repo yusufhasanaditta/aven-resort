@@ -14,7 +14,7 @@ const actionSchema = z.object({
 /**
  * review  → UNDER_REVIEW
  * approve → creates the ShareHolding (awaiting its first payment) with the
- *           applicant's instalment plan, links it, and converts their lead
+ *           applicant's installment plan, links it, and converts their lead
  * reject  → REJECTED, with the reason kept on the application
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -47,7 +47,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const plans = await prisma.membershipPlan.findMany();
-  const quote = calculate(plans, app.units, app.paymentPlan, app.installmentMonths ?? undefined);
+  const quote = calculate(plans, app.units, app.paymentPlan);
 
   const [holding] = await prisma.$transaction(async (tx) => {
     const h = await tx.shareHolding.create({
@@ -57,7 +57,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         units: quote.units,
         totalAmountBDT: quote.totalBDT,
         paymentPlan: app.paymentPlan,
-        installmentMonths: app.paymentPlan === "INSTALLMENT" ? app.installmentMonths : null,
+        installmentMonths: quote.installments ? quote.installments.length : null,
+        downPaymentBDT: quote.downPaymentBDT,
       },
     });
     await tx.application.update({
