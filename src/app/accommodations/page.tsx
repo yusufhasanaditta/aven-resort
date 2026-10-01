@@ -5,7 +5,7 @@ import { VisionStatement } from "@/components/sections/VisionStatement";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { getAsset } from "@/lib/cms";
+import { getAsset, getContent } from "@/lib/cms";
 import {
   accommodationCollections,
   accommodations,
@@ -18,15 +18,15 @@ export const metadata: Metadata = {
 };
 
 export default async function AccommodationsPage() {
-  const heroImage = await getAsset("accommodations.hero", "/renders/hotel-facade.jpg");
+  const [heroImage, bannerImage, pg] = await Promise.all([getAsset("accommodations.hero"), getAsset("accommodations.banner"), getContent("pages")]);
 
   return (
     <>
       <Hero
-        eyebrow="The product"
-        title="140 Rooms."
-        titleAccent="40 Private-Pool Villas."
-        lede="Every key in the estate sits where the topography put it — the hotel on the highest point, the villas stepping down a slope, the nature stays lightest of all."
+        eyebrow={pg.stayEyebrow}
+        title={pg.stayTitle}
+        titleAccent={pg.stayAccent}
+        lede={pg.stayLede}
         image={heroImage}
         imageAlt="The Aven luxury hotel against forested hills under a clear sky"
         height="tall"
@@ -124,7 +124,7 @@ export default async function AccommodationsPage() {
       <VisionStatement
         quote="Each villa steps down the hill, ensuring privacy and view."
         attribution="Elite Living, Hill 3"
-        image="/renders/villas-aerial-topdown.jpg"
+        image={bannerImage}
         imageAlt="Top-down aerial view of the villa cluster with private pools among the tea"
       />
 

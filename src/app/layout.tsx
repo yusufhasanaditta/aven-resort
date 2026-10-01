@@ -32,14 +32,18 @@ const sans = Inter({
   display: "swap",
 });
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://avenresort.com").replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://avenlimited.com"),
+  metadataBase: new URL(SITE_URL),
+  applicationName: "Aven Resort",
   title: {
     default: `${site.name} — ${site.tagline}`,
     template: `%s · AVEN`,
   },
   description: site.description,
   keywords: [
+    "Aven Resort",
     "Aven Eco Luxury Resort",
     "Aven Limited",
     "Sreemangal resort",
@@ -76,7 +80,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [announcement, lang] = await Promise.all([getContent("announcement"), getLang()]);
+  const [announcement, contact, lang] = await Promise.all([getContent("announcement"), getContent("contact"), getLang()]);
   const showAnnouncement = announcement.enabled && !!announcement.text.trim();
 
   return (
@@ -85,7 +89,35 @@ export default async function RootLayout({
       className={`${display.variable} ${sans.variable} ${bangla.variable}${showAnnouncement ? " has-announcement" : ""}`}
     >
       <body className="min-h-screen antialiased">
-        <HideOn prefixes={["/admin"]}>
+        {/* Tells search engines the site's name and logo — the logo Google shows beside "Aven Resort" results. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "Aven Resort",
+                alternateName: [site.name, "AVEN", "Aven Eco Luxury Resort"],
+                url: SITE_URL,
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "Resort",
+                name: site.name,
+                alternateName: "Aven Resort",
+                url: SITE_URL,
+                logo: `${SITE_URL}/brand/aven-logo-square.png`,
+                image: `${SITE_URL}/renders/hanging-bridge-dusk.jpg`,
+                description: site.description,
+                telephone: contact.phone,
+                email: contact.email,
+                address: { "@type": "PostalAddress", streetAddress: contact.resortAddress, addressCountry: "BD" },
+              },
+            ]),
+          }}
+        />
+        <HideOn prefixes={["/admin", "/pay"]}>
           <SmoothScroll />
         </HideOn>
         <a
@@ -94,15 +126,15 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        <HideOn prefixes={["/admin"]}>
-          <Header announcement={showAnnouncement ? announcement : null} lang={lang} />
+        <HideOn prefixes={["/admin", "/pay"]}>
+          <Header announcement={showAnnouncement ? announcement : null} phone={contact.phone} lang={lang} />
         </HideOn>
         <main id="main">{children}</main>
-        <HideOn prefixes={["/admin"]}>
+        <HideOn prefixes={["/admin", "/pay"]}>
           <Footer lang={lang} />
         </HideOn>
         {lang === "bn" && (
-          <HideOn prefixes={["/admin"]}>
+          <HideOn prefixes={["/admin", "/pay"]}>
             <AutoTranslate />
           </HideOn>
         )}

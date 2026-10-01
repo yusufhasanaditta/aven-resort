@@ -4,7 +4,7 @@ import { adminGuard, logActivity, readJson, revalidateSite } from "@/lib/admin";
 import { cmsDefaults, type CmsKey } from "@/data/cms-defaults";
 
 const MAX_TEXT = 20_000;
-const MAX_ITEMS = 60;
+const MAX_ITEMS = 150;
 
 /** Keep only the fields the default declares, each coerced to the default's type. */
 function shapeLike(template: Record<string, unknown>, input: unknown): Record<string, unknown> {

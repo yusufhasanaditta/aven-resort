@@ -204,7 +204,13 @@ export function Hero({
               transition={{ duration: 1, ease: easeOutExpo, delay: 0.78 }}
               className={cn(
                 "mt-14 grid gap-px overflow-hidden rounded-2xl border border-cream-50/30 bg-cream-50/20 backdrop-blur-xl shadow-xl",
-                facts.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : "max-w-2xl grid-cols-1 sm:grid-cols-[1.5fr_1fr]",
+                facts.length >= 4
+                  ? "grid-cols-2 sm:grid-cols-4"
+                  : facts.length === 3
+                    ? "w-full max-w-md grid-cols-3"
+                    : facts.length === 1
+                      ? "w-fit min-w-[16rem] grid-cols-1"
+                      : "max-w-2xl grid-cols-1 sm:grid-cols-[1.5fr_1fr]",
               )}
             >
               {facts.map((f) => (

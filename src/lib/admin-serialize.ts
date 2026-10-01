@@ -38,7 +38,20 @@ export function toAdminPayments(h: HoldingWithAll): AdminPayment[] {
 }
 
 export function toAdminCustomer(
-  user: { id: string; name: string; email: string; phone: string; location: string; createdAt: Date },
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    createdAt: Date;
+    memberNo?: string | null;
+    photoUrl?: string | null;
+    nid?: string | null;
+    nomineeName?: string | null;
+    nomineeRelation?: string | null;
+    referredBy?: string | null;
+  },
   holdings: AdminHolding[],
 ): AdminCustomer {
   const live = holdings.filter((h) => h.status !== "CANCELLED");
@@ -54,6 +67,12 @@ export function toAdminCustomer(
     location: user.location,
     createdAt: user.createdAt.toISOString(),
     memberId: memberIdFor(user),
+    photoUrl: user.photoUrl ?? null,
+    nid: user.nid ?? null,
+    nomineeName: user.nomineeName ?? null,
+    nomineeRelation: user.nomineeRelation ?? null,
+    referredBy: user.referredBy ?? null,
+    shareNumbers: live.filter((h) => h.shareNo).map((h) => h.shareNo!),
     units: live.filter((h) => h.status === "ACTIVE").reduce((s, h) => s + h.units, 0),
     committedBDT: live.reduce((s, h) => s + h.totalAmountBDT, 0),
     paidBDT: live.reduce((s, h) => s + h.paidBDT, 0),

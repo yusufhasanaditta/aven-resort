@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { settlePayment } from "@/lib/payments";
+import { returnTo } from "../return";
 
+/** SSLCommerz sends the browser here when the shareholder cancels checkout. */
 export async function POST(request: Request) {
   const form = await request.formData();
   const tranId = form.get("tran_id")?.toString() ?? "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return NextResponse.redirect(
-    `${siteUrl}/account?payment=cancelled&tran=${encodeURIComponent(tranId)}`,
-    { status: 303 },
-  );
+  if (tranId) await settlePayment(tranId, "CANCELLED", { raw: { gateway: Object.fromEntries(form) } });
+  return returnTo(request, "cancelled", tranId);
 }
+
+export const GET = (request: Request) => returnTo(request, "cancelled", "");

@@ -42,6 +42,8 @@ export type HoldingRow = {
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
   downPaymentBDT?: number | null;
+  shareFrom?: number | null;
+  shareTo?: number | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
   createdAt: Date;
   plan: PlanRow;
@@ -55,6 +57,12 @@ type UserRow = {
   phone: string;
   location: string;
   createdAt: Date;
+  memberNo?: string | null;
+  photoUrl?: string | null;
+  nid?: string | null;
+  nomineeName?: string | null;
+  nomineeRelation?: string | null;
+  referredBy?: string | null;
 };
 
 export type StepStatus = PaymentStatus | "UPCOMING";
@@ -101,6 +109,8 @@ export type DashHolding = {
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
   downPaymentBDT: number | null;
+  /** Share numbers, e.g. "#0012–0016"; null for holdings opened before numbering. */
+  shareNo: string | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
   openedAt: string;
   steps: DashStep[];
@@ -127,6 +137,13 @@ export type DashboardData = {
     location: string;
     memberSince: string;
     memberId: string;
+    photoUrl: string | null;
+    nid: string | null;
+    nomineeName: string | null;
+    nomineeRelation: string | null;
+    referredBy: string | null;
+    /** Share numbers of every holding that is not cancelled. */
+    shareNumbers: string[];
   };
   plans: (MembershipCardData & { id: string })[];
   holdings: DashHolding[];
@@ -155,9 +172,17 @@ export type DashboardData = {
   };
 };
 
-/** A stable, human-readable member number, e.g. `AVN-2026-4F9KQ2`. */
-export function memberIdFor(user: { id: string; createdAt: Date }) {
+/** The membership number (e.g. 20262001); accounts from before numbering fall back to the old style. */
+export function memberIdFor(user: { id: string; createdAt: Date; memberNo?: string | null }) {
+  if (user.memberNo) return user.memberNo;
   return `AVN-${user.createdAt.getFullYear()}-${user.id.slice(-6).toUpperCase()}`;
+}
+
+/** Share numbers as shown on cards and receipts: "#0012", or a run "#0012–0016". */
+export function shareNoLabel(from?: number | null, to?: number | null) {
+  if (!from) return null;
+  const pad = (n: number) => String(n).padStart(4, "0");
+  return !to || to === from ? `#${pad(from)}` : `#${pad(from)}–${pad(to)}`;
 }
 
 /** Invoice number for one payment, e.g. `INV-202609-7XK2PD`. */
@@ -261,6 +286,7 @@ export function holdingLedger(h: HoldingRow): DashHolding {
     paymentPlan: h.paymentPlan,
     installmentMonths: h.installmentMonths,
     downPaymentBDT: h.downPaymentBDT ?? null,
+    shareNo: shareNoLabel(h.shareFrom, h.shareTo),
     status: h.status,
     openedAt: h.createdAt.toISOString(),
     steps,
@@ -309,7 +335,7 @@ export function buildDashboard(user: UserRow, holdings: HoldingRow[], plans: Pla
     : sortedPlans[0] ?? null;
 
   const nextDueAll = live
-    .filter((h) => h.nextDue && !h.hasPending)
+    .filter((h) => h.nextDue)
     .map((h) => ({
       holdingId: h.id,
       planName: h.plan.name,
@@ -364,6 +390,12 @@ export function buildDashboard(user: UserRow, holdings: HoldingRow[], plans: Pla
       location: user.location,
       memberSince: user.createdAt.toISOString(),
       memberId: memberIdFor(user),
+      photoUrl: user.photoUrl ?? null,
+      nid: user.nid ?? null,
+      nomineeName: user.nomineeName ?? null,
+      nomineeRelation: user.nomineeRelation ?? null,
+      referredBy: user.referredBy ?? null,
+      shareNumbers: dashHoldings.filter((h) => h.status !== "CANCELLED" && h.shareNo).map((h) => h.shareNo!),
     },
     plans: sortedPlans.map((p) => ({ ...toCard(p), id: p.id })),
     holdings: dashHoldings,

@@ -20,10 +20,18 @@ const MAX_UNITS = 200;
  * both use `calculate()` from `lib/shares`. Installments already due on
  * existing holdings sit alongside, so everything payable is in one place.
  */
-export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: () => void }) {
+export function BuyPanel({
+  data,
+  paymentMode,
+  onOrdered,
+}: {
+  data: DashboardData;
+  paymentMode: "live" | "test" | "offline";
+  onOrdered: () => void;
+}) {
   const router = useRouter();
   const [units, setUnits] = useState(1);
-  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("FULL");
+  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("INSTALLMENT");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -35,7 +43,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
   );
 
   const nextPlan = result ? plans.find((p) => p.minUnits > result.units) : undefined;
-  const dueItems = data.holdings.filter((h) => h.status !== "CANCELLED" && h.nextDue && !h.hasPending);
+  const dueItems = data.holdings.filter((h) => h.status !== "CANCELLED" && h.nextDue);
 
   function setClamped(n: number) {
     setUnits(Math.max(1, Math.min(MAX_UNITS, Math.round(n) || 1)));
@@ -60,15 +68,16 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
       if (!res.ok) {
         setError(json.error ?? (Object.values(json.errors ?? {})[0] as string) ?? "Something went wrong.");
         setBusy(false);
+        if (json.holdingId) router.refresh();
         return;
       }
       if (json.gatewayUrl) {
         window.location.href = json.gatewayUrl;
         return;
       }
+      // Offline mode: the reservation is saved; show it on My holdings with how to pay.
       setNotice(json.notice ?? "Your share reservation has been recorded.");
-      setBusy(false);
-      router.refresh();
+      router.push("/account?tab=holdings&payment=reserved");
       onOrdered();
     } catch {
       setError("Could not reach the server. Please try again.");
@@ -185,7 +194,7 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
         <Glass>
           <PanelTitle eyebrow="Step 3" title="Payment plan" />
           <div className="mt-5 grid grid-cols-2 gap-2.5">
-            {(["FULL", "INSTALLMENT"] as const).map((p) => (
+            {(["INSTALLMENT", "FULL"] as const).map((p) => (
               <button
                 key={p}
                 type="button"
@@ -289,10 +298,14 @@ export function BuyPanel({ data, onOrdered }: { data: DashboardData; onOrdered: 
             disabled={busy}
             className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-gold-400 to-gold-300 text-sm font-semibold text-forest-950 shadow-[0_10px_30px_-10px_rgba(232,207,135,0.7)] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
           >
-            {busy ? "Starting checkout…" : `Checkout · ${formatBDT(dueToday)}`}
+            {busy ? "Starting checkout…" : paymentMode === "offline" ? `Reserve · ${formatBDT(dueToday)} due` : `Pay now · ${formatBDT(dueToday)}`}
           </button>
           <p className="mt-2 text-center text-[0.6875rem] text-cream-200/40">
-            Secure payment via SSLCommerz · prices indicative until confirmed by Aven Limited
+            {paymentMode === "live"
+              ? "Secure payment via SSLCommerz — cards, bKash, Nagad, Rocket and net banking"
+              : paymentMode === "test"
+                ? "Test mode — checkout is simulated until SSLCommerz is connected; no money is charged"
+                : "Reserve now and pay by bank transfer or bKash — online payment is coming soon"}
           </p>
           {error && <p className="mt-3 text-center text-xs text-red-300">{error}</p>}
           {notice && <p className="mt-3 text-center text-xs text-emerald-300">{notice}</p>}

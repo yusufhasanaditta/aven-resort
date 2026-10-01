@@ -10,6 +10,7 @@ import { Num } from "@/components/ui/Number";
 import { about, positioning } from "@/data/about";
 import { estateFacts } from "@/data/zones";
 import { site } from "@/data/site";
+import { getAsset, getContent } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "About AVEN",
@@ -17,15 +18,16 @@ export const metadata: Metadata = {
     "Aven Limited is building Aven Eco Luxury Resort & Wellness in the hills of Sreemangal — a top wellness resort where luxury meets the raw beauty of nature, owned by a community of shareholders.",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [heroImage, storyImage, bannerImage, pg] = await Promise.all([getAsset("about.hero"), getAsset("about.story"), getAsset("about.banner"), getContent("pages")]);
   return (
     <>
       <Hero
-        eyebrow="About AVEN"
-        title="Avenue Towards Self —"
-        titleAccent="Let's Make the Empire Together"
-        lede={site.description}
-        image="/renders/main-hotel-aerial.jpg"
+        eyebrow={pg.aboutEyebrow}
+        title={pg.aboutTitle}
+        titleAccent={pg.aboutAccent}
+        lede={pg.aboutLede}
+        image={heroImage}
         imageAlt="The main hotel building crowning Hill 2, surrounded by tea-covered hills"
         height="tall"
       />
@@ -75,7 +77,7 @@ export default function AboutPage() {
       <VisionStatement
         quote="We blend investment-grade asset creation with ecological stewardship."
         attribution={`${site.company}, The Vision`}
-        image="/renders/eco-villa-sunrise.jpg"
+        image={bannerImage}
         imageAlt="An eco-luxury villa on a tea hill at sunrise"
       />
 
@@ -90,7 +92,7 @@ export default function AboutPage() {
               >
                 <div className="relative aspect-4/5 overflow-hidden rounded-3xl">
                   <Image
-                    src="/renders/bridge-valley-restaurant.jpg"
+                    src={storyImage}
                     alt="The hanging bridge spanning two tea hills above the valley restaurant"
                     fill
                     sizes="(min-width: 1024px) 45vw, 92vw"

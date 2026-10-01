@@ -1,17 +1,18 @@
 /**
- * Seeds the membership plans and the admin-replaceable site assets. Run
- * with `npm run db:seed`.
+ * Sets up a fresh database: the five membership plans and the admin account.
+ * Runs on every build (`npm run build`), so it only ever *adds* what's
+ * missing — plan prices edited in admin → Packages are never overwritten, and
+ * an existing admin keeps their password. Nothing else is created: no demo
+ * shareholders, holdings, payments or leads.
  *
- * Plans come from `src/data/ownership.ts`, which transcribes the "Share
- * Price & Membership Chart": Executive, Gold, Platinum, Diamond and Royal, each
- * with an installment price, a full-payment price, a down payment and a fixed
- * number of monthly installments. Free stay is stored as nights (days − 1).
- * Re-running the seed overwrites plan pricing with the chart's figures.
+ * Plans come from `src/data/ownership.ts` (the Share Price & Membership
+ * Chart). Set SEED_RESET_PLANS=true for one run to put every plan back to the
+ * chart's figures.
  */
+import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { ownershipTiers } from "../src/data/ownership";
-import { planForUnits } from "../src/lib/shares";
 
 const prisma = new PrismaClient();
 
@@ -31,80 +32,23 @@ const plans = ownershipTiers.map((t, i) => ({
   sortOrder: i,
 }));
 
-/**
- * Plans the price chart no longer sells — the old "Premium" and "Silver" —
- * are retired. Any holdings made against them move to whichever current plan
- * covers their share count, so every holding keeps a valid plan.
- */
-async function retireLegacyPlans() {
-  const current = await prisma.membershipPlan.findMany({ where: { slug: { in: plans.map((p) => p.slug) } } });
-  const retired = await prisma.membershipPlan.findMany({
-    where: { slug: { notIn: plans.map((p) => p.slug) } },
-    include: { holdings: { select: { id: true, units: true } } },
-  });
-  for (const old of retired) {
-    for (const h of old.holdings) {
-      await prisma.shareHolding.update({ where: { id: h.id }, data: { planId: planForUnits(current, h.units).id } });
-    }
-    await prisma.membershipPlan.delete({ where: { id: old.id } });
-  }
-  return retired.map((p) => p.slug);
-}
-
-// Page hero images the admin Media tab can replace. The homepage banner is
-// edited under Content instead, with the rest of the hero copy.
-const assets = [
-  { key: "wellness.hero", url: "/renders/yoga-tea-garden.jpg", label: "Wellness page hero" },
-  { key: "ownership.hero", url: "/renders/eco-villa-sunrise.jpg", label: "Ownership page hero" },
-  { key: "amenities.hero", url: "/renders/hanging-bridge-night.jpg", label: "Amenities page hero" },
-  { key: "accommodations.hero", url: "/renders/hotel-facade.jpg", label: "Stay page hero" },
-];
-
-/** Contact-form enquiries from before the CRM existed become leads, once. */
-async function importLegacyInquiries() {
-  const inquiries = await prisma.inquiry.findMany();
-  for (const q of inquiries) {
-    const exists = await prisma.lead.findFirst({ where: { email: q.email.toLowerCase(), createdAt: q.createdAt } });
-    if (exists) continue;
-    await prisma.lead.create({
-      data: {
-        name: q.name,
-        email: q.email.toLowerCase(),
-        phone: q.phone,
-        message: [q.subject, q.message].filter(Boolean).join(" — "),
-        source: `contact-form:${q.type}`,
-        createdAt: q.createdAt,
-      },
-    });
-  }
-  return inquiries.length;
-}
-
 async function main() {
-  const imported = await importLegacyInquiries();
-  if (imported) console.log(`Checked ${imported} legacy enquiries into the CRM.`);
-
+  const reset = process.env.SEED_RESET_PLANS === "true";
+  let added = 0;
   for (const plan of plans) {
-    await prisma.membershipPlan.upsert({
-      where: { slug: plan.slug },
-      update: plan,
-      create: plan,
-    });
+    const exists = await prisma.membershipPlan.findUnique({ where: { slug: plan.slug }, select: { id: true } });
+    if (!exists) {
+      await prisma.membershipPlan.create({ data: plan });
+      added++;
+    } else if (reset) {
+      await prisma.membershipPlan.update({ where: { slug: plan.slug }, data: plan });
+    }
   }
-  const retired = await retireLegacyPlans();
-  if (retired.length) console.log(`Retired plans: ${retired.join(", ")}.`);
+  console.log(reset ? "Membership plans reset to the price chart." : `Membership plans: ${added} added, ${plans.length - added} already set up.`);
 
-  await prisma.siteAsset.deleteMany({ where: { key: { in: ["home.hero", "masterplan.hero"] } } });
-  for (const asset of assets) {
-    await prisma.siteAsset.upsert({
-      where: { key: asset.key },
-      update: { label: asset.label },
-      create: asset,
-    });
-  }
-
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@aventeaempire.com";
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD || "ChangeMe!2026";
+  const adminEmail = (process.env.SEED_ADMIN_EMAIL || "admin@aventeaempire.com").toLowerCase();
+  // No password in the code: set SEED_ADMIN_PASSWORD, or a random one is generated and printed once.
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || randomBytes(12).toString("base64url");
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existing) {
     await prisma.user.create({
@@ -117,15 +61,15 @@ async function main() {
         role: "ADMIN",
       },
     });
-    console.log(`Seeded admin account: ${adminEmail} / ${adminPassword} — change this password immediately after first login.`);
+    console.log(`Admin account created: ${adminEmail}${process.env.SEED_ADMIN_PASSWORD ? "" : ` — password: ${adminPassword}`}`);
+  } else {
+    console.log(`Admin account already exists: ${adminEmail}`);
   }
-
-  console.log(`Seeded ${plans.length} membership plans and ${assets.length} site assets.`);
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((err) => {
+    console.error(err);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

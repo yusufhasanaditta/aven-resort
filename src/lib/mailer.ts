@@ -1,18 +1,40 @@
 import "server-only";
 
+import nodemailer, { type Transporter } from "nodemailer";
+
 /**
- * Transactional email through Resend's HTTP API — no SDK, just `fetch`.
+ * Transactional email, through either:
+ * - SMTP (e.g. a Gmail account): set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+ *   (for Gmail, an App Password) and MAIL_FROM; or
+ * - Resend's HTTP API: set RESEND_API_KEY and MAIL_FROM on a verified domain.
  *
- * Set `RESEND_API_KEY` and `MAIL_FROM` (e.g. `Aven <noreply@avenlimited.com>`,
- * on a domain verified in Resend) to switch email on. Without them every
- * send is skipped and reported as such, and notifications still reach the
- * shareholder's dashboard inbox.
+ * Without either, sends are skipped and reported as such — notifications
+ * still reach the dashboard inbox — and in development the message is printed
+ * to the server log so flows like password reset can be tested.
  */
 
 export type MailResult = "SENT" | "FAILED" | "SKIPPED";
 
+function smtpConfigured() {
+  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
 export function emailConfigured() {
-  return !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+  return smtpConfigured() || !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+}
+
+let transport: Transporter | null = null;
+function smtp() {
+  if (!transport) {
+    const port = Number(process.env.SMTP_PORT || 465);
+    transport = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port,
+      secure: port === 465,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+  }
+  return transport;
 }
 
 export function siteUrl() {
@@ -44,7 +66,23 @@ ${paragraphs}${button}
 }
 
 export async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }): Promise<MailResult> {
-  if (!emailConfigured()) return "SKIPPED";
+  if (!emailConfigured()) {
+    if (process.env.NODE_ENV !== "production") console.log(`
+[aven] Email not configured — would send to ${to}: ${subject}
+${text}
+`);
+    return "SKIPPED";
+  }
+  const from = process.env.MAIL_FROM || `Aven Eco Luxury Resort <${process.env.SMTP_USER}>`;
+  if (smtpConfigured()) {
+    try {
+      await smtp().sendMail({ from, to, subject, html, text });
+      return "SENT";
+    } catch (err) {
+      console.error("Email send failed (SMTP)", err);
+      return "FAILED";
+    }
+  }
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

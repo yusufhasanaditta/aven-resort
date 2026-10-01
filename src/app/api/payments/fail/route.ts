@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { settlePayment } from "@/lib/payments";
+import { returnTo } from "../return";
 
+/** SSLCommerz sends the browser here when a payment fails. */
 export async function POST(request: Request) {
   const form = await request.formData();
   const tranId = form.get("tran_id")?.toString() ?? "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return NextResponse.redirect(
-    `${siteUrl}/account?payment=failed&tran=${encodeURIComponent(tranId)}`,
-    { status: 303 },
-  );
+  if (tranId) await settlePayment(tranId, "FAILED", { raw: { gateway: Object.fromEntries(form) } });
+  return returnTo(request, "failed", tranId);
 }
+
+export const GET = (request: Request) => returnTo(request, "failed", "");

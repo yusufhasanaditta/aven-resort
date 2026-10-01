@@ -8,6 +8,7 @@
  */
 import { ownershipBenefits } from "@/data/ownership";
 import { site } from "@/data/site";
+import { gallery } from "@/data/gallery";
 
 export type Announcement = { enabled: boolean; text: string; linkLabel: string; href: string };
 
@@ -21,6 +22,8 @@ export type HeroContent = {
   primaryHref: string;
   secondaryLabel: string;
   secondaryHref: string;
+  /** The line that scrolls across the band under the homepage banner. */
+  ticker: string;
 };
 
 export type ResortContent = { headline: string; paragraphOne: string; paragraphTwo: string; motto: string };
@@ -57,6 +60,13 @@ export type PaymentInstructions = {
 export type Benefit = { title: string; description: string; icon: string };
 export type Faq = { question: string; answer: string; category: string };
 export type LegalPage = { title: string; updated: string; body: string };
+/** A gallery photo. `span`: "wide", "tall" or empty; `category`: one of the gallery filter ids. */
+export type GalleryEntry = { src: string; title: string; caption: string; category: string; span: string };
+
+/** The heading block at the top of each main page: `<page>Eyebrow`, `<page>Title`, `<page>Accent`, `<page>Lede`. */
+export type PagesContent = Record<string, string>;
+/** A message shown at the top of every shareholder's dashboard. */
+export type AccountNotice = { enabled: boolean; title: string; text: string; linkLabel: string; href: string };
 
 export type CmsContent = {
   announcement: Announcement;
@@ -68,6 +78,9 @@ export type CmsContent = {
   faqs: Faq[];
   terms: LegalPage;
   privacy: LegalPage;
+  gallery: GalleryEntry[];
+  pages: PagesContent;
+  accountNotice: AccountNotice;
 };
 
 export type CmsKey = keyof CmsContent;
@@ -89,6 +102,7 @@ export const cmsDefaults: CmsContent = {
     primaryHref: "/contact?type=booking#enquiry",
     secondaryLabel: "Own Your Share",
     secondaryHref: "/own-your-share",
+    ticker: "Country's first wellness-based resort and retreat",
   },
   resort: {
     headline:
@@ -214,5 +228,47 @@ We do not sell your information. It is shared only with service providers who he
 
 ## Your choices
 You can ask us to correct your details or stop marketing contact at any time by writing to ${site.contact.email}.`,
+  },
+  gallery: gallery.map((g) => ({ src: g.src, title: g.title, caption: g.caption, category: g.category, span: g.span ?? "" })),
+  pages: {
+    aboutEyebrow: "About AVEN",
+    aboutTitle: "Avenue Towards Self —",
+    aboutAccent: "Let's Make the Empire Together",
+    aboutLede: site.description,
+    ownershipEyebrow: "Ownership & membership",
+    ownershipTitle: "Own a Piece",
+    ownershipAccent: "of the Hills",
+    ownershipLede:
+      "Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — five membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay.",
+    wellnessEyebrow: "Wellness & Retreat",
+    wellnessTitle: "Retreat, Don't Escape.",
+    wellnessAccent: "Aven Cares for You",
+    wellnessLede:
+      "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Nine therapies, all provided within the resort.",
+    amenitiesEyebrow: "Site zoning & functions",
+    amenitiesTitle: "Twenty Amenities.",
+    amenitiesAccent: "A Share of Every One.",
+    amenitiesLede:
+      "Every shareholder holds fractional ownership of all the features and amenities of the resort, with Saf-Kabla land registration — from the library and tree house to the cloud walkway and helipad.",
+    stayEyebrow: "The product",
+    stayTitle: "140 Rooms.",
+    stayAccent: "40 Private-Pool Villas.",
+    stayLede:
+      "Every key in the estate sits where the topography put it — the hotel on the highest point, the villas stepping down a slope, the nature stays lightest of all.",
+    galleryEyebrow: "Gallery",
+    galleryTitle: "The Estate,",
+    galleryAccent: "Render by Render",
+    galleryLede: "Architectural impressions of every zone — from the lit bridge across the valley to the tasting bar among the tea bushes.",
+    contactEyebrow: "Get in touch",
+    contactTitle: "We'd Love to",
+    contactAccent: "Hear From You",
+    contactLede: "Questions about the project, the land, the ownership structure or a site visit — the AVEN team is here to help.",
+  },
+  accountNotice: {
+    enabled: false,
+    title: "",
+    text: "",
+    linkLabel: "",
+    href: "",
   },
 };

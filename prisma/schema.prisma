@@ -1,18 +1,20 @@
 // Aven Tea Empire — shareholder & content database.
 //
-// Provider is SQLite for local development: zero setup, a real file, real
-// persistence, real constraints. To go to production on Vercel, change the
-// datasource below to `provider = "postgresql"` and point DATABASE_URL at a
-// hosted Postgres (Vercel Postgres, Neon, Supabase all work unchanged with
-// this schema) — Vercel's serverless filesystem is read-only at runtime, so
-// SQLite's on-disk file cannot be the production database there.
+// Production runs on MySQL (Hostinger): DATABASE_URL looks like
+//   mysql://USER:PASSWORD@localhost:3306/DATABASE
+// and `npm run build` creates/updates the tables and seeds the plans and
+// admin account (see HOSTINGER.md). Long text columns are marked @db.Text /
+// @db.MediumText because MySQL strings default to 191 characters.
+//
+// Local development can use a SQLite file instead: generate a copy of this
+// schema with provider "sqlite" and the @db.* attributes removed.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -56,15 +58,27 @@ enum ApplicationStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  phone        String
-  location     String
-  passwordHash String
-  role         Role     @default(SHAREHOLDER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @unique
+  phone              String
+  location           String
+  passwordHash       String
+  role               Role     @default(SHAREHOLDER)
+  /// Membership number: joining year + a running number from 2001, e.g. 20262001.
+  memberNo           String?  @unique
+  /// Profile photo, an uploaded image served at /media/<id>.
+  photoUrl           String?  @db.Text
+  /// Set when the admin issues a one-time password; cleared once the user picks their own.
+  mustChangePassword Boolean  @default(false)
+  /// KYC details, copied from the approved application; the admin can edit them.
+  nid                String?
+  nomineeName        String?
+  nomineeRelation    String?
+  /// Who referred the shareholder, if anyone.
+  referredBy         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   holdings      ShareHolding[]
   applications  Application[]
@@ -84,8 +98,8 @@ model Notification {
   /// DUE_SOON · DUE_TODAY · OVERDUE · PAYMENT_RECEIVED · REMINDER
   kind          String
   title         String
-  body          String
-  href          String?
+  body          String    @db.Text
+  href          String?   @db.Text
   holdingId     String?
   installmentNo Int?
   dedupeKey     String    @unique
@@ -145,6 +159,9 @@ model ShareHolding {
   /// down payment and the rest are equal monthly instalments.
   installmentMonths Int?
   downPaymentBDT    Int?
+  /// Share numbers: a holding of 5 shares gets a consecutive run, e.g. 12–16.
+  shareFrom         Int?
+  shareTo           Int?
   status            HoldingStatus  @default(PENDING_PAYMENT)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -166,10 +183,10 @@ model Payment {
   valId           String?
   installmentNo   Int           @default(1)
   status          PaymentStatus @default(PENDING)
-  gatewayResponse String?
+  gatewayResponse String?       @db.MediumText
   /// Bank reference, bKash number, cheque number… for manually recorded payments.
   reference       String?
-  note            String?
+  note            String?       @db.Text
   /// Admin who recorded or confirmed the payment, when it didn't come through the gateway.
   recordedBy      String?
   paidAt          DateTime?
@@ -188,7 +205,7 @@ model Inquiry {
   email     String
   phone     String
   subject   String?
-  message   String
+  message   String   @db.Text
   createdAt DateTime @default(now())
 
   @@map("inquiries")
@@ -201,7 +218,7 @@ model Inquiry {
 model SiteAsset {
   id        String   @id @default(cuid())
   key       String   @unique
-  url       String
+  url       String   @db.Text
   label     String
   updatedAt DateTime @updatedAt
 
@@ -220,7 +237,7 @@ model Lead {
   units           Int?
   investmentBDT   Int?
   paymentPref     String?
-  message         String?
+  message         String?    @db.Text
   source          String     @default("website")
   status          LeadStatus @default(NEW)
   priority        Int        @default(0)
@@ -242,7 +259,7 @@ model LeadNote {
   leadId     String
   lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   kind       String   @default("NOTE")
-  body       String
+  body       String   @db.Text
   authorName String
   createdAt  DateTime @default(now())
 
@@ -253,27 +270,31 @@ model LeadNote {
 /// Approval creates the ShareHolding and its instalment schedule.
 model Application {
   id                String            @id @default(cuid())
-  userId            String
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Empty until the application is approved and the applicant's account is opened.
+  userId            String?
+  user              User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName          String
   fatherName        String?
   email             String
   phone             String
   nid               String
   dateOfBirth       String?
-  address           String
+  address           String            @db.Text
   occupation        String?
   nomineeName       String?
   nomineeRelation   String?
   nomineePhone      String?
+  referredBy        String?
+  /// The applicant's chosen password (hashed), used when their account is opened.
+  passwordHash      String?
   planSlug          String
   units             Int
   paymentPlan       PaymentPlan       @default(FULL)
   installmentMonths Int?
   quotedTotalBDT    Int
-  notes             String?
+  notes             String?           @db.Text
   status            ApplicationStatus @default(SUBMITTED)
-  adminNote         String?
+  adminNote         String?           @db.Text
   reviewedBy        String?
   reviewedAt        DateTime?
   holdingId         String?
@@ -289,7 +310,7 @@ model Application {
 /// defaults in `src/data/cms-defaults.ts` as fallback.
 model SiteContent {
   key       String   @id
-  value     String
+  value     String   @db.MediumText
   updatedBy String?
   updatedAt DateTime @updatedAt
 
@@ -302,9 +323,49 @@ model ActivityLog {
   actor     String
   action    String
   target    String?
-  detail    String?
+  detail    String?  @db.Text
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@map("activity_log")
+}
+
+/// An image uploaded in the admin panel, stored in the database itself so it
+/// survives serverless deploys (Vercel's filesystem is read-only). Served at
+/// /media/<id>.
+model MediaFile {
+  id         String   @id @default(cuid())
+  filename   String   @db.VarChar(255)
+  mimeType   String
+  size       Int
+  data       Bytes    @db.LongBlob
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+
+  @@map("media_files")
+}
+
+/// A one-time code emailed for "forgot password". Only a hash of the code is
+/// kept; it expires after 15 minutes and locks after 5 wrong tries.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@map("password_resets")
+}
+
+/// Hands out membership numbers one at a time: `last` is the running number
+/// already used in that year (starts at 2000, so the first member is 2001).
+/// Row 0 is the share-number counter: `last` is the highest share number issued.
+model MemberCounter {
+  year Int @id
+  last Int @default(2000)
+
+  @@map("member_counters")
 }

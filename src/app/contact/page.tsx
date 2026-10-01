@@ -6,7 +6,7 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Num } from "@/components/ui/Number";
 import { site } from "@/data/site";
-import { getContent } from "@/lib/cms";
+import { getAsset, getContent } from "@/lib/cms";
 import { positioning } from "@/data/about";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
   const { type } = await searchParams;
-  const contact = await getContent("contact");
+  const [contact, heroImage, mapImage, pg] = await Promise.all([getContent("contact"), getAsset("contact.hero"), getAsset("contact.map"), getContent("pages")]);
   const contactRows = [
     {
       label: "Phone",
@@ -47,11 +47,11 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <Hero
-        eyebrow="Get in touch"
-        title="We&rsquo;d Love to"
-        titleAccent="Hear From You"
-        lede="Questions about the project, the land, the ownership structure or a site visit — the AVEN team is here to help."
-        image="/renders/glass-tea-restaurant.jpg"
+        eyebrow={pg.contactEyebrow}
+        title={pg.contactTitle}
+        titleAccent={pg.contactAccent}
+        lede={pg.contactLede}
+        image={heroImage}
         imageAlt="The glass tea restaurant overlooking the terraced tea gardens at dusk"
         height="short"
         leaves={false}
@@ -107,7 +107,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                   className="group relative mt-8 block aspect-4/3 overflow-hidden rounded-2xl shadow-lift"
                 >
                   <Image
-                    src="/brochure/location-map-aven.jpg"
+                    src={mapImage}
                     alt="Satellite map of Sreemangal with the Aven resort pinned among the tea gardens"
                     fill
                     sizes="(min-width: 1024px) 34vw, 92vw"

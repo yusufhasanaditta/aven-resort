@@ -10,6 +10,7 @@ import {
   Empty,
   ErrorNote,
   Field,
+  TextInput,
   LoadingRows,
   PageHeader,
   SearchInput,
@@ -144,15 +145,29 @@ function ApplicationDrawer({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<"approve" | "reject" | null>(null);
+  const [password, setPassword] = useState("");
+  const [issued, setIssued] = useState<{ memberNo: string; oneTimePassword: string | null; passwordNote: string } | null>(null);
 
   async function act(action: "review" | "approve" | "reject") {
     if (!app) return;
     setBusy(action);
-    const { ok, json } = await send(`/api/admin/applications/${app.id}`, "PATCH", { action, adminNote: note || undefined });
+    const { ok, json } = await send(`/api/admin/applications/${app.id}`, "PATCH", {
+      action,
+      adminNote: note || undefined,
+      password: action === "approve" ? password : undefined,
+    });
     setBusy(null);
     setConfirm(null);
     if (!ok) return toast(firstError(json), "error");
-    toast(action === "approve" ? "Approved — holding created" : action === "reject" ? "Application rejected" : "Marked under review");
+    if (json.memberNo) {
+      setIssued({
+        memberNo: String(json.memberNo),
+        oneTimePassword: (json.oneTimePassword as string | null) ?? null,
+        passwordNote: password ? `The one you set: ${password}` : "The one they chose on their application",
+      });
+    }
+    setPassword("");
+    toast(action === "approve" ? (json.memberNo ? `Approved — account ${json.memberNo} opened` : "Approved — holding created") : action === "reject" ? "Application rejected" : "Marked under review");
     setNote("");
     onChanged();
   }
@@ -164,7 +179,7 @@ function ApplicationDrawer({
       open={!!app}
       onClose={onClose}
       title={app?.fullName ?? ""}
-      subtitle={app && <>Submitted {formatDate(app.createdAt)} · account {app.user.email}</>}
+      subtitle={app && <>Submitted {formatDate(app.createdAt)} · {app.user ? `account ${app.user.email}` : "new applicant — no account yet"}</>}
       footer={
         app &&
         (decided ? (
@@ -172,15 +187,30 @@ function ApplicationDrawer({
             <p className="text-xs text-[#6B756F]">
               {app.status === "APPROVED" ? "Approved" : "Rejected"} by {app.reviewedBy} {app.reviewedAt ? relTime(app.reviewedAt) : ""}
             </p>
-            {app.status === "APPROVED" && (
-              <Btn variant="primary" onClick={() => nav("customers", { id: app.user.id })}>Open customer</Btn>
+            {app.status === "APPROVED" && app.user && (
+              <Btn variant="primary" onClick={() => nav("customers", { id: app.user!.id })}>Open customer</Btn>
             )}
           </div>
         ) : confirm ? (
+          <div className="space-y-3">
+          {confirm === "approve" && !app.user && (
+            <Field
+              label="Password for their account (optional)"
+              hint={
+                app.hasPassword
+                  ? "They chose a password on their application — leave empty to keep it, or type one to replace it."
+                  : "Type a password to give them, or leave empty for a one-time password. They can change it later."
+              }
+            >
+              {(id) => <TextInput id={id} type="text" autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} />}
+            </Field>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-[#3D4A44]">
               {confirm === "approve"
-                ? `Create a ${app.units}-share holding worth ${formatBDT(app.quotedTotalBDT)}?`
+                ? app.user
+                  ? `Create a ${app.units}-share holding worth ${formatBDT(app.quotedTotalBDT)}?`
+                  : `Open ${app.fullName.split(" ")[0]}'s account and a ${app.units}-share holding (${formatBDT(app.quotedTotalBDT)})?`
                 : "Reject this application?"}
             </p>
             <div className="flex gap-2">
@@ -189,6 +219,7 @@ function ApplicationDrawer({
                 {busy ? "Working…" : confirm === "approve" ? "Yes, approve" : "Yes, reject"}
               </Btn>
             </div>
+          </div>
           </div>
         ) : (
           <div className="flex flex-wrap justify-end gap-2">
@@ -201,6 +232,26 @@ function ApplicationDrawer({
     >
       {app && (
         <div className="space-y-5">
+          {issued && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-[0.8125rem] text-emerald-900" role="status">
+              <p className="font-semibold">Account opened — give these to {app.fullName.split(" ")[0]}</p>
+              <dl className="mt-2 grid grid-cols-[9rem_1fr] gap-y-1">
+                <dt>Membership number</dt><dd className="font-mono font-semibold">{issued.memberNo}</dd>
+                <dt>Sign-in</dt><dd className="font-mono">{app.email}</dd>
+                {issued.oneTimePassword ? (
+                  <><dt>One-time password</dt><dd className="font-mono font-semibold tracking-wider">{issued.oneTimePassword}</dd></>
+                ) : (
+                  <><dt>Password</dt><dd>{issued.passwordNote}</dd></>
+                )}
+              </dl>
+              <p className="mt-2 text-xs text-emerald-800/80">
+                {issued.oneTimePassword
+                  ? "It’s shown only now. They’ll choose their own password at first sign-in."
+                  : "They can sign in with their membership number or email, and change the password from their account."}{" "}
+                The details are also emailed to them when email is set up.
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-forest-800 to-forest-950 p-5 text-white">
             <div>
               <p className="text-xs text-white/60">Applied for</p>
@@ -228,6 +279,8 @@ function ApplicationDrawer({
                 { k: "Email", v: app.email },
                 { k: "Occupation", v: app.occupation },
                 { k: "Address", v: app.address },
+                { k: "Referred by", v: app.referredBy },
+                { k: "Account password", v: app.user ? "Has an account" : app.hasPassword ? "Chosen by applicant" : "Not set — you give one on approval" },
               ]}
             />
           </Card>

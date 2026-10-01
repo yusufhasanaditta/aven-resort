@@ -5,16 +5,13 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Container, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
-import {
-  gallery,
-  galleryCategories,
-  type GalleryCategory,
-} from "@/data/gallery";
+import { galleryCategories, type GalleryCategory } from "@/data/gallery";
+import type { GalleryEntry } from "@/data/cms-defaults";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-/** Filterable masonry gallery with a keyboard-navigable lightbox. */
-export function GalleryMasonry() {
+/** Filterable masonry gallery with a keyboard-navigable lightbox. Photos come from admin → Website content → Gallery. */
+export function GalleryMasonry({ items: gallery }: { items: GalleryEntry[] }) {
   const [filter, setFilter] = useState<GalleryCategory | null>(null);
   const [index, setIndex] = useState<number | null>(null);
 

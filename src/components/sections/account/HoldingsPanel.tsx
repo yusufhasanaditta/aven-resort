@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TierIcon } from "@/components/ui/TierIcon";
-import { PayNextButton } from "@/components/sections/AccountActions";
+import { CancelReservationButton, PayNextButton } from "@/components/sections/AccountActions";
 import { Glass, StatusChip, accentOnDark } from "./ui";
 import { daysUntil, formatDate, paymentPlanLabel, type DashboardData, type DashHolding } from "@/lib/account";
 import { formatBDT, ownershipPercent, stayDays } from "@/lib/shares";
@@ -52,7 +52,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
           <TierIcon tierId={h.plan.slug} color={accentOnDark(h.plan.accentColor)} />
           <div>
             <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-cream-200/50">
-              {h.plan.name} membership
+              {h.plan.name} membership{h.shareNo && <> · Share {h.shareNo}</>}
             </p>
             <p className="mt-0.5 font-display text-2xl text-cream-50">
               {h.units} unit share{h.units > 1 ? "s" : ""}
@@ -135,7 +135,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         {open && (
           <ol className="mt-5 divide-y divide-white/6 rounded-2xl border border-white/6">
             {h.steps.map((s) => {
-              const isNext = h.nextDue?.n === s.n && !h.hasPending;
+              const isNext = h.nextDue?.n === s.n;
               const d = daysUntil(s.dueDate, now);
               return (
                 <li
@@ -179,18 +179,21 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
             <p className="text-xs text-cream-200/50">This holding was cancelled.</p>
           ) : h.fullyPaid ? (
             <p className="text-xs font-medium text-emerald-300">Fully paid — thank you.</p>
-          ) : h.hasPending ? (
-            <p className="text-xs text-gold-300">A payment is in progress for this holding.</p>
           ) : (
             <>
               <p className="text-xs text-cream-200/55">
-                Next: {formatBDT(h.nextDue?.amountBDT ?? 0)} · due {h.nextDue ? formatDate(h.nextDue.dueDate) : "—"}
+                {h.hasPending
+                  ? "A payment was started but not finished — you can pay again."
+                  : `Next: ${formatBDT(h.nextDue?.amountBDT ?? 0)} · due ${h.nextDue ? formatDate(h.nextDue.dueDate) : "—"}`}
               </p>
-              <PayNextButton
-                holdingId={h.id}
-                tone="light"
-                label={h.paymentPlan === "INSTALLMENT" && nextStep ? `Pay ${nextStep.part.toLowerCase()}` : "Complete payment"}
-              />
+              <div className="flex flex-wrap items-start gap-2">
+                {paidCount === 0 && <CancelReservationButton holdingId={h.id} />}
+                <PayNextButton
+                  holdingId={h.id}
+                  tone="light"
+                  label={`${h.paymentPlan === "INSTALLMENT" && nextStep ? `Pay ${nextStep.part.toLowerCase()}` : "Pay now"} · ${formatBDT(h.nextDue?.amountBDT ?? 0)}`}
+                />
+              </div>
             </>
           )}
         </div>

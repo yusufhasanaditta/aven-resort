@@ -12,6 +12,7 @@ import { businessModel, ownershipTiers, shareOwnership } from "@/data/ownership"
 import { projectFacts } from "@/data/site";
 import { about } from "@/data/about";
 import { getAsset, getContent } from "@/lib/cms";
+import { getPlans } from "@/lib/plans";
 import { getLang } from "@/lib/i18n-server";
 import { InterestForm } from "@/components/sections/InterestForm";
 
@@ -22,9 +23,11 @@ export const metadata: Metadata = {
 };
 
 export default async function OwnershipPage() {
-  const [heroImage, benefits] = await Promise.all([
-    getAsset("ownership.hero", "/renders/eco-villa-sunrise.jpg"),
+  const [heroImage, benefits, plans, pg] = await Promise.all([
+    getAsset("ownership.hero"),
     getContent("benefits"),
+    getPlans(),
+    getContent("pages"),
   ]);
   const lang = await getLang();
   const bn = lang === "bn";
@@ -33,13 +36,13 @@ export default async function OwnershipPage() {
     <>
       <Hero
         bangla={bn}
-        eyebrow={bn ? "মালিকানা ও মেম্বারশিপ" : "Ownership & membership"}
-        title={bn ? "পাহাড়ের এক টুকরো" : "Own a Piece"}
-        titleAccent={bn ? "আপনার হোক" : "of the Hills"}
+        eyebrow={bn ? "মালিকানা ও মেম্বারশিপ" : pg.ownershipEyebrow}
+        title={bn ? "পাহাড়ের এক টুকরো" : pg.ownershipTitle}
+        titleAccent={bn ? "আপনার হোক" : pg.ownershipAccent}
         lede={
           bn
             ? "সাফ কাবলা নিবন্ধিত জমির নিশ্চয়তায় পুরো হোটেল ও রিসোর্টের আংশিক মালিকানা — এক্সিকিউটিভ থেকে রয়্যাল পর্যন্ত পাঁচটি মেম্বারশিপ প্ল্যান, আর একটি ক্যালকুলেটর যা দেখায় আপনি ঠিক কত পরিশোধ করবেন।"
-            : "Fractional ownership of the entire hotel and resort, backed by Saf-Kabla registered land — five membership plans from Executive to Royal, and a calculator that shows exactly what you'd pay."
+            : pg.ownershipLede
         }
         image={heroImage}
         imageAlt="An eco-luxury villa with infinity pool at sunrise, surrounded by tea hills"
@@ -65,7 +68,7 @@ export default async function OwnershipPage() {
         ]}
       />
 
-      <PlanChart lang={lang} />
+      <PlanChart plans={plans} lang={lang} />
 
       <Section tone="cream" id="calculator" className="scroll-mt-16">
         <Suspense fallback={<Container><p className="text-sm text-forest-900/50">Loading calculator…</p></Container>}>
@@ -128,7 +131,7 @@ export default async function OwnershipPage() {
 
           <RevealGroup className="mt-10 grid gap-4 md:grid-cols-[1.4fr_1fr]">
             {[
-              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর · ১৫.১৫ বিঘা" },
+              { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha · ${projectFacts.landDecimal} Decimal`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর · ১৫.১৫ বিঘা · ৫০০ শতাংশ" },
               { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২৭০০" },
             ].map((f) => (
               <RevealItem key={f.en}>
@@ -195,8 +198,8 @@ export default async function OwnershipPage() {
               {about.timelineNote}
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button href="/register" size="lg">
-                Open a shareholder account
+              <Button href="/apply" size="lg">
+                Apply to become a shareholder
                 <ArrowRight />
               </Button>
               <Button href="/contact" variant="secondary" size="lg">

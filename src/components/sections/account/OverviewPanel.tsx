@@ -17,7 +17,7 @@ export function OverviewPanel({
   onNavigate,
 }: {
   data: DashboardData;
-  onNavigate: (tab: "holdings" | "invoices" | "buy") => void;
+  onNavigate: (tab: "holdings" | "invoices" | "buy" | "profile") => void;
 }) {
   const { user, summary, holdings, events, now } = data;
   const daysAsMember = Math.max(0, -daysUntil(user.memberSince, now));
@@ -44,30 +44,27 @@ export function OverviewPanel({
         />
         <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto]">
           <div>
-            <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold-400/80">
-              Shareholder · {user.memberId}
-            </p>
-            <h2 className="mt-2 font-display text-4xl text-cream-50 sm:text-5xl">
-              Welcome back, {firstName}.
-            </h2>
-            <dl className="mt-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-              <div>
-                <dt className="text-[0.6875rem] text-cream-200/45">Member since</dt>
-                <dd className="mt-0.5 font-medium text-cream-50">{formatDate(user.memberSince)}</dd>
+            <div className="flex items-center gap-4">
+              {user.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- profile photo from /media
+                <img src={user.photoUrl} alt={`${user.name}'s photo`} className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-gold-400/50 sm:h-20 sm:w-20" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("profile")}
+                  className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-gold-400/60 text-[0.625rem] font-semibold leading-tight text-gold-300 hover:bg-gold-400/10 sm:h-20 sm:w-20"
+                >
+                  <AdminIcon icon="user" className="mb-1 h-5 w-5" />
+                  Add photo
+                </button>
+              )}
+              <div className="min-w-0">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold-400/80">
+                  Shareholder · ID {user.memberId}
+                </p>
+                <h2 className="mt-1 font-display text-4xl text-cream-50 sm:text-5xl">Welcome back, {firstName}.</h2>
               </div>
-              <div>
-                <dt className="text-[0.6875rem] text-cream-200/45">Shareholder for</dt>
-                <dd className="mt-0.5 font-medium text-cream-50">
-                  {daysAsMember} day{daysAsMember === 1 ? "" : "s"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[0.6875rem] text-cream-200/45">First share</dt>
-                <dd className="mt-0.5 font-medium text-cream-50">
-                  {summary.firstShareAt ? formatDate(summary.firstShareAt) : "Not yet"}
-                </dd>
-              </div>
-            </dl>
+            </div>
             <div className="mt-6 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -93,7 +90,7 @@ export function OverviewPanel({
               <TiltCard intensity={12} innerClassName="rounded-[1.6rem]">
                 <MembershipCard
                   plan={cardPlan}
-                  holder={{ name: user.name, memberId: user.memberId }}
+                  holder={{ name: user.name, memberId: user.memberId, photoUrl: user.photoUrl, shareNo: user.shareNumbers[0] }}
                   className="w-[17rem] sm:w-[21rem]"
                 />
               </TiltCard>
@@ -103,6 +100,29 @@ export function OverviewPanel({
             </div>
           )}
         </div>
+        <dl className="relative mt-8 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/8 pt-6 text-sm sm:grid-cols-3">
+          {[
+            { k: "Shareholder ID", v: user.memberId, mono: true },
+            { k: user.shareNumbers.length > 1 ? "Share numbers" : "Share number", v: user.shareNumbers.join(", ") || "Issued with your first share", mono: user.shareNumbers.length > 0 },
+            { k: "NID number", v: user.nid || "Not on file", mono: !!user.nid },
+            { k: "Nominee", v: user.nomineeName ? `${user.nomineeName}${user.nomineeRelation ? ` (${user.nomineeRelation})` : ""}` : "Not on file" },
+            { k: "Referred by", v: user.referredBy || "—" },
+            { k: "Shareholder since", v: `${formatDate(user.memberSince)} · ${daysAsMember} day${daysAsMember === 1 ? "" : "s"}` },
+          ].map((r) => (
+            <div key={r.k} className="min-w-0">
+              <dt className="text-[0.6875rem] text-cream-200/45">{r.k}</dt>
+              <dd className={cn("mt-0.5 break-words font-medium text-cream-50", r.mono && "font-mono tracking-wide")}>{r.v}</dd>
+            </div>
+          ))}
+        </dl>
+        {!user.photoUrl && (
+          <p className="relative mt-6 rounded-xl border border-gold-400/25 bg-gold-400/10 px-4 py-3 text-xs leading-relaxed text-gold-200">
+            Please add your photo — it goes on your shareholder card and share certificate.{" "}
+            <button type="button" onClick={() => onNavigate("profile")} className="font-semibold text-gold-300 underline underline-offset-2">
+              Upload now
+            </button>
+          </p>
+        )}
       </Glass>
 
       {/* Plan progress */}

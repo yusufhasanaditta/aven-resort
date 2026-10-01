@@ -88,3 +88,42 @@ export function PayNextButton({
     </div>
   );
 }
+
+/** Withdraws a reservation nothing has been paid on yet — asks once before doing it. */
+export function CancelReservationButton({ holdingId }: { holdingId: string }) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function cancel() {
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/shares/${holdingId}/cancel`, { method: "POST" }).catch(() => null);
+    const json = res ? await res.json().catch(() => ({})) : {};
+    setBusy(false);
+    if (!res?.ok) return setError(json.error ?? "Could not cancel. Please try again.");
+    setConfirming(false);
+    router.refresh();
+  }
+
+  if (!confirming) {
+    return (
+      <ButtonAction size="sm" variant="ghost-light" onClick={() => setConfirming(true)}>
+        Cancel reservation
+      </ButtonAction>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-full bg-white/5 py-1 pl-4 pr-1">
+      <span className="text-xs text-cream-100">Cancel these shares?</span>
+      <ButtonAction size="sm" variant="ghost-light" onClick={() => setConfirming(false)} disabled={busy}>
+        Keep
+      </ButtonAction>
+      <ButtonAction size="sm" variant="light" onClick={cancel} disabled={busy}>
+        {busy ? "Cancelling…" : "Yes, cancel"}
+      </ButtonAction>
+      {error && <p className="w-full pb-1 text-xs text-gold-300">{error}</p>}
+    </div>
+  );
+}

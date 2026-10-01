@@ -45,7 +45,7 @@ export function ShareCalculator() {
   const [plans, setPlans] = useState<PlanRow[]>(fallbackPlans);
   const [plansStatus, setPlansStatus] = useState<PlansStatus>("loading");
   const [units, setUnits] = useState(1);
-  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("FULL");
+  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("INSTALLMENT");
   const [session, setSession] = useState<Session>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +215,7 @@ export function ShareCalculator() {
           <div className="mt-8 border-t border-forest-600/10 pt-6">
             <p className="text-xs font-medium text-forest-900/60">Payment plan</p>
             <div className="mt-3 flex gap-2">
-              {(["FULL", "INSTALLMENT"] as const).map((p) => (
+              {(["INSTALLMENT", "FULL"] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
@@ -302,21 +302,38 @@ export function ShareCalculator() {
 
                 {schedule && (
                   <div className="mt-6 border-t border-cream-50/10 pt-5">
-                    <p className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">
-                      Installment schedule
-                    </p>
-                    <ul className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1 text-[0.8125rem]">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">Payment schedule</p>
+                      <p className="text-[0.625rem] text-cream-200/40">{schedule.length} payments</p>
+                    </div>
+                    <ol className="mt-3 max-h-80 divide-y divide-cream-50/6 overflow-y-auto rounded-2xl bg-cream-50/[0.04] pr-1 text-[0.8125rem] ring-1 ring-cream-50/8">
                       {schedule.map((line) => (
-                        <li key={line.index} className="flex items-center justify-between">
-                          <span className="text-cream-200/60">
-                            {line.label} · {line.dueLabel}
+                        <li
+                          key={line.index}
+                          className={cn("grid grid-cols-[1.75rem_1fr_auto] items-center gap-2 px-3 py-2.5", line.index === 1 && "bg-gold-400/10")}
+                        >
+                          <span
+                            className={cn(
+                              "flex h-6 w-6 items-center justify-center rounded-full font-numeral text-[0.625rem]",
+                              line.index === 1 ? "bg-gold-400 text-forest-950" : "bg-cream-50/8 text-cream-200/60",
+                            )}
+                          >
+                            {line.index}
                           </span>
-                          <span className="font-numeral text-cream-50">
-                            {formatBDT(line.amountBDT)}
+                          <span className="min-w-0">
+                            <span className={cn("block", line.index === 1 ? "font-semibold text-gold-300" : "text-cream-50")}>{line.label}</span>
+                            <span className="block text-[0.6875rem] text-cream-200/45">{line.dueLabel}</span>
                           </span>
+                          <span className="font-numeral text-cream-50">{formatBDT(line.amountBDT)}</span>
                         </li>
                       ))}
-                    </ul>
+                    </ol>
+                    <div className="mt-3 flex items-baseline justify-between rounded-2xl bg-cream-50/8 px-4 py-3">
+                      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-cream-200/70">Total of all payments</span>
+                      <span className="font-numeral text-xl text-cream-50">
+                        {formatBDT(schedule.reduce((sum, l) => sum + l.amountBDT, 0))}
+                      </span>
+                    </div>
                   </div>
                 )}
 
@@ -339,8 +356,8 @@ export function ShareCalculator() {
                       </p>
                     </>
                   ) : (
-                    <Button href={`/register?next=/ownership%23calculator`} variant="light" size="lg" className="w-full">
-                      Create an account to purchase
+                    <Button href={`/apply?plan=${result.plan.slug}`} variant="light" size="lg" className="w-full">
+                      Apply for these shares
                       <ArrowRight />
                     </Button>
                   )}

@@ -9,7 +9,7 @@ import { AmenityIcon } from "@/components/ui/AmenityIcon";
 import { amenities, amenityGroups, watchDeck, type Amenity, type AmenityGroupId } from "@/data/amenities";
 import { wellnessServices } from "@/data/wellness";
 import { cn } from "@/lib/utils";
-import { getAsset } from "@/lib/cms";
+import { getAsset, getContent } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Amenities",
@@ -36,15 +36,15 @@ type Panel = Pick<Amenity, "name" | "description" | "image"> & {
 };
 
 export default async function AmenitiesPage() {
-  const heroImage = await getAsset("amenities.hero", "/renders/hanging-bridge-night.jpg");
+  const [heroImage, pg] = await Promise.all([getAsset("amenities.hero"), getContent("pages")]);
 
   return (
     <>
       <Hero
-        eyebrow="Site zoning & functions"
-        title="Twenty Amenities."
-        titleAccent="A Share of Every One."
-        lede="Every shareholder holds fractional ownership of all the features and amenities of the resort, with Saf-Kabla land registration — from the library and tree house to the cloud walkway and helipad."
+        eyebrow={pg.amenitiesEyebrow}
+        title={pg.amenitiesTitle}
+        titleAccent={pg.amenitiesAccent}
+        lede={pg.amenitiesLede}
         image={heroImage}
         imageAlt="The cloud walkway lit gold, winding across the tea hills at dusk"
         height="tall"

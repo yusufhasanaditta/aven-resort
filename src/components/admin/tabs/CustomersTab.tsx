@@ -5,8 +5,10 @@ import { AdminIcon } from "@/components/ui/AdminIcon";
 import {
   ExportButton,
   Avatar,
+  Btn,
   Badge,
   Card,
+  DefinitionGrid,
   Drawer,
   Empty,
   ErrorNote,
@@ -20,6 +22,8 @@ import {
   useAdminFetch,
 } from "../kit";
 import { HoldingLedger } from "../HoldingLedger";
+import { PhotoUploader } from "@/components/sections/account/PhotoUploader";
+import { AddShareholderModal, AllocateSharesModal, EditCustomerModal, MessageModal, PasswordHelpModal } from "../CustomerActions";
 import { RecordPaymentModal } from "../RecordPayment";
 import { PaymentRows } from "./PaymentsTab";
 import type { AdminCustomer, AdminCustomerDetail, AdminHolding } from "@/lib/admin-types";
@@ -34,6 +38,8 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(focus.id ?? null);
+  const [adding, setAdding] = useState(!!focus.create);
+  const [messagingAll, setMessagingAll] = useState(false);
 
   const customers = useMemo(() => data?.customers ?? [], [data]);
   const shown = customers.filter((c) => {
@@ -50,7 +56,11 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
         title="Shareholders"
         description="Every customer account, their holdings, balances and payment history."
         actions={
-          <ExportButton kind="customers" />
+          <>
+            <ExportButton kind="customers" />
+            <Btn icon="mail" onClick={() => setMessagingAll(true)}>Message all</Btn>
+            <Btn variant="primary" icon="user" onClick={() => setAdding(true)}>Add shareholder</Btn>
+          </>
         }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -94,7 +104,7 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
                   <tr key={c.id} onClick={() => setOpenId(c.id)} className="cursor-pointer hover:bg-[#FAFBF9]">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <Avatar name={c.name} />
+                        <Avatar name={c.name} src={c.photoUrl} />
                         <div className="min-w-0">
                           <p className="truncate font-medium text-[#14201B]">{c.name}</p>
                           <p className="truncate text-xs text-[#6B756F]">
@@ -140,6 +150,17 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
           onChanged();
         }}
       />
+      <AddShareholderModal
+        open={adding}
+        onClose={() => setAdding(false)}
+        onCreated={(id) => {
+          setAdding(false);
+          reload();
+          onChanged();
+          setOpenId(id);
+        }}
+      />
+      <MessageModal to={messagingAll ? "all" : null} onClose={() => setMessagingAll(false)} />
     </>
   );
 }
@@ -149,6 +170,7 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
   const c = id && data?.customer.id === id ? data.customer : null;
   const [section, setSection] = useState<"holdings" | "payments" | "applications">("holdings");
   const [recording, setRecording] = useState<{ holding: AdminHolding; step?: number } | null>(null);
+  const [action, setAction] = useState<"edit" | "message" | "password" | "allocate" | null>(null);
   const [now] = useState(() => new Date().toISOString());
 
   const refresh = () => {
@@ -165,7 +187,7 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
         title={
           c ? (
             <span className="flex items-center gap-3">
-              <Avatar name={c.name} className="h-11 w-11 text-sm" />
+              <Avatar name={c.name} src={c.photoUrl} className="h-11 w-11 text-sm" />
               <span className="min-w-0">
                 <span className="block truncate">{c.name}</span>
                 <span className="block font-mono text-xs font-normal text-[#6B756F]">{c.memberId}</span>
@@ -189,6 +211,29 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F0F2EF] px-3 py-1.5 text-[#3D4A44]">
                 {c.location} · joined {formatDate(c.createdAt)}
               </span>
+            </div>
+
+            <PhotoUploader key={c.id} name={c.name} photoUrl={c.photoUrl} endpoint={`/api/admin/customers/${c.id}/photo`} tone="light" size="md" onChanged={refresh} />
+
+            <Card className="p-5">
+              <DefinitionGrid
+                cols={3}
+                items={[
+                  { k: "Shareholder ID", v: <span className="font-mono">{c.memberId}</span> },
+                  { k: "Share number", v: c.shareNumbers.length ? <span className="font-mono">{c.shareNumbers.join(", ")}</span> : null },
+                  { k: "NID number", v: c.nid && <span className="font-mono">{c.nid}</span> },
+                  { k: "Nominee", v: c.nomineeName && `${c.nomineeName}${c.nomineeRelation ? ` (${c.nomineeRelation})` : ""}` },
+                  { k: "Referred by", v: c.referredBy },
+                  { k: "Photo", v: c.photoUrl ? "On file" : <span className="text-amber-700">Missing — upload above</span> },
+                ]}
+              />
+            </Card>
+
+            <div className="flex flex-wrap gap-2">
+              <Btn size="sm" variant="primary" icon="layers" onClick={() => setAction("allocate")}>Allocate shares</Btn>
+              <Btn size="sm" icon="mail" onClick={() => setAction("message")}>Send message</Btn>
+              <Btn size="sm" icon="user" onClick={() => setAction("edit")}>Edit details</Btn>
+              <Btn size="sm" icon="bell" onClick={() => setAction("password")}>Password help</Btn>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -253,6 +298,10 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
           </div>
         )}
       </Drawer>
+      <EditCustomerModal key={`edit-${c?.id ?? ""}`} person={action === "edit" ? c : null} onClose={() => setAction(null)} onSaved={refresh} />
+      <MessageModal to={action === "message" ? c : null} onClose={() => setAction(null)} />
+      <PasswordHelpModal person={action === "password" ? c : null} onClose={() => setAction(null)} />
+      <AllocateSharesModal person={action === "allocate" ? c : null} onClose={() => setAction(null)} onDone={refresh} />
       <RecordPaymentModal
         key={recording ? `${recording.holding.id}-${recording.step ?? "next"}` : "none"}
         holding={recording?.holding ?? null}

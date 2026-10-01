@@ -3,15 +3,15 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { installmentLabelFor, scheduleAmounts } from "@/lib/shares";
-import { initiatePayment, isConfigured } from "@/lib/sslcommerz";
+import { startPayment } from "@/lib/payments";
 
 /**
  * Starts the next payment due on a holding — the next installment if it's on
- * a schedule, or a retry of the single payment if it's a full-payment holding
- * whose first attempt never completed.
+ * a schedule, or the single payment of a full-payment holding. An earlier
+ * attempt left pending (tab closed, back button) is replaced, never a dead end.
  */
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ holdingId: string }> },
 ) {
   const session = await getSession();
@@ -29,66 +29,30 @@ export async function POST(
   if (!holding || holding.userId !== session.sub) {
     return NextResponse.json({ error: "Holding not found." }, { status: 404 });
   }
-
-  const pendingExists = holding.payments.some((p) => p.status === "PENDING");
-  if (pendingExists) {
-    return NextResponse.json(
-      { error: "A payment is already in progress for this holding." },
-      { status: 409 },
-    );
+  if (holding.status === "CANCELLED") {
+    return NextResponse.json({ error: "This reservation was cancelled." }, { status: 409 });
   }
 
-  const successfulCount = holding.payments.filter((p) => p.status === "SUCCESS").length;
-
-  let amountBDT: number;
-  let installmentNo: number;
-  let label: string;
-
-  if (holding.paymentPlan === "INSTALLMENT" && holding.installmentMonths) {
-    if (successfulCount >= holding.installmentMonths) {
-      return NextResponse.json({ error: "This holding is fully paid." }, { status: 400 });
-    }
-    const schedule = scheduleAmounts(holding.totalAmountBDT, holding.installmentMonths, holding.downPaymentBDT);
-    amountBDT = schedule[successfulCount];
-    installmentNo = successfulCount + 1;
-    label = installmentLabelFor(installmentNo, holding.installmentMonths, !!holding.downPaymentBDT).toLowerCase();
-  } else {
-    if (successfulCount >= 1) {
-      return NextResponse.json({ error: "This holding is fully paid." }, { status: 400 });
-    }
-    amountBDT = holding.totalAmountBDT;
-    installmentNo = 1;
-    label = "full payment";
+  const paidSteps = new Set(holding.payments.filter((p) => p.status === "SUCCESS").map((p) => p.installmentNo));
+  const steps = holding.paymentPlan === "INSTALLMENT" && holding.installmentMonths ? holding.installmentMonths : 1;
+  const schedule = steps > 1 ? scheduleAmounts(holding.totalAmountBDT, steps, holding.downPaymentBDT) : [holding.totalAmountBDT];
+  const index = schedule.findIndex((_, i) => !paidSteps.has(i + 1));
+  if (index === -1) {
+    return NextResponse.json({ error: "This holding is fully paid." }, { status: 400 });
   }
 
-  const tranId = `AVEN-${holding.id}-${installmentNo}-${randomUUID().slice(0, 8)}`;
+  const installmentNo = index + 1;
+  const label = steps > 1 ? installmentLabelFor(installmentNo, steps, !!holding.downPaymentBDT).toLowerCase() : "full payment";
 
-  await prisma.payment.create({
-    data: { holdingId: holding.id, amountBDT, tranId, installmentNo, status: "PENDING" },
-  });
-
-  if (!isConfigured()) {
-    return NextResponse.json({
-      ok: true,
-      gatewayUrl: null,
-      notice:
-        "This payment has been recorded as due. Online payment via SSLCommerz isn't connected yet — the AVEN team will contact you to complete it.",
-    });
-  }
-
-  const gateway = await initiatePayment({
-    tranId,
-    amountBDT,
-    customerName: holding.user.name,
-    customerEmail: holding.user.email,
-    customerPhone: holding.user.phone,
-    customerAddress: holding.user.location,
+  const started = await startPayment({
+    holdingId: holding.id,
+    installmentNo,
+    amountBDT: schedule[index],
+    tranId: `AVEN-${holding.id}-${installmentNo}-${randomUUID().slice(0, 8)}`,
+    customer: holding.user,
     productName: `${holding.plan.name} — ${label}, Aven Eco Luxury Resort`,
   });
 
-  if (!gateway.ok) {
-    return NextResponse.json({ error: gateway.error }, { status: 502 });
-  }
-
-  return NextResponse.json({ ok: true, gatewayUrl: gateway.gatewayUrl });
+  if (!started.ok) return NextResponse.json({ error: started.error }, { status: started.status });
+  return NextResponse.json({ ok: true, gatewayUrl: started.gatewayUrl, notice: started.notice });
 }

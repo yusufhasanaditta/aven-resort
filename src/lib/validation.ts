@@ -20,8 +20,21 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password needs at least one number."),
 });
 
+/** What a shareholder may change on their own profile — email stays fixed, it is their sign-in. */
+export const profileSchema = registerSchema.pick({ name: true, phone: true, location: true });
+
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password."),
+  newPassword: registerSchema.shape.password,
+});
+
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+  /** An email address or a membership number. */
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .refine((v) => /^\d{8,}$/.test(v) || z.string().email().safeParse(v).success, "Enter your email or membership number."),
   password: z.string().min(1, "Enter your password."),
 });
 
@@ -70,6 +83,8 @@ export const leadUpdateSchema = z.object({
   status: z.enum(LEAD_STATUSES).optional(),
   nextFollowUpAt: z.string().trim().max(40).nullable().optional(),
   assignedTo: z.string().trim().max(120).nullable().optional(),
+  /** "Move to Leads CRM" re-files a contact request as an ordinary lead. */
+  source: z.string().trim().min(1).max(60).optional(),
   priority: z.coerce.number().int().min(0).max(2).optional(),
   name: z.string().trim().min(2).max(120).optional(),
   email: z.string().trim().toLowerCase().email().optional(),
@@ -102,12 +117,49 @@ export const applicationSchema = z
     nomineeName: optionalText(160),
     nomineeRelation: optionalText(60),
     nomineePhone: optionalText(20),
+    referredBy: optionalText(160),
+    /** Optional: the password for the account the team opens on approval. */
+    password: registerSchema.shape.password.optional().or(z.literal("")),
+    confirmPassword: z.string().optional(),
     planSlug: z.string().trim().min(1).max(40),
     units: z.coerce.number().int().min(1).max(500),
     paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
     notes: optionalText(2000),
     agree: z.literal(true, { message: "Please accept the terms to continue." }),
+  })
+  .refine((d) => !d.password || d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "The passwords don't match.",
   });
+
+const nullableText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((v) => v || null);
+
+/** A shareholder's NID, nominee and referrer, as the admin enters them. Blank clears a field. */
+export const kycSchema = z.object({
+  nid: z
+    .string()
+    .trim()
+    .regex(/^(\d{10}|\d{13}|\d{17})?$/, "NID must be 10, 13 or 17 digits.")
+    .optional()
+    .transform((v) => v || null),
+  nomineeName: nullableText(160),
+  nomineeRelation: nullableText(60),
+  referredBy: nullableText(160),
+});
+
+/** "Contact me" from the Apply chooser: just enough to call or email back. */
+export const contactRequestSchema = z.object({
+  name: z.string().trim().min(2, "Enter your name.").max(120),
+  phone,
+  email: z.string().trim().toLowerCase().email("Enter a valid email address."),
+  message: optionalText(1000),
+});
 
 /** An offline payment recorded by the team: cash, bank transfer, bKash… */
 export const manualPaymentSchema = z.object({
@@ -133,3 +185,16 @@ export function zodErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+/** A message from the Aven team to a shareholder's inbox and email. */
+export const messageSchema = z.object({
+  title: z.string().trim().min(3, "Add a subject.").max(140),
+  body: z.string().trim().min(3, "Write a message.").max(4000),
+  href: z
+    .string()
+    .trim()
+    .max(300)
+    .regex(/^(\/(?!\/)|https:\/\/)/, "Use a site path like /account or an https:// link.")
+    .optional()
+    .or(z.literal("")),
+});

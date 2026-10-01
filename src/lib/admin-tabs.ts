@@ -2,6 +2,7 @@
 export const ADMIN_TABS = [
   { id: "overview", label: "Overview", icon: "overview", group: "Workspace" },
   { id: "leads", label: "Leads CRM", icon: "users", group: "Sales" },
+  { id: "contacts", label: "Contact requests", icon: "mail", group: "Sales" },
   { id: "applications", label: "Applications", icon: "invoice", group: "Sales" },
   { id: "customers", label: "Shareholders", icon: "user", group: "Investors" },
   { id: "installments", label: "Installments & dues", icon: "calendar", group: "Investors" },
@@ -13,7 +14,8 @@ export const ADMIN_TABS = [
 ] as const;
 
 export type AdminTabId = (typeof ADMIN_TABS)[number]["id"];
-export type TabFocus = { id?: string; filter?: string };
+/** Where a tab opens: a record (`id`), a filter, or straight into its "new" form (`create`). */
+export type TabFocus = { id?: string; filter?: string; create?: boolean };
 
 export function isAdminTab(v: unknown): v is AdminTabId {
   return ADMIN_TABS.some((t) => t.id === v);

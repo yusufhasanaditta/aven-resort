@@ -1,6 +1,8 @@
-import type { NextConfig } from "next";
+// Plain JavaScript on purpose: Hostinger's shared servers can't run the
+// compiler Next.js needs to read a TypeScript config (next.config.ts).
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   async redirects() {
     return [
       {

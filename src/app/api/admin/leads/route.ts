@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { CONTACT_REQUEST_SOURCE } from "@/lib/contact-requests";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { LEAD_STATUSES, leadSchema, zodErrors } from "@/lib/validation";
 import type { Prisma } from "@prisma/client";
 
-/** GET ?status=NEW&q=rahim — the pipeline, newest first. */
+/** GET ?status=NEW&q=rahim&source=contact-request — the pipeline (or the contact requests), newest first. */
 export async function GET(request: Request) {
   const guard = await adminGuard();
   if (guard instanceof NextResponse) return guard;
@@ -15,6 +16,9 @@ export async function GET(request: Request) {
 
   const where: Prisma.LeadWhereInput = {};
   if (status && (LEAD_STATUSES as readonly string[]).includes(status)) where.status = status as (typeof LEAD_STATUSES)[number];
+  // Contact requests are listed on their own (?source=contact-request); the CRM shows the rest.
+  const source = url.searchParams.get("source");
+  where.source = source === CONTACT_REQUEST_SOURCE ? source : { not: CONTACT_REQUEST_SOURCE };
   if (q) where.OR = [{ name: { contains: q } }, { email: { contains: q } }, { phone: { contains: q } }];
 
   const leads = await prisma.lead.findMany({

@@ -7,11 +7,13 @@ import { MembershipSpread } from "@/components/sections/home/MembershipSpread";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
+import { ApplyNowButton } from "@/components/sections/ApplyChooser";
 import { Logo, LogoMark } from "@/components/ui/Logo";
 import { WellnessQuotes } from "@/components/sections/home/WellnessQuotes";
 import { wellnessServices } from "@/data/wellness";
 import { projectFacts, site } from "@/data/site";
 import { getContent } from "@/lib/cms";
+import { getPlans } from "@/lib/plans";
 import { getLang } from "@/lib/i18n-server";
 
 /**
@@ -24,7 +26,7 @@ const villaTypes = ["Super Deluxe Residential", "Single", "Duplex", "Presidentia
 
 export default async function HomePage() {
   const [yoga, ...therapies] = wellnessServices;
-  const [hero, resort, contact, lang] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact"), getLang()]);
+  const [hero, resort, contact, lang, plans] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact"), getLang(), getPlans()]);
   const bn = lang === "bn";
 
   return (
@@ -42,15 +44,22 @@ export default async function HomePage() {
           { label: bn ? "এখনই বুক করুন" : hero.primaryLabel, href: hero.primaryHref },
           { label: bn ? "আপনার শেয়ার নিন" : hero.secondaryLabel, href: hero.secondaryHref, variant: "outline-light" as const },
         ].filter((a) => a.label && a.href)}
-        facts={[
+        facts={
           bn
-            ? { value: "৫ একর · ১৫.১৫ বিঘা", label: "জমির পরিমাণ" }
-            : { value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha`, label: "Land" },
-          bn ? { value: "২,৭০০", label: "মোট শেয়ার" } : { value: projectFacts.totalShares.toLocaleString("en-US"), label: "Unit shares" },
-        ]}
+            ? [
+                { value: "৫", label: "একর" },
+                { value: "১৫.১৫", label: "বিঘা" },
+                { value: "৫০০", label: "শতাংশ" },
+              ]
+            : [
+                { value: projectFacts.landAcres, label: "Acres" },
+                { value: projectFacts.landBigha, label: "Bigha" },
+                { value: projectFacts.landDecimal, label: "Decimal" },
+              ]
+        }
       />
 
-      <WellnessLine />
+      <WellnessLine text={bn ? "দেশের প্রথম ওয়েলনেস-ভিত্তিক রিসোর্ট ও রিট্রিট" : hero.ticker} bangla={bn} />
 
       {/* The brochure's welcome letter */}
       <Section tone="white" className="bg-leaf-swirl overflow-hidden">
@@ -226,7 +235,7 @@ export default async function HomePage() {
             </p>
           </Reveal>
           <Reveal delay={0.1} className="mt-14">
-            <MembershipSpread />
+            <MembershipSpread plans={plans} />
           </Reveal>
           <Reveal delay={0.15} className="mt-8 flex flex-wrap justify-center gap-3">
             <Button href="/ownership#calculator" variant="light" size="lg">
@@ -307,10 +316,10 @@ export default async function HomePage() {
             </h2>
             <p className="mt-6 font-display text-2xl italic text-forest-700 sm:text-3xl">{resort.motto}</p>
             <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <Button href="/apply" size="lg">
+              <ApplyNowButton size="lg" lang={bn ? "bn" : "en"}>
                 Become a shareholder
                 <ArrowRight />
-              </Button>
+              </ApplyNowButton>
               <Button href="/interest" variant="secondary" size="lg">
                 Register interest
               </Button>

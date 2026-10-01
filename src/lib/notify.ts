@@ -6,7 +6,7 @@ import { emailHtml, sendEmail, siteUrl } from "@/lib/mailer";
 import { formatBDT } from "@/lib/shares";
 
 type NotificationInput = {
-  kind: "DUE_SOON" | "DUE_TODAY" | "OVERDUE" | "PAYMENT_RECEIVED" | "REMINDER";
+  kind: "DUE_SOON" | "DUE_TODAY" | "OVERDUE" | "PAYMENT_RECEIVED" | "REMINDER" | "MESSAGE";
   title: string;
   body: string;
   href?: string;

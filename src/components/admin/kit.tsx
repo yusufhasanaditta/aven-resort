@@ -9,6 +9,7 @@ import { createContext, useCallback, useContext, useEffect, useId, useRef, useSt
 import { AnimatePresence, motion } from "framer-motion";
 import { AdminIcon } from "@/components/ui/AdminIcon";
 import { cn } from "@/lib/utils";
+import { shrinkImage } from "@/lib/shrink-image";
 
 /* ------------------------------------------------------------------ data */
 
@@ -541,6 +542,9 @@ export function Modal({
   );
 }
 
+/** Open overlays, newest last — Escape closes only the top one (a modal over a drawer, not both). */
+const overlayStack: symbol[] = [];
+
 function useEscape(open: boolean, onClose: () => void) {
   const ref = useRef(onClose);
   useEffect(() => {
@@ -548,9 +552,14 @@ function useEscape(open: boolean, onClose: () => void) {
   });
   useEffect(() => {
     if (!open) return;
-    const h = (e: KeyboardEvent) => e.key === "Escape" && ref.current();
+    const me = Symbol("overlay");
+    overlayStack.push(me);
+    const h = (e: KeyboardEvent) => e.key === "Escape" && overlayStack[overlayStack.length - 1] === me && ref.current();
     window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
+    return () => {
+      window.removeEventListener("keydown", h);
+      overlayStack.splice(overlayStack.indexOf(me), 1);
+    };
   }, [open]);
 }
 
@@ -586,7 +595,11 @@ export function ErrorNote({ children }: { children: React.ReactNode }) {
   return <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{children}</p>;
 }
 
-export function Avatar({ name, className }: { name: string; className?: string }) {
+export function Avatar({ name, src, className }: { name: string; src?: string | null; className?: string }) {
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element -- small avatar from /media, no optimisation needed
+    return <img src={src} alt="" aria-hidden="true" className={cn("h-9 w-9 shrink-0 rounded-full object-cover", className)} />;
+  }
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -654,4 +667,19 @@ function downloadFile(url: string) {
   a.href = url;
   a.download = "";
   a.click();
+}
+
+/* ---------------------------------------------------------------- uploads */
+
+/** Uploads an image to the media library; resolves with its URL or an error message. */
+export async function uploadImage(file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    const fd = new FormData();
+    fd.append("file", await shrinkImage(file));
+    const r = await fetch("/api/admin/assets/upload", { method: "POST", body: fd });
+    const json = await r.json().catch(() => ({}));
+    return r.ok ? { ok: true, url: json.url } : { ok: false, error: json.error ?? "Upload failed." };
+  } catch {
+    return { ok: false, error: "Upload failed. Please try again." };
+  }
 }

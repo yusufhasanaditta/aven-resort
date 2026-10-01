@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdminIcon } from "@/components/ui/AdminIcon";
 import { LogoMark } from "@/components/ui/Logo";
@@ -11,7 +12,7 @@ import { BuyPanel } from "./BuyPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { ApplicationsPanel, PaymentInstructionsCard, type AccountApplication } from "./ApplicationsPanel";
 import { NotificationBell, type AccountNotification } from "./NotificationBell";
-import type { PaymentInstructions } from "@/data/cms-defaults";
+import type { AccountNotice, ContactContent, PaymentInstructions } from "@/data/cms-defaults";
 import type { DashboardData } from "@/lib/account";
 import { accountTabs, type AccountTabId } from "@/lib/account-tabs";
 import { easeOutExpo } from "@/lib/motion";
@@ -19,12 +20,16 @@ import { cn } from "@/lib/utils";
 
 const paymentBanner: Record<string, { text: string; className: string }> = {
   success: {
-    text: "Payment received — it can take a minute to reflect here while SSLCommerz confirms it.",
+    text: "Payment successful — thank you. Your installment tracker and receipt are updated.",
     className: "border-emerald-300/30 bg-emerald-400/10 text-emerald-200",
   },
   failed: {
-    text: "That payment did not go through. You can retry it from your holdings.",
+    text: "That payment did not go through and nothing was charged. You can try again below.",
     className: "border-red-300/30 bg-red-400/10 text-red-200",
+  },
+  reserved: {
+    text: "Your shares are reserved. Pay using the bank or bKash details below and the Aven team will confirm it — or pay online here once it is switched on.",
+    className: "border-gold-300/30 bg-gold-400/10 text-gold-200",
   },
   cancelled: {
     text: "Payment was cancelled. You can try again whenever you're ready.",
@@ -44,6 +49,10 @@ export function AccountDashboard({
   applications,
   paymentInfo,
   notifications,
+  receiptId,
+  paymentMode,
+  contact,
+  notice,
 }: {
   data: DashboardData;
   initialTab: AccountTabId;
@@ -51,6 +60,10 @@ export function AccountDashboard({
   applications: AccountApplication[];
   paymentInfo: PaymentInstructions | null;
   notifications: AccountNotification[];
+  receiptId?: string;
+  paymentMode: "live" | "test" | "offline";
+  contact: ContactContent;
+  notice: AccountNotice | null;
 }) {
   const [tab, setTab] = useState<AccountTabId>(initialTab);
 
@@ -85,7 +98,12 @@ export function AccountDashboard({
             className="sticky top-[calc(var(--header-height)+2rem)] rounded-3xl border border-white/8 bg-white/[0.03] p-3 backdrop-blur-xl"
           >
             <div className="flex items-center gap-3 px-3 pb-4 pt-2">
-              <span className="h-8 w-8"><LogoMark tone="light" /></span>
+              {data.user.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- profile photo from /media
+                <img src={data.user.photoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-gold-400/40" />
+              ) : (
+                <span className="h-8 w-8"><LogoMark tone="light" /></span>
+              )}
               <span>
                 <span className="block text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold-400/80">Shareholder</span>
                 <span className="block truncate text-sm text-cream-50">{data.user.name}</span>
@@ -145,8 +163,32 @@ export function AccountDashboard({
             <NotificationBell initial={notifications} />
           </div>
 
+          {notice && (
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold-300/25 bg-gradient-to-r from-gold-400/12 to-gold-400/[0.04] px-5 py-4">
+              <div className="flex items-start gap-3">
+                <AdminIcon icon="bell" className="mt-0.5 h-5 w-5 shrink-0 text-gold-300" />
+                <div>
+                  {notice.title && <p className="text-sm font-semibold text-cream-50">{notice.title}</p>}
+                  {notice.text && <p className="mt-0.5 whitespace-pre-line text-[0.8125rem] leading-relaxed text-cream-200/70">{notice.text}</p>}
+                </div>
+              </div>
+              {notice.linkLabel && notice.href && (
+                <Link href={notice.href} className="shrink-0 rounded-full bg-gold-400 px-4 py-1.5 text-xs font-semibold text-forest-950 hover:bg-gold-300">
+                  {notice.linkLabel}
+                </Link>
+              )}
+            </div>
+          )}
+
           {banner && (
-            <p className={cn("mb-6 rounded-2xl border px-5 py-3 text-sm", banner.className)}>{banner.text}</p>
+            <div role="status" className={cn("mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-3 text-sm", banner.className)}>
+              <p>{banner.text}</p>
+              {receiptId && (
+                <Link href={`/account/invoices/${receiptId}`} className="shrink-0 rounded-full bg-emerald-300/15 px-4 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/25">
+                  View receipt →
+                </Link>
+              )}
+            </div>
           )}
 
           <AnimatePresence mode="wait">
@@ -168,11 +210,11 @@ export function AccountDashboard({
               {tab === "invoices" && <InvoicesPanel data={data} />}
               {tab === "buy" && (
                 <div className="space-y-5">
-                  <BuyPanel data={data} onOrdered={() => select("holdings")} />
+                  <BuyPanel data={data} paymentMode={paymentMode} onOrdered={() => select("holdings")} />
                   {paymentInfo && <PaymentInstructionsCard info={paymentInfo} />}
                 </div>
               )}
-              {tab === "profile" && <ProfilePanel data={data} />}
+              {tab === "profile" && <ProfilePanel data={data} contact={contact} />}
             </motion.div>
           </AnimatePresence>
         </main>

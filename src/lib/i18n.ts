@@ -40,7 +40,7 @@ export const navBn: Record<string, { label: string; description: string }> = {
 export const ui = {
   en: {
     signIn: "Sign in",
-    signUp: "Sign up",
+    signUp: "Apply now",
     myAccount: "My account",
     adminPanel: "Admin panel",
     hi: "Hi",
@@ -65,7 +65,7 @@ export const ui = {
   },
   bn: {
     signIn: "সাইন ইন",
-    signUp: "সাইন আপ",
+    signUp: "আবেদন করুন",
     myAccount: "আমার অ্যাকাউন্ট",
     adminPanel: "অ্যাডমিন প্যানেল",
     hi: "হ্যালো",

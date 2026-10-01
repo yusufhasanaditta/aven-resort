@@ -6,7 +6,7 @@ import { AdminIcon } from "@/components/ui/AdminIcon";
 import { AmenityIcon } from "@/components/ui/AmenityIcon";
 import { BenefitIcon } from "@/components/ui/BenefitIcon";
 import { RichText } from "@/components/ui/RichText";
-import { Btn, Card, CardHeader, ErrorNote, Field, LoadingRows, PageHeader, Segmented, TextArea, TextInput, Toggle, firstError, send, useAdminFetch, useToast } from "../kit";
+import { Btn, Card, CardHeader, ErrorNote, Field, LoadingRows, PageHeader, Segmented, TextArea, TextInput, Toggle, firstError, send, uploadImage, useAdminFetch, useToast } from "../kit";
 import type { CmsContent, CmsKey } from "@/data/cms-defaults";
 import { cn } from "@/lib/utils";
 
@@ -15,8 +15,11 @@ type FieldSpec = { key: string; label: string; type?: "text" | "textarea" | "tog
 const SECTIONS: { key: CmsKey; label: string; icon: string; description: string; viewHref: string }[] = [
   { key: "announcement", label: "Announcement bar", icon: "bell", description: "A slim banner across the top of every page.", viewHref: "/" },
   { key: "hero", label: "Homepage banner", icon: "image", description: "The first thing every visitor sees.", viewHref: "/" },
+  { key: "pages", label: "Page headers", icon: "layers", description: "The heading and intro at the top of each main page.", viewHref: "/about" },
+  { key: "accountNotice", label: "Shareholder dashboard notice", icon: "bell", description: "A message at the top of every shareholder's account — news, site visits, payment deadlines.", viewHref: "/account" },
   { key: "resort", label: "Resort story", icon: "overview", description: "The welcome letter on the homepage.", viewHref: "/" },
   { key: "benefits", label: "Investment benefits", icon: "tag", description: "“Why own with us?” on the ownership page.", viewHref: "/ownership#why-own" },
+  { key: "gallery", label: "Gallery photos", icon: "image", description: "Every photo on /gallery — add, replace, caption and reorder.", viewHref: "/gallery" },
   { key: "faqs", label: "FAQs", icon: "search", description: "Questions and answers on /faq.", viewHref: "/faq" },
   { key: "contact", label: "Contact & social", icon: "mail", description: "Phone, email, addresses, map link and the footer's social media links.", viewHref: "/contact" },
   { key: "payment", label: "Payment instructions", icon: "wallet", description: "Bank / mobile-banking details shown to shareholders.", viewHref: "/account?tab=buy" },
@@ -24,7 +27,31 @@ const SECTIONS: { key: CmsKey; label: string; icon: string; description: string;
   { key: "privacy", label: "Privacy policy", icon: "user", description: "The /privacy page.", viewHref: "/privacy" },
 ];
 
+/** Page headers: the same four fields for each page, grouped by page. */
+const PAGE_HEADERS: [string, string][] = [
+  ["about", "About"],
+  ["ownership", "Ownership"],
+  ["wellness", "Wellness"],
+  ["amenities", "Amenities"],
+  ["stay", "Stay"],
+  ["gallery", "Gallery"],
+  ["contact", "Contact"],
+];
+
 const OBJECT_FIELDS: Partial<Record<CmsKey, FieldSpec[]>> = {
+  pages: PAGE_HEADERS.flatMap(([k, name]) => [
+    { key: `${k}Eyebrow`, label: `${name} — small label above the title` },
+    { key: `${k}Title`, label: `${name} — title` },
+    { key: `${k}Accent`, label: `${name} — second line (gold)` },
+    { key: `${k}Lede`, label: `${name} — intro text`, type: "textarea" as const, rows: 3 },
+  ]),
+  accountNotice: [
+    { key: "enabled", label: "Show this notice on every shareholder's dashboard", type: "toggle" },
+    { key: "title", label: "Title", hint: "e.g. Site visit on 15 November" },
+    { key: "text", label: "Message", type: "textarea", rows: 3 },
+    { key: "linkLabel", label: "Button label (optional)" },
+    { key: "href", label: "Button link (optional)", hint: "e.g. /contact or https://…" },
+  ],
   announcement: [
     { key: "enabled", label: "Show the announcement bar", type: "toggle" },
     { key: "text", label: "Message" },
@@ -41,6 +68,7 @@ const OBJECT_FIELDS: Partial<Record<CmsKey, FieldSpec[]>> = {
     { key: "primaryHref", label: "Primary link" },
     { key: "secondaryLabel", label: "Secondary button" },
     { key: "secondaryHref", label: "Secondary link" },
+    { key: "ticker", label: "Scrolling line under the banner", hint: "Repeats across the band below the homepage banner." },
   ],
   resort: [
     { key: "headline", label: "Headline question", type: "textarea", rows: 3 },
@@ -191,6 +219,24 @@ function SectionEditor({
               </span>
             )}
           />
+        ) : section.key === "gallery" ? (
+          <ListEditor
+            items={value as CmsContent["gallery"]}
+            onChange={setValue}
+            blank={{ src: "", title: "", caption: "", category: "nature", span: "" }}
+            fields={[
+              { key: "title", label: "Title" },
+              { key: "src", label: "Photo", type: "image" },
+              { key: "caption", label: "Caption", type: "textarea", rows: 2 },
+              { key: "category", label: "Category", hint: "masterplan · architecture · villas · water · wellness · dining · events · nature" },
+              { key: "span", label: "Size", hint: "wide · tall · or leave empty for normal" },
+            ]}
+            renderBadge={(item) => (
+              <span className="relative h-9 w-12 shrink-0 overflow-hidden rounded-md bg-[#EEF1EC]">
+                {item.src && <Image src={item.src} alt="" fill sizes="3rem" unoptimized className="object-cover" />}
+              </span>
+            )}
+          />
         ) : section.key === "faqs" ? (
           <ListEditor
             items={value as CmsContent["faqs"]}
@@ -262,13 +308,10 @@ function ImageField({ label, value, onChange }: { label: string; value: string; 
 
   async function upload(file: File) {
     setBusy(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const r = await fetch("/api/admin/assets/upload", { method: "POST", body: fd }).catch(() => null);
-    const json = r ? await r.json().catch(() => ({})) : { error: "Upload failed." };
+    const up = await uploadImage(file);
     setBusy(false);
-    if (!r?.ok) return toast(json.error ?? "Upload failed.", "error");
-    onChange(json.url);
+    if (!up.ok) return toast(up.error, "error");
+    onChange(up.url);
     toast("Image uploaded — save to publish");
   }
 
@@ -293,7 +336,7 @@ function ImageField({ label, value, onChange }: { label: string; value: string; 
             }}
           />
           <Btn size="sm" icon="image" onClick={() => ref.current?.click()} disabled={busy}>{busy ? "Uploading…" : "Upload new image"}</Btn>
-          <p className="text-[0.6875rem] text-[#8A948E]">JPG, PNG, WebP or AVIF, up to 8 MB. Wide landscape images work best.</p>
+          <p className="text-[0.6875rem] text-[#8A948E]">JPG, PNG, WebP or AVIF — large photos are resized automatically. Wide landscape images work best.</p>
         </div>
       </div>
     </div>
@@ -341,7 +384,10 @@ function ListEditor<T extends Record<string, string>>({
           </div>
           {open === i && (
             <div className="grid gap-3 border-t border-[#EEF0EC] bg-[#FAFBF9] p-3 sm:grid-cols-2">
-              {fields.map((f) => (
+              {fields.map((f) =>
+                f.type === "image" ? (
+                  <ImageField key={f.key} label={f.label} value={item[f.key] ?? ""} onChange={(v) => update(i, f.key, v)} />
+                ) : (
                 <Field key={f.key} label={f.label} hint={f.hint} className={f.type === "textarea" ? "sm:col-span-2" : undefined}>
                   {(id) =>
                     f.type === "textarea" ? (
@@ -351,7 +397,8 @@ function ListEditor<T extends Record<string, string>>({
                     )
                   }
                 </Field>
-              ))}
+                ),
+              )}
             </div>
           )}
         </div>

@@ -1,35 +1,41 @@
 # Aven Tea Empire
 
-**Live Demo:** [https://aven-resort-1.vercel.app/](https://aven-resort-1.vercel.app/)
+Investor website for a 5-star eco-luxury resort across five tea hills in Srimangal, Bangladesh. Next.js 16 (App Router), Tailwind v4, React Three Fiber, Prisma (MySQL).
 
-Investor website for a 5-star eco-luxury resort across five tea hills in Srimangal, Bangladesh. Next.js 16 (App Router), Tailwind v4, React Three Fiber, Prisma.
+**Deploying:** see [HOSTINGER.md](HOSTINGER.md) — step-by-step for a Hostinger Node.js Web App with MySQL.
 
 ## Run locally
 
+Production uses MySQL. For local development either point `DATABASE_URL` at a MySQL/MariaDB database (e.g. XAMPP) and run:
+
 ```bash
 npm install
-npx prisma migrate dev     # creates prisma/dev.db (SQLite)
-npm run db:seed            # 4 membership plans, site assets, admin account
+npm run db:push     # creates the tables
+npm run db:seed     # 5 membership plans + admin account (no demo data)
 npm run dev
 ```
 
-Seeded admin login: `admin@aventeaempire.com` / `ChangeMe!2026` — **change it immediately** (or set `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` before seeding).
+…or use a SQLite file: generate a copy of `prisma/schema.prisma` with `provider = "sqlite"` and the `@db.*` attributes removed as `prisma/schema.local.prisma`, set `DATABASE_URL="file:./prisma/dev.db"`, then `npx prisma db push --schema prisma/schema.local.prisma` and `npx prisma generate --schema prisma/schema.local.prisma`.
+
+Seeded admin login: `admin@aventeaempire.com` with the password in `SEED_ADMIN_PASSWORD` (without it, the seed generates one and prints it once).
 
 ## What's in it
 
 | Area | Where |
 | --- | --- |
-| Pages | Home, Membership, Wellness, Ownership (share calculator), Masterplan (3D + 26 zone functions), Accommodations, Experiences, Gallery, About, Contact |
-| Accounts | `/register`, `/login`, `/account` (holdings, payment history, instalments) |
-| Admin | `/admin` — overview, shareholders, enquiries, editable plan pricing, image replacement |
-| Content | `src/data/*` (typed, sourced from the project PDFs) |
-| Numerals | `.font-numeral` / `<Num>` — sans, tabular, lining figures for every stat |
+| Pages | Home, Ownership (price chart + share calculator), Wellness, Amenities, Stay, Masterplan, Gallery, About, Contact, FAQ |
+| Accounts | `/register`, `/login`, `/forgot-password` (emailed code), `/account` (holdings, installment tracker, payments, receipts, profile) |
+| Payments | SSLCommerz (`src/lib/sslcommerz.ts`, `src/lib/payments.ts`); built-in test checkout in development; bank/bKash offline payments recorded by admin |
+| Admin | `/admin` — CRM, applications, shareholders (create, edit, message, allocate shares, password help), installments, payments, packages, website content, media library, activity log |
+| Content | Defaults in `src/data/*`; everything editable in admin is stored in the database |
+
+## Environment variables
+
+See the table in [HOSTINGER.md](HOSTINGER.md#3-add-the-environment-variables).
 
 ## Before going live
 
-1. **SSLCommerz** — set `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD` (sandbox first: https://developer.sslcommerz.com/registration/), `SSLCOMMERZ_IS_LIVE=true` for production, and `NEXT_PUBLIC_SITE_URL` to the public origin (SSLCommerz posts back to `/api/payments/ipn`). Until set, orders are recorded and the shareholder is told the gateway isn't connected — no payment is ever faked.
-2. **Database** — SQLite cannot persist on Vercel (read-only, ephemeral filesystem). Change `provider` in `prisma/schema.prisma` to `postgresql`, set `DATABASE_URL` to a hosted Postgres (Neon / Vercel Postgres / Supabase), run `prisma migrate deploy` and `npm run db:seed`.
-3. **Image uploads** — `/api/admin/assets/upload` writes to `public/uploads`, fine locally / self-hosted; on Vercel it returns 501 until swapped for Vercel Blob (or S3/Cloudinary). See the comment at the top of that file.
-4. **Secrets** — set a long random `AUTH_SECRET`; rotate the seeded admin password.
-5. **Unit price** — `৳500,000` per unit is a **placeholder** (the masterplan document gives unit-share ranges but no price). Set the real figure in Admin → Membership plans.
-6. **Legal** — share sales to the public need regulatory review in Bangladesh; this codebase handles the mechanics, not the compliance.
+1. **SSLCommerz** — add the store credentials (see HOSTINGER.md step 3 and 6).
+2. **Email** — set the SMTP variables so password-reset codes, receipts and reminders are sent.
+3. **Secrets** — a long random `AUTH_SECRET`, and change the admin password after first sign-in.
+4. **Legal** — share sales to the public need regulatory review in Bangladesh; this codebase handles the mechanics, not the compliance.

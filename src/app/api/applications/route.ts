@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, hashPassword } from "@/lib/auth";
 import { applicationSchema, zodErrors } from "@/lib/validation";
 import { calculate } from "@/lib/shares";
 import { readJson } from "@/lib/admin";
@@ -11,19 +11,22 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
   const applications = await prisma.application.findMany({
     where: { userId: session.sub },
+    omit: { passwordHash: true },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({ applications });
 }
 
 /**
- * Submits a share-purchase application. The quoted total is computed here
- * with the same `calculate()` the calculator and order route use, so the
- * figure the admin approves is the figure the applicant saw.
+ * Submits a share-purchase application — open to anyone, since accounts are
+ * only opened by the Aven team: approving an application opens the
+ * applicant's account. A signed-in shareholder's application is linked to
+ * their account straight away. The quoted total is computed here with the
+ * same `calculate()` the calculator uses, so the figure the admin approves
+ * is the figure the applicant saw.
  */
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Please sign in to apply." }, { status: 401 });
 
   const body = await readJson(request);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
@@ -39,7 +42,10 @@ export async function POST(request: Request) {
   const quote = calculate(plans, d.units, d.paymentPlan);
 
   const open = await prisma.application.count({
-    where: { userId: session.sub, status: { in: ["SUBMITTED", "UNDER_REVIEW"] } },
+    where: {
+      status: { in: ["SUBMITTED", "UNDER_REVIEW"] },
+      OR: [{ email: d.email.toLowerCase() }, ...(session ? [{ userId: session.sub }] : [])],
+    },
   });
   if (open >= 3) {
     return NextResponse.json(
@@ -50,10 +56,10 @@ export async function POST(request: Request) {
 
   const application = await prisma.application.create({
     data: {
-      userId: session.sub,
+      userId: session?.sub ?? null,
       fullName: d.fullName,
       fatherName: d.fatherName,
-      email: d.email,
+      email: d.email.toLowerCase(),
       phone: d.phone,
       nid: d.nid,
       dateOfBirth: d.dateOfBirth,
@@ -62,6 +68,9 @@ export async function POST(request: Request) {
       nomineeName: d.nomineeName,
       nomineeRelation: d.nomineeRelation,
       nomineePhone: d.nomineePhone,
+      referredBy: d.referredBy,
+      // A signed-in shareholder already has a password.
+      passwordHash: d.password && !session ? await hashPassword(d.password) : null,
       planSlug: quote.plan.slug,
       units: quote.units,
       paymentPlan: d.paymentPlan,

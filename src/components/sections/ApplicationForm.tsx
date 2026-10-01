@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 type Plan = MembershipCardData & { id: string };
 type Prefill = { name: string; email: string; phone: string; location: string };
 
-const STEPS = ["Package", "Your details", "Nominee", "Review"] as const;
+const STEPS = ["Package", "Your details", "Nominee & account", "Review"] as const;
 
 const inputCls =
   "h-12 w-full rounded-xl border border-forest-600/15 bg-white px-4 text-[0.9375rem] text-forest-900 outline-none transition-shadow placeholder:text-forest-900/35 focus:border-forest-500 focus:ring-4 focus:ring-forest-500/10";
@@ -21,12 +21,22 @@ const inputCls =
  * same `calculate()` the server uses, and the server recomputes it on submit,
  * so the figure shown here is the figure the admin approves.
  */
-export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]; prefill: Prefill; initialPlan?: string }) {
+export function ApplicationForm({
+  plans,
+  prefill,
+  initialPlan,
+  signedIn = false,
+}: {
+  plans: Plan[];
+  prefill: Prefill;
+  initialPlan?: string;
+  signedIn?: boolean;
+}) {
   const start = plans.find((p) => p.slug === initialPlan);
   const [step, setStep] = useState(0);
   const [f, setF] = useState({
     units: start?.minUnits ?? 1,
-    paymentPlan: "FULL" as "FULL" | "INSTALLMENT",
+    paymentPlan: "INSTALLMENT" as "FULL" | "INSTALLMENT",
     fullName: prefill.name,
     fatherName: "",
     email: prefill.email,
@@ -38,6 +48,9 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
     nomineeName: "",
     nomineeRelation: "",
     nomineePhone: "",
+    referredBy: "",
+    password: "",
+    confirmPassword: "",
     notes: "",
     agree: false,
   });
@@ -60,6 +73,11 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
       if (!/^[0-9+\s()-]{7,20}$/.test(f.phone)) e.phone = "Enter a valid phone number.";
       if (!/^(\d{10}|\d{13}|\d{17})$/.test(f.nid.trim())) e.nid = "NID must be 10, 13 or 17 digits.";
       if (f.address.trim().length < 8) e.address = "Enter your full address.";
+    }
+    if (s === 2 && f.password) {
+      if (f.password.length < 8 || !/[A-Za-z]/.test(f.password) || !/[0-9]/.test(f.password))
+        e.password = "At least 8 characters, with a letter and a number.";
+      else if (f.password !== f.confirmPassword) e.confirmPassword = "The passwords don't match.";
     }
     if (s === 3 && !f.agree) e.agree = "Please accept the terms to continue.";
     setErrors(e);
@@ -87,6 +105,7 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
         setErrors(json.errors ?? {});
         setServerError(json.error ?? (json.errors ? "Please check the highlighted fields." : "Something went wrong."));
         if (json.errors && ["fullName", "email", "phone", "nid", "address"].some((k) => k in json.errors)) setStep(1);
+        else if (json.errors && ["password", "confirmPassword", "referredBy"].some((k) => k in json.errors)) setStep(2);
         setBusy(false);
         return;
       }
@@ -104,10 +123,18 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
         <h2 className="mt-6 font-display text-4xl text-forest-900">Application submitted.</h2>
         <p className="mx-auto mt-3 max-w-md text-[0.9375rem] text-forest-900/60">
           Your {quote.plan.name} application for {quote.units} share{quote.units > 1 ? "s" : ""} ({formatBDT(quote.totalBDT)}) is with the
-          Aven team. You&rsquo;ll see its status on your dashboard, and your payment schedule appears there as soon as it&rsquo;s approved.
+          Aven team.{" "}
+          {signedIn
+            ? "You'll see its status on your dashboard, and your payment schedule appears there as soon as it's approved."
+            : f.password
+              ? "Once it's approved, the team opens your shareholder account and sends you your membership number — sign in with it (or your email) and the password you just chose."
+              : "Once it's approved, the team opens your shareholder account and sends you your membership number and sign-in details."}
         </p>
-        <Link href="/account?tab=applications" className="mt-8 inline-flex h-12 items-center rounded-full bg-forest-600 px-7 text-sm font-medium text-cream-50 hover:bg-forest-700">
-          Track my application
+        <Link
+          href={signedIn ? "/account?tab=applications" : "/"}
+          className="mt-8 inline-flex h-12 items-center rounded-full bg-forest-600 px-7 text-sm font-medium text-cream-50 hover:bg-forest-700"
+        >
+          {signedIn ? "Track my application" : "Back to the website"}
         </Link>
       </motion.div>
     );
@@ -225,12 +252,26 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
 
             {step === 2 && (
               <div>
-                <h2 className="font-display text-3xl text-forest-900">Nominee</h2>
+                <h2 className="font-display text-3xl text-forest-900">Nominee &amp; account</h2>
                 <p className="mt-1 text-sm text-forest-900/55">Who your shares pass to. Optional now — you can add it before approval.</p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   <Text label="Nominee name" value={f.nomineeName} onChange={(v) => set("nomineeName", v)} className="sm:col-span-2" />
                   <Text label="Relationship" value={f.nomineeRelation} onChange={(v) => set("nomineeRelation", v)} placeholder="e.g. Spouse" />
                   <Text label="Nominee phone" value={f.nomineePhone} onChange={(v) => set("nomineePhone", v)} />
+                  <Text label="Referred by (optional)" value={f.referredBy} onChange={(v) => set("referredBy", v)} placeholder="Name of the person who referred you" className="sm:col-span-2" />
+                  {!signedIn && (
+                    <div className="rounded-2xl bg-forest-600/5 p-4 sm:col-span-2">
+                      <p className="text-sm font-medium text-forest-900">Choose a password for your account (optional)</p>
+                      <p className="mt-1 text-xs leading-relaxed text-forest-900/55">
+                        Accounts are opened by the Aven team when your application is approved. Set a password now and you can sign in with it
+                        straight away; leave it empty and the team will give you one. You can change it any time.
+                      </p>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <Text label="Password" type="password" autoComplete="new-password" error={errors.password} value={f.password} onChange={(v) => set("password", v)} />
+                        <Text label="Confirm password" type="password" autoComplete="new-password" error={errors.confirmPassword} value={f.confirmPassword} onChange={(v) => set("confirmPassword", v)} />
+                      </div>
+                    </div>
+                  )}
                   <label className="block sm:col-span-2">
                     <span className="mb-1.5 block text-xs font-medium text-forest-900/60">Anything the team should know? (optional)</span>
                     <textarea className={cn(inputCls, "h-auto py-3")} rows={3} value={f.notes} onChange={(e) => set("notes", e.target.value)} />
@@ -252,6 +293,8 @@ export function ApplicationForm({ plans, prefill, initialPlan }: { plans: Plan[]
                     ["Email", f.email],
                     ["Address", f.address],
                     ["Nominee", f.nomineeName ? `${f.nomineeName}${f.nomineeRelation ? ` (${f.nomineeRelation})` : ""}` : "Not given"],
+                    ["Referred by", f.referredBy || "—"],
+                    ...(signedIn ? [] : [["Password", f.password ? "Chosen by you" : "The team will give you one"]]),
                   ].map(([k, v]) => (
                     <div key={k}>
                       <dt className="text-xs text-forest-900/45">{k}</dt>

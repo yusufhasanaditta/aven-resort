@@ -21,11 +21,14 @@ export async function POST(request: Request) {
   // Deliberately generic on failure — never reveal whether the email exists.
   const invalid = () =>
     NextResponse.json(
-      { errors: { form: "Incorrect email or password." } },
+      { errors: { form: "Incorrect email, membership number or password." } },
       { status: 401 },
     );
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  // Shareholders can sign in with their email or their membership number (e.g. 20262001).
+  const user = /^\d{8,}$/.test(email)
+    ? await prisma.user.findUnique({ where: { memberNo: email } })
+    : await prisma.user.findUnique({ where: { email } });
   if (!user) return invalid();
 
   const valid = await verifyPassword(password, user.passwordHash);
@@ -38,5 +41,5 @@ export async function POST(request: Request) {
     email: user.email,
   });
 
-  return NextResponse.json({ ok: true, role: user.role });
+  return NextResponse.json({ ok: true, role: user.role, mustChangePassword: user.mustChangePassword });
 }

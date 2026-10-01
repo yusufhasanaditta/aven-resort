@@ -5,8 +5,7 @@ import { TierIcon } from "@/components/ui/TierIcon";
 import { Depth, TiltCard } from "@/components/ui/TiltCard";
 import { planBreakdown } from "@/components/sections/PlanDetails";
 import { PriceMedallion } from "@/components/sections/PriceMedallion";
-import { SHARE_PRICE_BDT } from "@/data/ownership";
-import { fallbackPlans } from "@/data/planFallback";
+import type { FallbackPlan } from "@/data/planFallback";
 import { bnDigits, type Lang } from "@/lib/i18n";
 import { ordinal, stayDays } from "@/lib/shares";
 import { cn } from "@/lib/utils";
@@ -108,8 +107,9 @@ const steps = ["xl:mt-24", "xl:mt-[4.5rem]", "xl:mt-12", "xl:mt-6", "xl:mt-0"];
  * every plan. Hand-written in both languages, so it opts out of the
  * automatic translator.
  */
-export function PlanChart({ lang = "en" }: { lang?: Lang }) {
-  const plans = fallbackPlans;
+export function PlanChart({ plans, lang = "en" }: { plans: FallbackPlan[]; lang?: Lang }) {
+  // Prices come from admin → Packages; the medallion shows the lowest per-share price.
+  const sharePrice = Math.min(...plans.map((p) => p.unitPriceBDT));
   const t = copy[lang];
   const bn = lang === "bn";
   const name = (slug: string, en: string) => (bn ? bnPlan[slug] ?? en : en);
@@ -147,7 +147,7 @@ export function PlanChart({ lang = "en" }: { lang?: Lang }) {
             </div>
           </Reveal>
           <Reveal delay={0.1}>
-            <PriceMedallion price={tk(SHARE_PRICE_BDT, lang)} label={t.medalLabel} note={t.medalNote} />
+            <PriceMedallion price={tk(sharePrice, lang)} label={t.medalLabel} note={t.medalNote} />
           </Reveal>
         </div>
 
@@ -194,7 +194,7 @@ export function PlanChart({ lang = "en" }: { lang?: Lang }) {
                       <p className="text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-forest-900/45">{t.packagePrice}</p>
                       <p className={cn("mt-1 leading-none text-forest-900", bn ? "text-[1.8rem] font-semibold" : "font-display text-[2rem]")}>{words(b.installmentTotal, lang)}</p>
                       <p className="mt-1.5 font-numeral text-xs text-forest-900/55">
-                        {tk(SHARE_PRICE_BDT, lang)} × {grouped(b.units, lang)} = {tk(b.installmentTotal, lang)}
+                        {tk(p.unitPriceBDT, lang)} × {grouped(b.units, lang)} = {tk(b.installmentTotal, lang)}
                       </p>
 
                       <div className="mt-5 rounded-2xl bg-cream-100/80 p-4 ring-1 ring-forest-600/5">
@@ -288,7 +288,7 @@ export function PlanChart({ lang = "en" }: { lang?: Lang }) {
                         {p.maxUnits === null && "+"}
                       </td>
                       <td className="px-5 py-4 font-numeral text-forest-900">
-                        {grouped(SHARE_PRICE_BDT, lang)} × {grouped(b.units, lang)} = <span className="font-semibold">{grouped(b.installmentTotal, lang)}</span>
+                        {grouped(p.unitPriceBDT, lang)} × {grouped(b.units, lang)} = <span className="font-semibold">{grouped(b.installmentTotal, lang)}</span>
                       </td>
                       <td className="px-5 py-4 font-numeral text-forest-900">{grouped(b.down, lang)}</td>
                       <td className="px-5 py-4 text-forest-900">
@@ -302,7 +302,7 @@ export function PlanChart({ lang = "en" }: { lang?: Lang }) {
                     </tr>,
                     <tr key={`${p.slug}-f`} className={shade}>
                       <td className="px-5 pb-4 font-numeral text-forest-900/70">
-                        {grouped(SHARE_PRICE_BDT, lang)} × {grouped(b.units, lang)} = {grouped(b.fullTotal, lang)}
+                        {grouped(b.fullPrice, lang)} × {grouped(b.units, lang)} = {grouped(b.fullTotal, lang)}
                       </td>
                       <td className="px-5 pb-4 text-forest-900/70">{t.fullPayment}</td>
                       <td className="px-5 pb-4 font-numeral text-forest-900/70">{grouped(0, lang)}</td>

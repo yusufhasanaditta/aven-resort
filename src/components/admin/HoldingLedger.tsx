@@ -36,7 +36,7 @@ export function HoldingLedger({
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4" style={{ boxShadow: `inset 3px 0 0 ${h.plan.accentColor}` }}>
         <div>
           <p className="text-sm font-semibold text-[#14201B]">
-            {h.plan.name} · {h.units} share{h.units > 1 ? "s" : ""}
+            {h.plan.name} · {h.units} share{h.units > 1 ? "s" : ""}{h.shareNo && <span className="font-mono text-[#6B756F]"> · {h.shareNo}</span>}
           </p>
           <p className="text-xs text-[#6B756F]">
             Opened {formatDate(h.openedAt)} · {paymentPlanLabel(h)}

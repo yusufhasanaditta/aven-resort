@@ -4,7 +4,7 @@ import Link from "next/link";
 import { InterestForm } from "@/components/sections/InterestForm";
 import { Container, Eyebrow } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
-import { getContent } from "@/lib/cms";
+import { getAsset, getContent } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Register your interest",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  * submission lands in the admin CRM as a lead.
  */
 export default async function InterestPage() {
-  const contact = await getContent("contact");
+  const [contact, photo] = await Promise.all([getContent("contact"), getAsset("interest.image")]);
 
   return (
     <div className="bg-leaf-swirl min-h-[100svh] bg-cream-100 pb-24 pt-[calc(var(--header-height)+3rem)]">
@@ -54,7 +54,7 @@ export default async function InterestPage() {
             </ol>
 
             <div className="relative mt-10 hidden aspect-[16/9] overflow-hidden rounded-3xl shadow-lift lg:block">
-              <Image src="/renders/eco-villa-sunrise.jpg" alt="An Aven villa with its private pool at sunrise above the tea hills" fill sizes="40vw" className="object-cover" />
+              <Image src={photo} alt="An Aven villa with its private pool at sunrise above the tea hills" fill sizes="40vw" className="object-cover" />
             </div>
 
             <div className="mt-8 rounded-2xl border border-forest-600/12 bg-cream-50 p-5">

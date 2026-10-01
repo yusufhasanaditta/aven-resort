@@ -77,8 +77,8 @@ export const amenityGroups: {
 
 export const amenities: Amenity[] = [
   {
-    id: "receptionist",
-    name: "Receptionist",
+    id: "reception",
+    name: "Reception",
     icon: "reception",
     group: "arrival",
     description: "A 24-hour reception and concierge desk at the hotel lobby — check-in, guest services, transfers and every request during your stay.",

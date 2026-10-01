@@ -1,70 +1,27 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { notifyPaymentReceived } from "@/lib/notify";
-import { validateTransaction } from "@/lib/sslcommerz";
+import { confirmWithGateway, settlePayment } from "@/lib/payments";
 
 /**
- * SSLCommerz's server-to-server Instant Payment Notification. This is the
- * authoritative confirmation — the browser redirect to /api/payments/success
- * is only ever a hint to refresh the UI, since a closed tab or flaky network
- * can drop it. Every status change to a real Payment row happens here, after
- * independently re-validating with SSLCommerz's own validation API.
+ * SSLCommerz's server-to-server Instant Payment Notification — the
+ * authoritative confirmation, since a closed tab can drop the browser
+ * redirect. A success is only recorded after independently re-validating the
+ * transaction with SSLCommerz and checking the amount matches.
  */
 export async function POST(request: Request) {
   const form = await request.formData();
+  const fields = Object.fromEntries(form);
   const tranId = form.get("tran_id")?.toString();
   const valId = form.get("val_id")?.toString();
   const status = form.get("status")?.toString();
 
-  if (!tranId || !valId) {
-    return NextResponse.json({ error: "Missing tran_id or val_id." }, { status: 400 });
-  }
-
-  const payment = await prisma.payment.findUnique({
-    where: { tranId },
-    include: { holding: true },
-  });
-  if (!payment) {
-    return NextResponse.json({ error: "Unknown transaction." }, { status: 404 });
-  }
+  if (!tranId) return NextResponse.json({ error: "Missing tran_id." }, { status: 400 });
 
   if (status !== "VALID" && status !== "VALIDATED") {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: "FAILED", valId, gatewayResponse: JSON.stringify(Object.fromEntries(form)) },
-    });
-    return NextResponse.json({ ok: true, recorded: "FAILED" });
+    const r = await settlePayment(tranId, status === "CANCELLED" ? "CANCELLED" : "FAILED", { valId, raw: { ipn: fields } });
+    return NextResponse.json({ ok: r.ok, recorded: r.status ?? "UNKNOWN" }, { status: r.ok ? 200 : 404 });
   }
+  if (!valId) return NextResponse.json({ error: "Missing val_id." }, { status: 400 });
 
-  const check = await validateTransaction(valId);
-  if (!check.valid || check.amount !== payment.amountBDT) {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: "FAILED",
-        valId,
-        gatewayResponse: JSON.stringify({ ipn: Object.fromEntries(form), validation: check.raw }),
-      },
-    });
-    return NextResponse.json({ ok: true, recorded: "FAILED_VALIDATION_MISMATCH" });
-  }
-
-  await prisma.$transaction([
-    prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: "SUCCESS",
-        paidAt: new Date(),
-        valId,
-        gatewayResponse: JSON.stringify({ ipn: Object.fromEntries(form), validation: check.raw }),
-      },
-    }),
-    prisma.shareHolding.update({
-      where: { id: payment.holdingId },
-      data: { status: "ACTIVE" },
-    }),
-  ]);
-
-  await notifyPaymentReceived(payment.id);
-  return NextResponse.json({ ok: true, recorded: "SUCCESS" });
+  const result = await confirmWithGateway(tranId, valId, fields);
+  return NextResponse.json({ ok: result.ok, recorded: result.status ?? "UNKNOWN" }, { status: result.ok ? 200 : 404 });
 }

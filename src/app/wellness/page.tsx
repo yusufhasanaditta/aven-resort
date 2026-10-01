@@ -7,8 +7,8 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { TiltCard, Depth } from "@/components/ui/TiltCard";
 import { Num } from "@/components/ui/Number";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { wellnessIntro, wellnessServices } from "@/data/wellness";
-import { getAsset } from "@/lib/cms";
+import { wellnessServices } from "@/data/wellness";
+import { getAsset, getContent } from "@/lib/cms";
 
 export const metadata: Metadata = {
   title: "Wellness",
@@ -17,15 +17,15 @@ export const metadata: Metadata = {
 };
 
 export default async function WellnessPage() {
-  const heroImage = await getAsset("wellness.hero", "/renders/yoga-tea-garden.jpg");
+  const [heroImage, bannerImage, pg] = await Promise.all([getAsset("wellness.hero"), getAsset("wellness.banner"), getContent("pages")]);
 
   return (
     <>
       <Hero
-        eyebrow={wellnessIntro.eyebrow}
-        title="Retreat, Don't Escape."
-        titleAccent="Aven Cares for You"
-        lede={wellnessIntro.lede}
+        eyebrow={pg.wellnessEyebrow}
+        title={pg.wellnessTitle}
+        titleAccent={pg.wellnessAccent}
+        lede={pg.wellnessLede}
         image={heroImage}
         imageAlt="A guest in sunrise yoga on a timber deck above the misted tea terraces"
         height="tall"
@@ -116,7 +116,7 @@ export default async function WellnessPage() {
       <VisionStatement
         quote="Retreating your body and mind towards a stronger, more passionate, and peaceful self."
         attribution="Aven Eco Luxury Resort & Wellness"
-        image="/renders/barefoot-earthing.jpg"
+        image={bannerImage}
         imageAlt="Bare feet stepping onto wet earth and grass on the mud-walk trail"
       />
 

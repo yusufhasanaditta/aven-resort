@@ -63,7 +63,7 @@ export default async function OwnYourSharePage({ searchParams }: Props) {
   const t = shareCopy[lang];
 
   const [heroImage, contact, dbPlans] = await Promise.all([
-    getAsset("ownership.hero", "/renders/masterplan-aerial.jpg"),
+    getAsset("own-your-share.hero"),
     getContent("contact"),
     prisma.membershipPlan.findMany({ orderBy: { sortOrder: "asc" } }).catch(() => []),
   ]);

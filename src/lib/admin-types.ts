@@ -6,6 +6,8 @@ export type ApplicationStatus = "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJ
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED";
 
 export type OverviewData = {
+  /** "Contact me" requests not yet handled. */
+  contactRequestsNew: number;
   leads: {
     total: number;
     newThisMonth: number;
@@ -87,6 +89,9 @@ export type AdminApplication = {
   nomineeName: string | null;
   nomineeRelation: string | null;
   nomineePhone: string | null;
+  referredBy: string | null;
+  /** The applicant chose their own password on the form. */
+  hasPassword?: boolean;
   planSlug: string;
   units: number;
   paymentPlan: "FULL" | "INSTALLMENT";
@@ -99,7 +104,8 @@ export type AdminApplication = {
   reviewedAt: string | null;
   holdingId: string | null;
   createdAt: string;
-  user: { id: string; name: string; email: string };
+  /** Null until the application is approved and the account opened. */
+  user: { id: string; name: string; email: string } | null;
 };
 
 /** A holding as the admin sees it: the shared ledger plus who owns it. */
@@ -115,6 +121,12 @@ export type AdminCustomer = {
   location: string;
   createdAt: string;
   memberId: string;
+  photoUrl: string | null;
+  nid: string | null;
+  nomineeName: string | null;
+  nomineeRelation: string | null;
+  referredBy: string | null;
+  shareNumbers: string[];
   units: number;
   committedBDT: number;
   paidBDT: number;

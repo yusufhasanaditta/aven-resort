@@ -55,3 +55,9 @@ next-env.d.ts
 /prisma/prisma/*.db
 /prisma/prisma/*.db-journal
 *.db
+
+# local SQLite copy of the schema (generated for development)
+/prisma/schema.local.prisma
+
+# Hostinger database imports (contain the admin password hash) — kept on the Desktop, not in git
+/hostinger-*.sql

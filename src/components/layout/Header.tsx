@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { easeOutExpo } from "@/lib/motion";
 import type { Announcement } from "@/data/cms-defaults";
 import { LangSwitch } from "@/components/layout/LangSwitch";
+import { ApplyChooser } from "@/components/sections/ApplyChooser";
 import { navBn, ui, type Lang } from "@/lib/i18n";
 
 /**
@@ -19,13 +20,31 @@ import { navBn, ui, type Lang } from "@/lib/i18n";
  */
 type SessionState = { name: string; role: "SHAREHOLDER" | "ADMIN" } | null;
 
-export function Header({ announcement = null, lang = "en" }: { announcement?: Announcement | null; lang?: Lang }) {
+export function Header({
+  announcement = null,
+  phone = site.contact.phone,
+  lang = "en",
+}: {
+  announcement?: Announcement | null;
+  /** From admin → Website content → Contact & social. */
+  phone?: string;
+  lang?: Lang;
+}) {
   const t = ui[lang];
   const label = (href: string, en: string) => (lang === "bn" ? navBn[href]?.label ?? en : en);
   const describe = (href: string, en?: string) => (lang === "bn" ? navBn[href]?.description ?? en : en);
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // "Apply now" asks first: contact me, or apply for shares. A new key opens it fresh.
+  const [chooser, setChooser] = useState(0);
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const openChooser = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setOpen(false);
+    setChooser((n) => n + 1);
+    setChooserOpen(true);
+  };
   const [session, setSession] = useState<SessionState>(null);
 
   useEffect(() => {
@@ -147,7 +166,7 @@ export function Header({ announcement = null, lang = "en" }: { announcement?: An
                   </svg>
                   {t.signIn}
                 </Link>
-                <Button href="/register" variant={light ? "light" : "primary"} size="sm" className="whitespace-nowrap max-sm:hidden">
+                <Button href="/apply" onClick={openChooser} variant={light ? "light" : "primary"} size="sm" className="whitespace-nowrap max-sm:hidden">
                   {t.signUp}
                   <ArrowRight />
                 </Button>
@@ -250,7 +269,7 @@ export function Header({ announcement = null, lang = "en" }: { announcement?: An
                     <Button href="/login" variant="outline-light" size="lg" className="w-full">
                       {t.signIn}
                     </Button>
-                    <Button href="/register" variant="light" size="lg" className="w-full">
+                    <Button href="/apply" onClick={openChooser} variant="light" size="lg" className="w-full">
                       {t.signUp}
                     </Button>
                   </div>
@@ -260,13 +279,14 @@ export function Header({ announcement = null, lang = "en" }: { announcement?: An
                   <ArrowRight />
                 </Button>
                 <p className="mt-6 text-center text-xs text-cream-200/45">
-                  {site.contact.phone} · {site.location.label}
+                  {phone} · {site.location.label}
                 </p>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      <ApplyChooser key={chooser} open={chooserOpen} onClose={() => setChooserOpen(false)} lang={lang} />
     </>
   );
 }

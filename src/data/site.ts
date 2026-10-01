@@ -45,6 +45,7 @@ export const projectFacts = {
   /** Total project land: 5 acres = 500 decimal ≈ 15.15 bigha (33 decimal per bigha). */
   landAcres: "5",
   landBigha: "15.15",
+  landDecimal: "500",
   landSqft: "2,17,800",
   totalShares: 2700,
   timelineMonths: 36,

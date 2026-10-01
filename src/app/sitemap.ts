@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { navigation } from "@/data/site";
 
-const BASE = "https://avenlimited.com";
+const BASE = (process.env.NEXT_PUBLIC_SITE_URL || "https://avenresort.com").replace(/\/$/, "");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [...navigation, { href: "/own-your-share" }, { href: "/interest" }, { href: "/apply" }, { href: "/faq" }, { href: "/terms" }, { href: "/privacy" }];

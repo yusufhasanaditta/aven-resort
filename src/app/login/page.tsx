@@ -38,7 +38,15 @@ function LoginForm() {
         return;
       }
 
-      const next = params.get("next") || (json.role === "ADMIN" ? "/admin" : "/account");
+      // Only follow same-site paths, never an outside URL passed in ?next=.
+      const asked = params.get("next");
+      const next = json.mustChangePassword
+        ? "/account"
+        : asked && asked.startsWith("/") && !asked.startsWith("//")
+          ? asked
+          : json.role === "ADMIN"
+            ? "/admin"
+            : "/account";
       router.push(next);
       router.refresh();
     } catch {
@@ -49,17 +57,22 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-5" noValidate>
-      <Field id="email" label="Email address" error={errors.email}>
+      <Field id="email" label="Email or membership number" error={errors.email}>
         <input
           id="email"
           name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
+          type="text"
+          autoComplete="username"
+          placeholder="you@example.com or 20262001"
           className={fieldInputClass(errors.email)}
         />
       </Field>
 
+      <div className="-mb-3 flex justify-end">
+        <Link href="/forgot-password" className="text-xs font-medium text-forest-700 hover:underline">
+          Forgot password?
+        </Link>
+      </div>
       <Field id="password" label="Password" error={errors.password}>
         <input
           id="password"
@@ -82,9 +95,9 @@ function LoginForm() {
       </ButtonAction>
 
       <p className="text-center text-xs text-forest-900/45">
-        New to AVEN?{" "}
-        <Link href="/register" className="font-medium text-forest-700 hover:underline">
-          Create a shareholder account
+        Not a shareholder yet?{" "}
+        <Link href="/apply" className="font-medium text-forest-700 hover:underline">
+          Apply for shares
         </Link>
       </p>
     </form>

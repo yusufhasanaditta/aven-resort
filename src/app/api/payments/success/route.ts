@@ -1,17 +1,21 @@
-import { NextResponse } from "next/server";
+import { confirmWithGateway } from "@/lib/payments";
+import { returnTo } from "../return";
 
 /**
- * SSLCommerz redirects the shareholder's browser here with a POST after
- * checkout. The authoritative status update happens server-to-server via
- * /api/payments/ipn — this route only reads the tran_id to bounce the
- * browser to a friendly confirmation on the account page.
+ * SSLCommerz sends the shareholder's browser here after a successful
+ * checkout. The payment is confirmed right away (re-validated with
+ * SSLCommerz, exactly as the IPN does — whichever arrives first records it),
+ * then the shareholder lands on their dashboard with the receipt.
  */
 export async function POST(request: Request) {
   const form = await request.formData();
   const tranId = form.get("tran_id")?.toString() ?? "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return NextResponse.redirect(
-    `${siteUrl}/account?payment=success&tran=${encodeURIComponent(tranId)}`,
-    { status: 303 },
-  );
+  const valId = form.get("val_id")?.toString();
+  if (tranId && valId) {
+    const r = await confirmWithGateway(tranId, valId, Object.fromEntries(form));
+    if (r.ok && r.status !== "SUCCESS") return returnTo(request, "failed", tranId);
+  }
+  return returnTo(request, "success", tranId);
 }
+
+export const GET = (request: Request) => returnTo(request, "success", new URL(request.url).searchParams.get("tran_id") ?? "");

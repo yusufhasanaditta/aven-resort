@@ -1,23 +1,21 @@
 import Link from "next/link";
 import { MembershipCard } from "@/components/ui/MembershipCard";
-import { fallbackPlans } from "@/data/planFallback";
+import type { FallbackPlan } from "@/data/planFallback";
 
 /**
  * The membership cards fanned out like a dealt hand. Hovering (or
  * focusing) a card straightens it and lifts it clear of the others. On small
  * screens the fan becomes a horizontal snap-scroll row instead.
  *
- * Uses the static brochure plan data — this is a showcase of the plans, and
- * only the terms printed on the cards are shown here; live pricing lives in
- * the calculator on /ownership.
+ * Plans come from admin → Packages, so the cards always match live pricing.
  */
-export function MembershipSpread() {
-  const n = fallbackPlans.length;
+export function MembershipSpread({ plans }: { plans: FallbackPlan[] }) {
+  const n = plans.length;
   return (
     <>
       {/* Desktop: the fan */}
       <div className="relative mx-auto hidden h-[25rem] max-w-[76rem] lg:block">
-        {fallbackPlans.map((plan, i) => {
+        {plans.map((plan, i) => {
           const t = i - (n - 1) / 2; // -2.5 … 2.5
           return (
             <Link
@@ -42,7 +40,7 @@ export function MembershipSpread() {
 
       {/* Mobile & tablet: a snap row */}
       <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 sm:-mx-8 sm:px-8 lg:hidden">
-        {fallbackPlans.map((plan) => (
+        {plans.map((plan) => (
           <Link
             key={plan.slug}
             href={`/ownership?plan=${plan.slug}#calculator`}

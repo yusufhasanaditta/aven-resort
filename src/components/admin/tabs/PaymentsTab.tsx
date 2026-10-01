@@ -35,7 +35,7 @@ export function PaymentsTab({ focus, onChanged }: { focus: TabFocus; onChanged: 
   const [filter, setFilter] = useState<Filter>((focus.filter as Filter) ?? "ALL");
   const [method, setMethod] = useState("ALL");
   const [q, setQ] = useState("");
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState(!!focus.create);
   const [recording, setRecording] = useState<AdminHolding | null>(null);
 
   const payments = useMemo(() => data?.payments ?? [], [data]);

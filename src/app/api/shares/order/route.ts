@@ -4,13 +4,15 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { shareOrderSchema, zodErrors } from "@/lib/validation";
 import { calculate } from "@/lib/shares";
-import { initiatePayment, isConfigured } from "@/lib/sslcommerz";
+import { startPayment } from "@/lib/payments";
 import { convertLeadsFor } from "@/lib/crm";
+import { nextShareNumbers } from "@/lib/member";
 
 /**
- * Creates a share holding at the price the calculator showed, then either
- * hands back an SSLCommerz redirect URL (full payment or first installment)
- * or a clear "gateway not connected" message — never a fabricated success.
+ * Creates a share holding at the price the calculator showed, then starts
+ * its first payment (the full amount, or the down payment) through the
+ * gateway — or, while online payment isn't connected, keeps the reservation
+ * and says how to pay offline. Never a fabricated success.
  */
 export async function POST(request: Request) {
   const session = await getSession();
@@ -33,8 +35,7 @@ export async function POST(request: Request) {
   const { planSlug, units, paymentPlan } = parsed.data;
 
   const plans = await prisma.membershipPlan.findMany();
-  const plan = plans.find((p) => p.slug === planSlug);
-  if (!plan) {
+  if (!plans.some((p) => p.slug === planSlug)) {
     return NextResponse.json({ error: "Unknown membership plan." }, { status: 400 });
   }
 
@@ -47,55 +48,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Account not found." }, { status: 404 });
   }
 
-  const holding = await prisma.shareHolding.create({
-    data: {
-      userId: user.id,
-      planId: result.plan.id,
-      units: result.units,
-      totalAmountBDT: result.totalBDT,
-      paymentPlan,
-      installmentMonths: result.installments ? result.installments.length : null,
-      downPaymentBDT: result.downPaymentBDT,
-    },
-  });
+  const holding = await prisma.$transaction(async (tx) =>
+    tx.shareHolding.create({
+      data: {
+        ...(await nextShareNumbers(tx, result.units)),
+        userId: user.id,
+        planId: result.plan.id,
+        units: result.units,
+        totalAmountBDT: result.totalBDT,
+        paymentPlan,
+        installmentMonths: result.installments ? result.installments.length : null,
+        downPaymentBDT: result.downPaymentBDT,
+      },
+    }),
+  );
 
   await convertLeadsFor(user.email, `reserved ${result.units} ${result.plan.name} share(s) online`);
 
-  const tranId = `AVEN-${holding.id}-1-${randomUUID().slice(0, 8)}`;
-
-  await prisma.payment.create({
-    data: {
-      holdingId: holding.id,
-      amountBDT: firstDue,
-      tranId,
-      installmentNo: 1,
-      status: "PENDING",
-    },
-  });
-
-  if (!isConfigured()) {
-    return NextResponse.json({
-      ok: true,
-      holdingId: holding.id,
-      gatewayUrl: null,
-      notice:
-        "Your share reservation has been recorded. Online payment via SSLCommerz isn't connected yet — the AVEN team will contact you to complete payment.",
-    });
-  }
-
-  const gateway = await initiatePayment({
-    tranId,
+  const started = await startPayment({
+    holdingId: holding.id,
+    installmentNo: 1,
     amountBDT: firstDue,
-    customerName: user.name,
-    customerEmail: user.email,
-    customerPhone: user.phone,
-    customerAddress: user.location,
+    tranId: `AVEN-${holding.id}-1-${randomUUID().slice(0, 8)}`,
+    customer: user,
     productName: `${result.plan.name} — ${result.units} unit share(s), Aven Eco Luxury Resort`,
   });
 
-  if (!gateway.ok) {
-    return NextResponse.json({ error: gateway.error }, { status: 502 });
+  if (!started.ok) {
+    return NextResponse.json(
+      { error: `${started.error} Your reservation is saved — you can retry the payment from My holdings.`, holdingId: holding.id },
+      { status: started.status },
+    );
   }
-
-  return NextResponse.json({ ok: true, holdingId: holding.id, gatewayUrl: gateway.gatewayUrl });
+  return NextResponse.json({ ok: true, holdingId: holding.id, gatewayUrl: started.gatewayUrl, notice: started.notice });
 }

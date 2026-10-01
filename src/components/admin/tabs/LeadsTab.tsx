@@ -63,7 +63,7 @@ export function LeadsTab({ focus, onChanged }: { focus: TabFocus; onChanged: () 
   const [filter, setFilter] = useState<Filter>((focus.filter?.toUpperCase() as Filter) ?? "ALL");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(focus.id ?? null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(!!focus.create);
   const toast = useToast();
   const [now] = useState(() => new Date().toISOString());
 

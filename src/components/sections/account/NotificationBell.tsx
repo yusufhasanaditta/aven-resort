@@ -23,6 +23,7 @@ const kindTone: Record<string, string> = {
   DUE_SOON: "bg-sky-300",
   REMINDER: "bg-gold-400",
   PAYMENT_RECEIVED: "bg-emerald-300",
+  MESSAGE: "bg-sky-300",
 };
 
 function ago(iso: string) {

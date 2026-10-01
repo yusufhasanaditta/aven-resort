@@ -82,7 +82,7 @@ export function MembershipCard({
 }: {
   plan: MembershipCardData;
   isActive?: boolean;
-  holder?: { name: string; memberId: string };
+  holder?: { name: string; memberId: string; photoUrl?: string | null; shareNo?: string | null };
   className?: string;
 }) {
   const t = themeFor(plan);
@@ -115,20 +115,25 @@ export function MembershipCard({
           {sharesLabel(plan)}
         </p>
         <p className="text-[0.6875rem] opacity-85 sm:text-xs">
-          <span className="font-numeral">{formatBDT(plan.unitPriceBDT)}</span> / share
+          <span className="font-numeral">{formatBDT(plan.unitPriceBDT)}</span>
         </p>
         {t.perk && <p className="text-[0.6875rem] font-medium sm:text-xs">{t.perk}</p>}
 
         <div className="mt-auto">
           {holder ? (
-            <>
-              <p className="truncate text-[0.8125rem] font-semibold uppercase tracking-[0.12em]">
-                {holder.name}
-              </p>
-              <p className="mt-0.5 font-mono text-[0.625rem] tracking-[0.18em] opacity-70">
-                {holder.memberId}
-              </p>
-            </>
+            <div className="flex items-center gap-2.5">
+              {holder.photoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- profile photo from /media
+                <img src={holder.photoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 2px ${t.strip}` }} />
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-[0.8125rem] font-semibold uppercase tracking-[0.12em]">{holder.name}</p>
+                <p className="mt-0.5 truncate font-mono text-[0.625rem] tracking-[0.18em] opacity-70">ID {holder.memberId}</p>
+                {holder.shareNo && (
+                  <p className="truncate font-mono text-[0.625rem] tracking-[0.18em] opacity-70">SHARE {holder.shareNo}</p>
+                )}
+              </div>
+            </div>
           ) : (
             <>
               <p className="text-[0.6875rem] opacity-80">Free Stay</p>

@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { AdminIcon } from "@/components/ui/AdminIcon";
 import { LogoMark } from "@/components/ui/Logo";
-import { Avatar, ToastProvider, useAdminFetch } from "./kit";
+import { Avatar, Modal, ToastProvider, useAdminFetch } from "./kit";
+import { ChangePasswordForm } from "@/components/sections/account/ProfileForms";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { LeadsTab } from "./tabs/LeadsTab";
+import { ContactsTab } from "./tabs/ContactsTab";
 import { ApplicationsTab } from "./tabs/ApplicationsTab";
 import { CustomersTab } from "./tabs/CustomersTab";
 import { InstallmentsTab } from "./tabs/InstallmentsTab";
@@ -61,6 +63,7 @@ function Shell({ adminName, initialTab }: { adminName: string; initialTab: Admin
   const badges: Partial<Record<AdminTabId, { n: number; tone: "red" | "amber" | "gray" }>> = o
     ? {
         leads: { n: o.leads.byStatus.find((s) => s.status === "NEW")?.count ?? 0, tone: "gray" },
+        contacts: { n: o.contactRequestsNew, tone: "amber" },
         applications: { n: o.pendingApplications, tone: "amber" },
         installments: { n: o.money.overdueHoldings, tone: "red" },
         payments: { n: o.money.pendingPayments, tone: "amber" },
@@ -103,6 +106,7 @@ function Shell({ adminName, initialTab }: { adminName: string; initialTab: Admin
         <main className="mx-auto max-w-[96rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {tab === "overview" && <OverviewTab key={key} data={o} error={overview.error} nav={nav} />}
           {tab === "leads" && <LeadsTab key={key} focus={focus} onChanged={changed} />}
+          {tab === "contacts" && <ContactsTab key={key} nav={nav} onChanged={changed} />}
           {tab === "applications" && <ApplicationsTab key={key} focus={focus} nav={nav} onChanged={changed} />}
           {tab === "customers" && <CustomersTab key={key} focus={focus} onChanged={changed} />}
           {tab === "installments" && <InstallmentsTab key={key} focus={focus} nav={nav} onChanged={changed} />}
@@ -210,6 +214,7 @@ function TopBar({
 }) {
   const router = useRouter();
   const [menu, setMenu] = useState<"bell" | "create" | "user" | null>(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -224,6 +229,7 @@ function TopBar({
         overview.money.overdueHoldings > 0 && { text: `${overview.money.overdueHoldings} holdings have overdue installments`, go: () => nav("installments", { filter: "overdue" }), tone: "bg-red-500" },
         overview.leads.followUpsDue > 0 && { text: `${overview.leads.followUpsDue} lead follow-ups due`, go: () => nav("leads", { filter: "due" }), tone: "bg-amber-500" },
         overview.pendingApplications > 0 && { text: `${overview.pendingApplications} applications waiting for review`, go: () => nav("applications"), tone: "bg-violet-500" },
+        overview.contactRequestsNew > 0 && { text: `${overview.contactRequestsNew} new contact requests`, go: () => nav("contacts"), tone: "bg-sky-500" },
         overview.money.pendingPayments > 0 && { text: `${overview.money.pendingPayments} payments awaiting confirmation`, go: () => nav("payments", { filter: "PENDING" }), tone: "bg-sky-500" },
       ].filter(Boolean) as { text: string; go: () => void; tone: string }[]
     : [];
@@ -258,9 +264,10 @@ function TopBar({
             </button>
             {menu === "create" && (
               <Menu>
-                <MenuItem icon="users" onClick={() => nav("leads")}>Lead</MenuItem>
-                <MenuItem icon="wallet" onClick={() => nav("payments")}>Payment record</MenuItem>
-                <MenuItem icon="search" onClick={() => nav("content")}>FAQ or page content</MenuItem>
+                <MenuItem icon="users" onClick={() => { setMenu(null); nav("leads", { create: true }); }}>Lead</MenuItem>
+                <MenuItem icon="user" onClick={() => { setMenu(null); nav("customers", { create: true }); }}>Shareholder account</MenuItem>
+                <MenuItem icon="wallet" onClick={() => { setMenu(null); nav("payments", { create: true }); }}>Payment record</MenuItem>
+                <MenuItem icon="layers" onClick={() => { setMenu(null); nav("content"); }}>FAQ or page content</MenuItem>
               </Menu>
             )}
           </div>
@@ -294,13 +301,17 @@ function TopBar({
             </button>
             {menu === "user" && (
               <Menu>
-                <MenuItem icon="overview" onClick={() => window.open("/", "_blank")}>View website</MenuItem>
+                <MenuItem icon="overview" onClick={() => { setMenu(null); window.open("/", "_blank"); }}>View website</MenuItem>
+                <MenuItem icon="user" onClick={() => { setMenu(null); setPasswordOpen(true); }}>Change password</MenuItem>
                 <MenuItem icon="logout" onClick={logout}>Sign out</MenuItem>
               </Menu>
             )}
           </div>
         </div>
       </div>
+      <Modal open={passwordOpen} onClose={() => setPasswordOpen(false)} title="Change your password">
+        <ChangePasswordForm tone="light" />
+      </Modal>
     </header>
   );
 }
