@@ -29,7 +29,6 @@ export type InstallmentLine = {
   index: number;
   label: string;
   amountBDT: number;
-  dueLabel: string;
 };
 
 export type CalculatorResult<T extends PlanLike = PlanLike> = {
@@ -89,18 +88,14 @@ export function scheduleAmounts(totalBDT: number, steps: number, downPaymentBDT?
 export function buildInstallmentSchedule(
   totalBDT: number,
   steps: number,
-  start: Date = new Date(),
   downPaymentBDT?: number | null,
 ): InstallmentLine[] {
-  return scheduleAmounts(totalBDT, steps, downPaymentBDT).map((amountBDT, i) => {
-    const due = installmentDueDate(start, i + 1);
-    return {
-      index: i + 1,
-      label: downPaymentBDT ? (i === 0 ? "Down payment" : `${ordinal(i)} installment`) : `${ordinal(i + 1)} installment`,
-      amountBDT,
-      dueLabel: due.toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
-    };
-  });
+  // Numbered parts only — "Down payment", "1st installment", … — no calendar months.
+  return scheduleAmounts(totalBDT, steps, downPaymentBDT).map((amountBDT, i) => ({
+    index: i + 1,
+    label: downPaymentBDT ? (i === 0 ? "Down payment" : `${ordinal(i)} installment`) : `${ordinal(i + 1)} installment`,
+    amountBDT,
+  }));
 }
 
 /** 1 → "1st", 2 → "2nd", 11 → "11th", 23 → "23rd". */
@@ -140,7 +135,7 @@ export function calculate<T extends PlanLike>(
 
   const monthlyCount = installment ? Math.max(1, plan.installmentCount) : null;
   const downPaymentBDT = installment ? Math.min(downPaymentFor(plan, safeUnits), totalBDT) : null;
-  const installments = installment ? buildInstallmentSchedule(totalBDT, monthlyCount! + 1, new Date(), downPaymentBDT) : null;
+  const installments = installment ? buildInstallmentSchedule(totalBDT, monthlyCount! + 1, downPaymentBDT) : null;
 
   return {
     plan,

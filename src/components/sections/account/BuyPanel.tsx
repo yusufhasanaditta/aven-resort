@@ -280,15 +280,19 @@ export function BuyPanel({
 
           {result.installments && (
             <details className="mt-4 rounded-xl border border-white/8 px-4 py-3 text-xs text-cream-200/65">
-              <summary className="cursor-pointer font-medium text-cream-100">See all {result.installments.length} payment dates</summary>
+              <summary className="cursor-pointer font-medium text-cream-100">See all {result.installments.length} payments</summary>
               <ul className="mt-3 max-h-44 space-y-1.5 overflow-y-auto pr-1">
                 {result.installments.map((l) => (
                   <li key={l.index} className="flex justify-between">
-                    <span>{l.label} · {l.dueLabel}</span>
+                    <span>{l.label}</span>
                     <span className="font-numeral text-cream-100">{formatBDT(l.amountBDT)}</span>
                   </li>
                 ))}
               </ul>
+              <p className="mt-2 flex justify-between border-t border-white/8 pt-2 font-semibold text-cream-100">
+                <span>Total</span>
+                <span className="font-numeral">{formatBDT(result.installments.reduce((s, l) => s + l.amountBDT, 0))}</span>
+              </p>
             </details>
           )}
 

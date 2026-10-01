@@ -92,7 +92,7 @@ export function HoldingLedger({
                 <td className="py-2.5">
                   <p className="text-[#14201B]">{s.label}</p>
                   <p className="text-[0.6875rem] text-[#8A948E]">
-                    {s.paidAt ? `Paid ${formatDate(s.paidAt)}` : `Due ${formatDate(s.dueDate)}${overdue ? ` · ${-d}d late` : ""}`}
+                    {s.paidAt ? `Paid ${formatDate(s.paidAt)}` : overdue ? `Overdue · ${-d}d late` : "Upcoming"}
                   </p>
                 </td>
                 <td className="py-2.5 text-right tabular-nums text-[#14201B]">{formatBDT(s.amountBDT)}</td>

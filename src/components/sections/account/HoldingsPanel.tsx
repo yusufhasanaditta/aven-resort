@@ -161,7 +161,13 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                     <span className="block text-[0.6875rem] text-cream-200/45">
                       {s.paidAt
                         ? `Paid ${formatDate(s.paidAt)}`
-                        : `Due ${formatDate(s.dueDate)}${isNext ? (d < 0 ? ` · ${-d} days overdue` : d === 0 ? " · today" : ` · in ${d} days`) : ""}`}
+                        : isNext
+                          ? d < 0
+                            ? `Next payment · ${-d} days overdue`
+                            : d === 0
+                              ? "Next payment · due today"
+                              : "Next payment"
+                          : "Upcoming"}
                     </span>
                   </span>
                   <span className="font-numeral text-cream-50">{formatBDT(s.amountBDT)}</span>

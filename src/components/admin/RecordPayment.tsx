@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Btn, Field, Modal, SelectInput, TextArea, TextInput, firstError, send, useToast } from "./kit";
 import type { AdminHolding } from "@/lib/admin-types";
-import { formatDate } from "@/lib/account";
 import { formatBDT } from "@/lib/shares";
 
 export const METHOD_LABEL: Record<string, string> = {
@@ -129,7 +128,7 @@ export function RecordPaymentModal({
                     <SelectInput id={id} value={step?.n} onChange={(e) => setN(Number(e.target.value))}>
                       {unpaid.map((s) => (
                         <option key={s.n} value={s.n}>
-                          {s.label} — {formatBDT(s.amountBDT)} · due {formatDate(s.dueDate)}
+                          {s.label} — {formatBDT(s.amountBDT)}
                           {s.status === "PENDING" ? " (gateway pending)" : ""}
                         </option>
                       ))}

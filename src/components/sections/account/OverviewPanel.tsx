@@ -369,7 +369,7 @@ function UpNext({ data, holdingId, after }: { data: DashboardData; holdingId: st
         {later.map((s) => (
           <li key={s.n} className="flex justify-between gap-3">
             <span className="text-cream-200/65">
-              {s.n} of {holding!.steps.length} · {formatDate(s.dueDate)}
+              {s.label} · {s.n} of {holding!.steps.length}
             </span>
             <span className="font-numeral text-cream-100">{formatBDT(s.amountBDT)}</span>
           </li>

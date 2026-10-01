@@ -322,7 +322,6 @@ export function ShareCalculator() {
                           </span>
                           <span className="min-w-0">
                             <span className={cn("block", line.index === 1 ? "font-semibold text-gold-300" : "text-cream-50")}>{line.label}</span>
-                            <span className="block text-[0.6875rem] text-cream-200/45">{line.dueLabel}</span>
                           </span>
                           <span className="font-numeral text-cream-50">{formatBDT(line.amountBDT)}</span>
                         </li>
