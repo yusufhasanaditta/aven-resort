@@ -9,6 +9,7 @@ export const ADMIN_TABS = [
   { id: "payments", label: "Payments & receipts", icon: "wallet", group: "Investors" },
   { id: "packages", label: "Packages", icon: "tag", group: "Catalogue" },
   { id: "content", label: "Website content", icon: "layers", group: "Website" },
+  { id: "careers", label: "Careers", icon: "briefcase", group: "Website" },
   { id: "media", label: "Media library", icon: "image", group: "Website" },
   { id: "activity", label: "Activity log", icon: "overview", group: "System" },
 ] as const;

@@ -50,8 +50,12 @@ export const projectFacts = {
   totalShares: 2700,
   timelineMonths: 36,
   amenities: 20,
-  hotelRooms: 140,
-  villas: 40,
+  /** 140 rooms in all: 100 in the main hotel, and 20 villas of two rooms each. */
+  totalRooms: 140,
+  hotelRooms: 100,
+  villas: 20,
+  roomsPerVilla: 2,
+  villaRooms: 40,
 } as const;
 
 export type NavItem = {
@@ -70,7 +74,7 @@ export const navigation: NavItem[] = [
   {
     label: "Wellness",
     href: "/wellness",
-    description: "Nine therapies — Aven cares for you",
+    description: "Eleven therapies — Aven cares for you",
   },
   {
     label: "Amenities",
@@ -80,7 +84,7 @@ export const navigation: NavItem[] = [
   {
     label: "Stay",
     href: "/accommodations",
-    description: "140-room hotel and 40 private-pool villas",
+    description: "140 rooms: a 100-room hotel and 20 private-pool villas",
   },
   {
     label: "Masterplan",

@@ -27,13 +27,14 @@ export function num(lang: Lang, value: string | number) {
 export const navBn: Record<string, { label: string; description: string }> = {
   "/": { label: "হোম", description: "এক নজরে পুরো স্বপ্ন" },
   "/ownership": { label: "মালিকানা", description: "পাঁচটি মেম্বারশিপ প্ল্যান, ক্যালকুলেটর ও পেমেন্ট" },
-  "/wellness": { label: "ওয়েলনেস", description: "নয়টি থেরাপি — অ্যাভেন আপনার যত্ন নেয়" },
+  "/wellness": { label: "ওয়েলনেস", description: "এগারোটি থেরাপি — অ্যাভেন আপনার যত্ন নেয়" },
   "/amenities": { label: "সুবিধাসমূহ", description: "লাইব্রেরি থেকে হেলিপ্যাড পর্যন্ত ২০টি সুবিধা" },
-  "/accommodations": { label: "থাকার ব্যবস্থা", description: "১৪০ রুমের হোটেল ও ৪০টি প্রাইভেট-পুল ভিলা" },
+  "/accommodations": { label: "থাকার ব্যবস্থা", description: "১৪০টি রুম — ১০০ রুমের হোটেল ও ২০টি প্রাইভেট-পুল ভিলা" },
   "/masterplan": { label: "মাস্টারপ্ল্যান", description: "পাঁচটি পাহাড় জুড়ে পুরো পরিকল্পনা" },
   "/gallery": { label: "গ্যালারি", description: "রেন্ডার ও ছবি" },
   "/about": { label: "আমাদের সম্পর্কে", description: "অ্যাভেন লিমিটেড ও আমাদের লক্ষ্য" },
   "/contact": { label: "যোগাযোগ", description: "ফোন, ইমেইল ও সাইট ভিজিট" },
+  "/careers": { label: "ক্যারিয়ার", description: "চাকরির বিজ্ঞপ্তি ও আবেদন" },
 };
 
 /** Short interface strings used across the header and footer. */
@@ -53,6 +54,7 @@ export const ui = {
     getInTouch: "Get in touch",
     applyForShares: "Apply for shares",
     faq: "FAQ",
+    careers: "Careers",
     whatsapp: "WhatsApp us →",
     resortMap: "Resort · View on map ↗",
     corporateOffice: "Corporate office",
@@ -78,6 +80,7 @@ export const ui = {
     getInTouch: "যোগাযোগ করুন",
     applyForShares: "শেয়ারের জন্য আবেদন",
     faq: "সাধারণ প্রশ্ন",
+    careers: "ক্যারিয়ার",
     whatsapp: "হোয়াটসঅ্যাপে লিখুন →",
     resortMap: "রিসোর্ট · ম্যাপে দেখুন ↗",
     corporateOffice: "কর্পোরেট অফিস",

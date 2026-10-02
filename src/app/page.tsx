@@ -25,7 +25,9 @@ import { getLang } from "@/lib/i18n-server";
 const villaTypes = ["Super Deluxe Residential", "Single", "Duplex", "Presidential"];
 
 export default async function HomePage() {
-  const [yoga, ...therapies] = wellnessServices;
+  // Yoga leads the mosaic; eight more fill its two rows of four.
+  const [yoga, ...rest] = wellnessServices;
+  const therapies = rest.slice(0, 8);
   const [hero, resort, contact, lang, plans] = await Promise.all([getContent("hero"), getContent("resort"), getContent("contact"), getLang(), getPlans()]);
   const bn = lang === "bn";
 
@@ -118,6 +120,9 @@ export default async function HomePage() {
                   <p className="mt-2 font-display text-3xl text-cream-50">
                     {projectFacts.villas} exclusive villas
                   </p>
+                  <p className="mt-1 text-[0.8125rem] text-cream-100/75">
+                    {projectFacts.roomsPerVilla} rooms each · {projectFacts.villaRooms} villa rooms · {projectFacts.totalRooms} rooms across the resort
+                  </p>
                   <ul className="mt-3 flex flex-wrap gap-1.5">
                     {villaTypes.map((t) => (
                       <li key={t} className="rounded-full bg-cream-50/12 px-3 py-1 text-[0.75rem] text-cream-50 ring-1 ring-cream-50/20 backdrop-blur-sm">
@@ -186,7 +191,7 @@ export default async function HomePage() {
               </div>
               <div className="absolute inset-x-0 bottom-0 p-7 sm:p-9">
                 <Button href="/wellness" variant="light">
-                  All nine therapies
+                  All eleven therapies
                   <ArrowRight />
                 </Button>
               </div>

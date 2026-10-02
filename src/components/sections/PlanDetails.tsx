@@ -25,7 +25,7 @@ export function planBreakdown(plan: MembershipCardData) {
 }
 
 /**
- * The chart row for a plan, as a panel: both ways to pay, the down payment,
+ * The chart row for a plan, as a panel: the installment plan, the down payment,
  * the monthly amount and a ribbon showing every part of the schedule —
  * down payment, 1st installment, 2nd installment… No savings or discounts.
  */
@@ -88,21 +88,19 @@ export function PlanDetails({
           </dl>
         </div>
 
-        {/* Full payment */}
+        {/* The schedule in brief — online purchases are by installments only */}
         <div className={cn("rounded-2xl p-5", panel)}>
-          <p className={cn("text-xs font-medium", muted)}>Full payment</p>
-          <p className={cn("mt-1 font-numeral text-2xl", strong)}>{formatBDT(b.fullTotal)}</p>
-          <p className={cn("text-xs", muted)}>
-            {formatBDT(b.fullPrice)} × {b.units} share{b.units > 1 ? "s" : ""}
-          </p>
+          <p className={cn("text-xs font-medium", muted)}>Your schedule</p>
+          <p className={cn("mt-1 font-numeral text-2xl", strong)}>{b.months + 1} payments</p>
+          <p className={cn("text-xs", muted)}>Down payment, then {b.months} monthly</p>
           <dl className="mt-4 space-y-1.5 text-[0.8125rem]">
             <div className="flex justify-between gap-3">
-              <dt className={muted}>Payments</dt>
-              <dd className={strong}>One payment</dd>
+              <dt className={muted}>Last installment</dt>
+              <dd className={cn("font-numeral", strong)}>{formatBDT(b.parts[b.parts.length - 1])}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className={muted}>Installments</dt>
-              <dd className={strong}>None</dd>
+              <dt className={muted}>Total</dt>
+              <dd className={cn("font-numeral", strong)}>{formatBDT(b.installmentTotal)}</dd>
             </div>
           </dl>
         </div>

@@ -32,7 +32,7 @@ const copy = {
     eyebrow: "Share price & membership chart",
     title: "One share price.",
     titleAccent: "Five ways to own.",
-    lede: "Choose your package, pay the down payment, then the balance in equal monthly installments — or pay the whole amount at once. Each step up the ladder brings more free days in the hills every year.",
+    lede: "Choose your package, pay the down payment, then the balance in equal monthly installments. Each step up the ladder brings more free days in the hills every year.",
     medalLabel: "Price per share",
     medalNote: "The same on every plan · valid until 30 September 2026",
     shares: (n: number, plus: boolean) => `${n}${plus ? "+" : ""} share${n > 1 || plus ? "s" : ""}`,
@@ -44,7 +44,6 @@ const copy = {
     down: "Down payment",
     monthly: (m: number) => `${m} monthly`,
     ribbon: (m: number) => `Down payment, then 1st – ${ordinal(m)} installment`,
-    payFull: "Or pay in full",
     villaPerk: "+ 100% Villa Ownership",
     apply: "Apply",
     calculate: "Calculate",
@@ -52,7 +51,6 @@ const copy = {
     chartTitle: "Share Price & Membership Chart",
     validUntil: "This chart is valid until 30 September 2026",
     heads: ["S/L", "Membership", "Unit", "Price (BDT)", "Down payment", "Installment (monthly)", "Free stay (yearly)"],
-    fullPayment: "Full payment",
     days: (d: number) => `${d} Days`,
     villaOwnership: "100% Villa Ownership",
     footnote: "Installments are due on the 1st of each month after the down payment; any rounding is settled in the last installment. A share count between packages uses the same ৳5,00,000 per share, with the down payment prorated per share.",
@@ -61,7 +59,7 @@ const copy = {
     eyebrow: "শেয়ার মূল্য ও মেম্বারশিপ চার্ট",
     title: "এক শেয়ার মূল্য।",
     titleAccent: "মালিকানার পাঁচটি পথ।",
-    lede: "আপনার প্যাকেজ বেছে নিন, ডাউন পেমেন্ট দিন, তারপর বাকি টাকা সমান মাসিক কিস্তিতে — অথবা পুরো টাকা একবারে পরিশোধ করুন। প্রতিটি ধাপে বাড়ে পাহাড়ে প্রতি বছরের ফ্রি অবকাশ।",
+    lede: "আপনার প্যাকেজ বেছে নিন, ডাউন পেমেন্ট দিন, তারপর বাকি টাকা সমান মাসিক কিস্তিতে পরিশোধ করুন। প্রতিটি ধাপে বাড়ে পাহাড়ে প্রতি বছরের ফ্রি অবকাশ।",
     medalLabel: "প্রতি শেয়ার মূল্য",
     medalNote: "সব প্ল্যানে একই · ৩০ সেপ্টেম্বর ২০২৬ পর্যন্ত প্রযোজ্য",
     shares: (n: number, plus: boolean) => `${bnDigits(n)}${plus ? "+" : ""}টি শেয়ার`,
@@ -73,7 +71,6 @@ const copy = {
     down: "ডাউন পেমেন্ট",
     monthly: (m: number) => `${bnDigits(m)}টি মাসিক কিস্তি`,
     ribbon: (m: number) => `ডাউন পেমেন্ট, তারপর ১ম – ${bnDigits(m)}তম কিস্তি`,
-    payFull: "অথবা এককালীন পরিশোধ",
     villaPerk: "+ ১০০% ভিলা মালিকানা",
     apply: "আবেদন করুন",
     calculate: "হিসাব করুন",
@@ -81,7 +78,6 @@ const copy = {
     chartTitle: "শেয়ার মূল্য ও মেম্বারশিপ চার্ট",
     validUntil: "এই চার্ট ৩০ সেপ্টেম্বর ২০২৬ পর্যন্ত প্রযোজ্য",
     heads: ["ক্রমিক", "মেম্বারশিপ", "ইউনিট", "মূল্য (টাকা)", "ডাউন পেমেন্ট", "কিস্তি (মাসিক)", "ফ্রি অবকাশ (বাৎসরিক)"],
-    fullPayment: "এককালীন পরিশোধ",
     days: (d: number) => `${bnDigits(d)} দিন`,
     villaOwnership: "১০০% ভিলা মালিকানা",
     footnote: "ডাউন পেমেন্টের পর প্রতি মাসের ১ তারিখে কিস্তি পরিশোধযোগ্য; ভগ্নাংশের সমন্বয় শেষ কিস্তিতে হবে। প্যাকেজের মাঝামাঝি শেয়ার সংখ্যাতেও প্রতি শেয়ার ৫,০০,০০০ টাকা, এবং ডাউন পেমেন্ট শেয়ার অনুপাতে নির্ধারিত হবে।",
@@ -217,11 +213,6 @@ export function PlanChart({ plans, lang = "en" }: { plans: FallbackPlan[]; lang?
                         <p className="mt-2 text-[0.6875rem] text-forest-900/45">{t.ribbon(b.months)}</p>
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-dashed border-forest-600/20 px-4 py-3 text-[0.8125rem]">
-                        <span className="whitespace-nowrap text-forest-900/60">{t.payFull}</span>
-                        <span className="whitespace-nowrap font-numeral font-medium text-forest-900">{tk(b.fullTotal, lang)}</span>
-                      </div>
-
                       {royal && <p className={cn("mt-3 rounded-xl px-3 py-2 text-center text-xs font-semibold", skin.chip)}>{t.villaPerk}</p>}
 
                       <div className="mt-6 flex gap-2">
@@ -274,16 +265,16 @@ export function PlanChart({ plans, lang = "en" }: { plans: FallbackPlan[]; lang?
                 {plans.map((p, idx) => {
                   const b = planBreakdown(p);
                   const shade = idx % 2 ? "bg-cream-50" : "bg-white";
-                  return [
-                    <tr key={`${p.slug}-i`} className={cn(shade, "border-t border-forest-600/10")}>
-                      <td rowSpan={2} className="px-5 py-4 align-top font-numeral font-semibold text-forest-900">{grouped(idx + 1, lang).padStart(2, bn ? "০" : "0")}</td>
-                      <th rowSpan={2} scope="rowgroup" className="px-5 py-4 align-top">
+                  return (
+                    <tr key={p.slug} className={cn(shade, "border-t border-forest-600/10")}>
+                      <td className="px-5 py-4 align-top font-numeral font-semibold text-forest-900">{grouped(idx + 1, lang).padStart(2, bn ? "০" : "0")}</td>
+                      <th scope="row" className="px-5 py-4 align-top">
                         <span className="flex items-center gap-2.5">
                           <TierIcon tierId={p.slug} color={p.accentColor} size="sm" />
                           <span className={cn("text-lg text-forest-900", bn ? "font-semibold" : "font-display")}>{name(p.slug, p.name)}</span>
                         </span>
                       </th>
-                      <td rowSpan={2} className="px-5 py-4 align-top font-numeral text-forest-900">
+                      <td className="px-5 py-4 align-top font-numeral text-forest-900">
                         {grouped(b.units, lang).padStart(2, bn ? "০" : "0")}
                         {p.maxUnits === null && "+"}
                       </td>
@@ -295,19 +286,12 @@ export function PlanChart({ plans, lang = "en" }: { plans: FallbackPlan[]; lang?
                         <span className="font-numeral font-semibold">{grouped(b.months, lang)}</span>
                         <span className="ml-1.5 font-numeral text-xs text-forest-900/50">× {grouped(b.monthly, lang)}</span>
                       </td>
-                      <td rowSpan={2} className="px-5 py-4 text-right align-top">
+                      <td className="px-5 py-4 text-right align-top">
                         <span className="font-numeral text-forest-900">{t.days(stayDays(p.freeStayNights))}</span>
                         {p.slug === "royal" && <span className="mt-1 block text-xs font-semibold text-forest-700">{t.villaOwnership}</span>}
                       </td>
-                    </tr>,
-                    <tr key={`${p.slug}-f`} className={shade}>
-                      <td className="px-5 pb-4 font-numeral text-forest-900/70">
-                        {grouped(b.fullPrice, lang)} × {grouped(b.units, lang)} = {grouped(b.fullTotal, lang)}
-                      </td>
-                      <td className="px-5 pb-4 text-forest-900/70">{t.fullPayment}</td>
-                      <td className="px-5 pb-4 font-numeral text-forest-900/70">{grouped(0, lang)}</td>
-                    </tr>,
-                  ];
+                    </tr>
+                  );
                 })}
               </tbody>
             </table>

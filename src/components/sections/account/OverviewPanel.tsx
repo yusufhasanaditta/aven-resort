@@ -30,7 +30,7 @@ export function OverviewPanel({
     { icon: "wallet", label: "Paid to date", value: formatBDTCompact(summary.paidBDT), sub: `of ${formatBDTCompact(summary.committedBDT)} committed` },
     { icon: "bell", label: "Outstanding", value: formatBDTCompact(summary.outstandingBDT), sub: summary.outstandingBDT ? "Across open plans" : "Nothing owed" },
     { icon: "sun", label: "Free stay", value: `${summary.stayDaysPerYear} days`, sub: "Per year, at the resort" },
-    { icon: "percent", label: "Plan share price", value: summary.currentPlan ? formatBDTCompact(summary.currentPlan.fullPriceBDT) : "—", sub: "Per share, paid in full" },
+    { icon: "percent", label: "Plan share price", value: summary.currentPlan ? formatBDTCompact(summary.currentPlan.unitPriceBDT) : "—", sub: "Per share" },
   ];
 
   return (
@@ -277,7 +277,7 @@ function PlanRing({ data, onBuy }: { data: DashboardData; onBuy: () => void }) {
               </p>
               <p className="mt-2 text-xs leading-relaxed text-cream-200/55">
                 {summary.nextPlan.name} brings {stayDays(summary.nextPlan.freeStayNights)} free days a year
-                {` and ${formatBDT(summary.nextPlan.fullPriceBDT)} a share paid in full`}.
+                {` at ${formatBDT(summary.nextPlan.unitPriceBDT)} a share`}.
               </p>
             </>
           ) : (

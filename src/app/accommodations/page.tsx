@@ -6,6 +6,7 @@ import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { getAsset, getContent } from "@/lib/cms";
+import { projectFacts } from "@/data/site";
 import {
   accommodationCollections,
   accommodations,
@@ -14,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "Accommodations",
   description:
-    "140 exclusive rooms in the luxury hotel, 40 private-pool villas — single, duplex and presidential — and tree houses raised into the canopy at Aven Eco Luxury Resort & Wellness.",
+    "140 rooms in all — 100 exclusive rooms in the luxury hotel and 20 two-room private-pool villas (super deluxe, single, duplex and presidential) — and tree houses raised into the canopy at Aven Eco Luxury Resort & Wellness.",
 };
 
 export default async function AccommodationsPage() {
@@ -31,10 +32,10 @@ export default async function AccommodationsPage() {
         imageAlt="The Aven luxury hotel against forested hills under a clear sky"
         height="tall"
         facts={[
-          { value: "140", label: "Exclusive rooms" },
-          { value: "40", label: "Luxury villas" },
+          { value: String(projectFacts.totalRooms), label: "Rooms in all" },
+          { value: String(projectFacts.hotelRooms), label: "Hotel rooms" },
+          { value: String(projectFacts.villas), label: `Villas · ${projectFacts.villaRooms} rooms` },
           { value: "200", label: "Pax ballroom" },
-          { value: "3", label: "Villa types" },
         ]}
         actions={[{ label: "Enquire about ownership", href: "/contact" }]}
       />
@@ -51,7 +52,7 @@ export default async function AccommodationsPage() {
                 <Eyebrow>{collection}</Eyebrow>
                 <h2 className="mt-4 font-display text-display-md text-forest-900">
                   {collection === "Hotel" && "The luxury hotel"}
-                  {collection === "Villas" && "Forty villas, forty private pools"}
+                  {collection === "Villas" && "Twenty villas, twenty private pools"}
                   {collection === "Nature Stays" && "Into the canopy"}
                 </h2>
               </Reveal>
@@ -59,6 +60,34 @@ export default async function AccommodationsPage() {
               <div className="mt-12 space-y-16 lg:space-y-24">
                 {items.map((item, i) => (
                   <Reveal key={item.id}>
+                    {!item.image ? (
+                      // A text-only section: the details framed as a card, no photograph.
+                      <article className="grid gap-8 rounded-3xl border border-forest-600/12 bg-cream-50/70 p-7 sm:p-10 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+                        <div>
+                          <p className="text-eyebrow text-forest-600/60">{item.hill}</p>
+                          <h3 className="mt-3 font-display text-display-sm text-balance text-forest-900">{item.name}</h3>
+                          <p className="mt-2 font-display text-xl italic text-forest-600">{item.tagline}</p>
+                          <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/65">{item.description}</p>
+                        </div>
+                        <div className="lg:border-l lg:border-forest-600/12 lg:pl-14">
+                          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+                            {item.specs.map((spec) => (
+                              <div key={spec.label}>
+                                <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-forest-900/40">{spec.label}</dt>
+                                <dd className="mt-1 text-sm font-semibold text-forest-800">{spec.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          <ul className="mt-7 flex flex-wrap gap-1.5">
+                            {item.features.map((f) => (
+                              <li key={f} className="rounded-full bg-forest-600/7 px-3 py-1.5 text-[0.75rem] text-forest-800/80">
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </article>
+                    ) : (
                     <article
                       className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${
                         i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
@@ -113,6 +142,7 @@ export default async function AccommodationsPage() {
                         </ul>
                       </div>
                     </article>
+                    )}
                   </Reveal>
                 ))}
               </div>

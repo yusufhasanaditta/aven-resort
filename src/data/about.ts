@@ -22,7 +22,7 @@ export const about = {
     },
     {
       title: "Excellence",
-      body: "A 5-star programme — 40 suites, 10–12 villas, spa, ballroom and MICE — built to investment grade throughout.",
+      body: "A 5-star programme — a 100-room hotel, 20 two-room villas, spa, ballroom and MICE — built to investment grade throughout.",
     },
     {
       title: "Community",
@@ -55,9 +55,9 @@ export const positioning = [
     detail: "Every shareholder owns a fraction of each.",
   },
   {
-    stat: "180",
-    label: "Rooms & villas",
-    detail: "140 hotel rooms plus 40 private-pool villas.",
+    stat: "140",
+    label: "Rooms in all",
+    detail: "100 hotel rooms plus 20 private-pool villas of two rooms each.",
   },
 ];
 

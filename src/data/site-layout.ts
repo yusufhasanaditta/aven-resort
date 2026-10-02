@@ -36,7 +36,7 @@ export const layout = {
   barbecue: { x: 1.6, z: 0.4, rot: 0.68 },
   farm: { x: 14.6, z: 9.2, rot: -0.3 },
   bridge: { from: [-1.4, 5.6] as [number, number], to: [-3.6, -10.2] as [number, number] },
-  /** Villas along the northern ridge, each facing down to the lake. */
+  /** The 20 two-room villas: along the northern ridge and down its far side, each facing the lake. */
   villas: [
     { x: -6.4, z: -21.0, rot: -1.45 },
     { x: -6.6, z: -18.6, rot: -1.4 },
@@ -48,6 +48,16 @@ export const layout = {
     { x: -2.6, z: -15.2, rot: 0.1 },
     { x: -0.2, z: -15.0, rot: 0.2 },
     { x: 1.8, z: -16.6, rot: 0.6 },
+    { x: 3.4, z: -15.0, rot: -0.31 },
+    { x: -4.2, z: -18.0, rot: 0.23 },
+    { x: -1.8, z: -18.2, rot: 0.08 },
+    { x: 0.6, z: -19.0, rot: -0.07 },
+    { x: 2.8, z: -19.6, rot: -0.2 },
+    { x: -4.4, z: -20.6, rot: 0.21 },
+    { x: -2.0, z: -21.0, rot: 0.08 },
+    { x: 0.4, z: -21.6, rot: -0.05 },
+    { x: 2.4, z: -22.4, rot: -0.15 },
+    { x: -4.6, z: -23.2, rot: 0.19 },
   ] as Spot[],
 };
 
@@ -67,6 +77,8 @@ export const paths: { id: string; points: [number, number][]; trail?: boolean }[
   },
   { id: "ridge-east", points: [[-3.6, -10.2], [-1.6, -11.0], [0.8, -10.6], [2.4, -11.4], [3.2, -12.2]] },
   { id: "ridge-inner", points: [[-4.6, -11.4], [-2.8, -13.6], [-0.4, -13.8], [1.6, -15.2]] },
+  { id: "ridge-north", points: [[-2.8, -13.6], [-3.0, -16.6], [-3.2, -19.4], [-3.4, -22.2]] },
+  { id: "ridge-gully", points: [[1.6, -15.2], [1.6, -18.0], [1.6, -21.0], [1.4, -23.2]] },
   {
     id: "lake-trail",
     trail: true,

@@ -31,16 +31,13 @@ export function BuyPanel({
 }) {
   const router = useRouter();
   const [units, setUnits] = useState(1);
-  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("INSTALLMENT");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const plans = data.plans;
-  const result = useMemo(
-    () => (plans.length ? calculate(plans, units, paymentPlan) : null),
-    [plans, units, paymentPlan],
-  );
+  // Shareholders buy online by installments only; full payment is arranged with management.
+  const result = useMemo(() => (plans.length ? calculate(plans, units, "INSTALLMENT") : null), [plans, units]);
 
   const nextPlan = result ? plans.find((p) => p.minUnits > result.units) : undefined;
   const dueItems = data.holdings.filter((h) => h.status !== "CANCELLED" && h.nextDue);
@@ -61,7 +58,7 @@ export function BuyPanel({
         body: JSON.stringify({
           planSlug: result.plan.slug,
           units: result.units,
-          paymentPlan,
+          paymentPlan: "INSTALLMENT",
         }),
       });
       const json = await res.json();
@@ -185,7 +182,7 @@ export function BuyPanel({
                   Add {nextPlan.minUnits - result.units} more
                 </button>{" "}
                 to unlock <strong className="font-semibold">{nextPlan.name}</strong> —{" "}
-                {formatBDT(nextPlan.fullPriceBDT)} a share paid in full and {stayDays(nextPlan.freeStayNights)} free days a year.
+                {formatBDT(nextPlan.unitPriceBDT)} a share and {stayDays(nextPlan.freeStayNights)} free days a year.
               </motion.p>
             )}
           </AnimatePresence>
@@ -193,28 +190,11 @@ export function BuyPanel({
 
         <Glass>
           <PanelTitle eyebrow="Step 3" title="Payment plan" />
-          <div className="mt-5 grid grid-cols-2 gap-2.5">
-            {(["INSTALLMENT", "FULL"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPaymentPlan(p)}
-                aria-pressed={paymentPlan === p}
-                className={cn(
-                  "rounded-2xl border p-4 text-left transition-colors",
-                  paymentPlan === p ? "border-gold-300/60 bg-gold-400/10" : "border-white/8 hover:border-white/20",
-                )}
-              >
-                <span className="block text-sm font-semibold text-cream-50">
-                  {p === "FULL" ? "Pay in full" : "Installments"}
-                </span>
-                <span className="mt-0.5 block text-[0.6875rem] text-cream-200/50">
-                  {p === "FULL" ? "One payment, holding active at once" : "Down payment today, then monthly"}
-                </span>
-              </button>
-            ))}
+          <div className="mt-5 rounded-2xl border border-gold-300/60 bg-gold-400/10 p-4">
+            <span className="block text-sm font-semibold text-cream-50">Installments</span>
+            <span className="mt-0.5 block text-[0.6875rem] text-cream-200/50">Down payment today, then monthly</span>
           </div>
-          {paymentPlan === "INSTALLMENT" && result.installments && (
+          {result.installments && (
             <p className="mt-4 rounded-xl bg-gold-400/8 px-3.5 py-2.5 text-xs leading-relaxed text-cream-100">
               {result.plan.name} terms: <strong className="font-semibold">{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment today,
               then <strong className="font-semibold">{result.monthlyCount} monthly installments</strong> of about{" "}
@@ -273,7 +253,7 @@ export function BuyPanel({
               <dd className="font-numeral text-2xl text-cream-50">{formatBDT(result.totalBDT)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-cream-200/60">{paymentPlan === "INSTALLMENT" ? "Due today (down payment)" : "Due today"}</dt>
+              <dt className="text-cream-200/60">Due today (down payment)</dt>
               <dd className="font-numeral font-semibold text-gold-300">{formatBDT(dueToday)}</dd>
             </div>
           </dl>

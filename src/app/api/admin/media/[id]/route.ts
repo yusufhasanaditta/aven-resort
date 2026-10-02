@@ -9,12 +9,13 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const url = `/media/${id}`;
 
-  const [inSlot, inContent, asPhoto] = await Promise.all([
+  const [inSlot, inContent, asPhoto, inJob] = await Promise.all([
     prisma.siteAsset.count({ where: { url } }),
     prisma.siteContent.count({ where: { value: { contains: url } } }),
     prisma.user.count({ where: { photoUrl: url } }),
+    prisma.jobPost.count({ where: { OR: [{ images: { contains: `"${url}"` } }, { circularUrl: url }] } }),
   ]);
-  if (inSlot || inContent || asPhoto) {
+  if (inSlot || inContent || asPhoto || inJob) {
     return NextResponse.json({ error: "This image is still used on the website. Replace it there first, then delete it." }, { status: 409 });
   }
   const file = await prisma.mediaFile.delete({ where: { id }, select: { filename: true } }).catch(() => null);

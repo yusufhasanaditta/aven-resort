@@ -16,6 +16,7 @@ import { CustomersTab } from "./tabs/CustomersTab";
 import { InstallmentsTab } from "./tabs/InstallmentsTab";
 import { PaymentsTab } from "./tabs/PaymentsTab";
 import { PackagesTab } from "./tabs/PackagesTab";
+import { CareersTab } from "./tabs/CareersTab";
 import { ContentTab } from "./tabs/ContentTab";
 import { MediaTab } from "./tabs/MediaTab";
 import { ActivityTab } from "./tabs/ActivityTab";
@@ -113,6 +114,7 @@ function Shell({ adminName, initialTab }: { adminName: string; initialTab: Admin
           {tab === "payments" && <PaymentsTab key={key} focus={focus} onChanged={changed} />}
           {tab === "packages" && <PackagesTab key={key} />}
           {tab === "content" && <ContentTab key={key} />}
+          {tab === "careers" && <CareersTab key={key} focus={focus} />}
           {tab === "media" && <MediaTab key={key} />}
           {tab === "activity" && <ActivityTab key={key} />}
         </main>
@@ -268,6 +270,7 @@ function TopBar({
                 <MenuItem icon="user" onClick={() => { setMenu(null); nav("customers", { create: true }); }}>Shareholder account</MenuItem>
                 <MenuItem icon="layers" onClick={() => { setMenu(null); nav("customers", { sell: true }); }}>Share sale (cash / bank)</MenuItem>
                 <MenuItem icon="wallet" onClick={() => { setMenu(null); nav("payments", { create: true }); }}>Payment record</MenuItem>
+                <MenuItem icon="briefcase" onClick={() => { setMenu(null); nav("careers", { create: true }); }}>Job circular</MenuItem>
                 <MenuItem icon="layers" onClick={() => { setMenu(null); nav("content"); }}>FAQ or page content</MenuItem>
               </Menu>
             )}

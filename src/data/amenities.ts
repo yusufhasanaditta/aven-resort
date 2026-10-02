@@ -34,14 +34,14 @@ export const amenityGroups: {
   {
     id: "stay",
     eyebrow: "Stay",
-    title: "A hotel, forty villas and water everywhere.",
-    lede: "140 exclusive rooms in the main hotel, forty private-pool villas on the slopes, and a luxurious common pool between them.",
+    title: "A hotel, twenty villas and water everywhere.",
+    lede: "140 rooms in all — 100 in the main hotel and 40 across twenty two-room private-pool villas on the slopes — with a luxurious common pool between them.",
   },
   {
     id: "wellness",
     eyebrow: "Wellness & Retreat",
-    title: "Nine therapies, one peaceful self.",
-    lede: "Yoga, sound healing, reflexology, acupuncture and more — all provided within the resort.",
+    title: "Eleven therapies, one peaceful self.",
+    lede: "Yoga, mental health consultancy, physiotherapy, sound healing, acupuncture and more — all provided within the resort.",
   },
   {
     id: "dining",
@@ -89,7 +89,7 @@ export const amenities: Amenity[] = [
     name: "Luxury Hotel",
     icon: "hotel",
     group: "stay",
-    description: "140 exclusive rooms, presidential and royal suites, a 200-pax grand ballroom, a 50-pax seminar room and meeting rooms.",
+    description: "100 exclusive rooms, presidential and royal suites, a 200-pax grand ballroom, a 50-pax seminar room and meeting rooms.",
     image: "/renders/hotel-facade.jpg",
   },
   {
@@ -97,7 +97,7 @@ export const amenities: Amenity[] = [
     name: "Luxury Villas",
     icon: "villa",
     group: "stay",
-    description: "40 exclusive villas — super deluxe residential, single, duplex and presidential — with private pool and a tranquil, serene hill view.",
+    description: "20 exclusive villas of two rooms each (40 rooms) — super deluxe residential, single, duplex and presidential — with private pool and a tranquil, serene hill view.",
     image: "/renders/hillside-villas-valley.jpg",
   },
   {
@@ -113,7 +113,7 @@ export const amenities: Amenity[] = [
     name: "Wellness & Retreat",
     icon: "wellness",
     group: "wellness",
-    description: "Nine therapies from yoga and nutritional consultation to acupuncture, quartz therapy and sound healing.",
+    description: "Eleven therapies, from yoga, mental health consultancy and physiotherapy to acupuncture, quartz therapy and sound healing.",
     image: "/renders/yoga-tea-garden.jpg",
   },
   {

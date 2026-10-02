@@ -251,6 +251,10 @@ export function Header({
                     </Link>
                   </motion.div>
                 ))}
+                <Link href="/careers" className="flex items-baseline justify-between py-4 text-cream-200/70 hover:text-cream-50">
+                  <span className="text-lg">{t.careers}</span>
+                  <span className="text-xs text-cream-200/50">{describe("/careers", "Job circulars & how to apply")}</span>
+                </Link>
               </nav>
 
               <div className="mt-auto space-y-3 pt-10">

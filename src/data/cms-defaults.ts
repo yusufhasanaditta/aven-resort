@@ -68,6 +68,28 @@ export type PagesContent = Record<string, string>;
 /** A message shown at the top of every shareholder's dashboard. */
 export type AccountNotice = { enabled: boolean; title: string; text: string; linkLabel: string; href: string };
 
+/**
+ * The Careers section: HR contact, the "Why join Aven" page and the notes on
+ * the vacancy board. List fields are one item per line, "Title — detail"
+ * (FAQs: "Question | Answer"), so they are easy to edit in a text box.
+ */
+export type CareersContent = {
+  hrEmail: string;
+  hrPhone: string;
+  hrHours: string;
+  noVacancy: string;
+  fraudNotice: string;
+  whyTitle: string;
+  whyAccent: string;
+  whyLede: string;
+  mission: string;
+  offers: string;
+  values: string;
+  equalOpportunity: string;
+  process: string;
+  faqs: string;
+};
+
 export type CmsContent = {
   announcement: Announcement;
   hero: HeroContent;
@@ -81,6 +103,7 @@ export type CmsContent = {
   gallery: GalleryEntry[];
   pages: PagesContent;
   accountNotice: AccountNotice;
+  careers: CareersContent;
 };
 
 export type CmsKey = keyof CmsContent;
@@ -244,7 +267,7 @@ You can ask us to correct your details or stop marketing contact at any time by 
     wellnessTitle: "Retreat, Don't Escape.",
     wellnessAccent: "Aven Cares for You",
     wellnessLede:
-      "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Nine therapies, all provided within the resort.",
+      "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Eleven therapies, all provided within the resort.",
     amenitiesEyebrow: "Site zoning & functions",
     amenitiesTitle: "Twenty Amenities.",
     amenitiesAccent: "A Share of Every One.",
@@ -252,7 +275,7 @@ You can ask us to correct your details or stop marketing contact at any time by 
       "Every shareholder holds fractional ownership of all the features and amenities of the resort, with Saf-Kabla land registration — from the library and tree house to the cloud walkway and helipad.",
     stayEyebrow: "The product",
     stayTitle: "140 Rooms.",
-    stayAccent: "40 Private-Pool Villas.",
+    stayAccent: "One Hotel, 20 Villas.",
     stayLede:
       "Every key in the estate sits where the topography put it — the hotel on the highest point, the villas stepping down a slope, the nature stays lightest of all.",
     galleryEyebrow: "Gallery",
@@ -270,5 +293,49 @@ You can ask us to correct your details or stop marketing contact at any time by 
     text: "",
     linkLabel: "",
     href: "",
+  },
+  careers: {
+    hrEmail: site.contact.email,
+    hrPhone: site.contact.phone,
+    hrHours: "Saturday – Thursday, 10 am – 5 pm",
+    noVacancy: "Currently no vacancy is open. New circulars are posted here first — please check back, or send us your CV.",
+    fraudNotice:
+      "Aven Limited never asks for money at any stage of recruitment — not for forms, tests, interviews or appointment. Every genuine circular is published on this page. If anyone asks you to pay for a job at Aven, please report it to HR.",
+    whyTitle: "Why Join",
+    whyAccent: "Aven",
+    whyLede:
+      "We are building Sreemangal's eco-luxury resort and wellness retreat — and the people who will run it. Join a team that cares for its guests, its land and each other.",
+    mission:
+      "Aven Eco Luxury Resort & Wellness is being built to bring world-class hospitality to the tea hills of Sreemangal without cutting the hills — and to create lasting careers for the people of Moulvibazar and beyond. We hire on merit, train generously and promote from within, so the people who open the resort are the people who lead it.",
+    offers: [
+      "Competitive salary — Pay reviewed every year against the hospitality market.",
+      "Festival bonuses — Two festival bonuses a year.",
+      "Meals & accommodation — Meals on duty, and staff accommodation for roles on site.",
+      "Health & wellness — Medical support and access to the resort's own wellness programme.",
+      "Training & growth — Structured training from day one and a clear path to promotion.",
+      "Leave & rest — Weekly days off, annual leave and public holidays as per Bangladesh labour law.",
+    ].join("\n"),
+    values: [
+      "Care — For guests, for colleagues and for the hills we work in.",
+      "Integrity — Honest work, fair dealing and transparent hiring.",
+      "Excellence — Five-star standards, in every small detail.",
+      "Community — Local people first, and long-term livelihoods in Moulvibazar.",
+    ].join("\n"),
+    equalOpportunity:
+      "Aven is an equal opportunity employer. Every application is judged on merit — skills, experience and character — without regard to religion, gender, ethnicity, disability or background. Recruitment is transparent, and no one can buy or broker a job with us.",
+    process: [
+      "Apply — Apply through the circular's link or email before the deadline.",
+      "Shortlisting — HR reviews every application; shortlisted candidates are notified and listed on the circular.",
+      "Written test or skills test — For roles that need one, with the schedule posted as an update.",
+      "Interview — Meet the department head and HR, in Sreemangal or Dhaka.",
+      "Offer & joining — Selected candidates receive an appointment letter and a full induction.",
+    ].join("\n"),
+    faqs: [
+      "Do I have to pay anything to apply? | No. Aven never charges any fee at any stage of recruitment.",
+      "Can I apply for more than one position? | Yes — apply separately to each circular you are qualified for.",
+      "How will I know if I am shortlisted? | We contact shortlisted candidates by phone or email, and post the list as an update on the circular.",
+      "Is accommodation provided? | Staff accommodation is available for roles based at the resort; the circular says so where it applies.",
+      "Can I send my CV when no vacancy is open? | Yes. Email it to HR and we will keep it on file for future openings.",
+    ].join("\n"),
   },
 };

@@ -245,18 +245,18 @@ export const zones: Zone[] = [
     hill: "Hill 3",
     category: "hospitality",
     zoneType: "Open / Luxury / Eco",
-    tagline: "10–12 villas terraced down the slope",
+    tagline: "20 two-room villas terraced down the slope",
     description:
       "Each villa steps down the slope of Hill 3, so no villa looks into another. Modern glass-centric architecture with floor-to-ceiling windows facing the valley, private pools on the upper levels and two master bedrooms below. A private buggy path serves each one — no shared walls, true villa living on the tillas.",
     highlights: [
-      "10–12 terraced villas",
+      "20 terraced villas · 40 rooms",
       "Private pools on upper levels",
       "3-room layout: living + 2 ensuite masters + deck",
       "Private buggy path, no shared walls",
     ],
     land: { decimals: 70, sqft: 78408, percent: 19.4 },
     image: "/renders/hillside-villas-valley.jpg",
-    position: [-3, -13.4],
+    position: [-1.4, -17.4],
   },
   {
     id: "lake",

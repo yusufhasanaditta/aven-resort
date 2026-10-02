@@ -20,6 +20,7 @@ export const mediaSlots: MediaSlot[] = [
   { key: "gallery.hero", label: "Gallery — top banner", page: "/gallery", fallback: "/renders/villa-terrace-sunset.jpg" },
   { key: "contact.hero", label: "Contact — top banner", page: "/contact", fallback: "/renders/glass-tea-restaurant.jpg" },
   { key: "contact.map", label: "Contact — location map", page: "/contact", fallback: "/brochure/location-map-aven.jpg" },
+  { key: "careers.hero", label: "Careers — top banner", page: "/careers", fallback: "/renders/tea-house-lounge.jpg" },
   { key: "interest.image", label: "Register interest — photo", page: "/interest", fallback: "/renders/eco-villa-sunrise.jpg" },
 ];
 

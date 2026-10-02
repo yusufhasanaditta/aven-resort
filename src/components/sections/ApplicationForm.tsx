@@ -36,7 +36,8 @@ export function ApplicationForm({
   const [step, setStep] = useState(0);
   const [f, setF] = useState({
     units: start?.minUnits ?? 1,
-    paymentPlan: "INSTALLMENT" as "FULL" | "INSTALLMENT",
+    // Online applications are by installments only; full payment is arranged with management.
+    paymentPlan: "INSTALLMENT" as const,
     fullName: prefill.name,
     fatherName: "",
     email: prefill.email,
@@ -209,22 +210,10 @@ export function ApplicationForm({
                   </label>
                   <div>
                     <span className="mb-1.5 block text-xs font-medium text-forest-900/60">Payment plan</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["FULL", "INSTALLMENT"] as const).map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => set("paymentPlan", p)}
-                          aria-pressed={f.paymentPlan === p}
-                          className={cn("h-12 rounded-xl border text-sm font-medium", f.paymentPlan === p ? "border-forest-600 bg-forest-600 text-cream-50" : "border-forest-600/15 bg-white text-forest-800")}
-                        >
-                          {p === "FULL" ? "Full payment" : "Installments"}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="flex h-12 items-center justify-center rounded-xl border border-forest-600 bg-forest-600 text-sm font-medium text-cream-50">Installments</p>
                   </div>
                 </div>
-                {f.paymentPlan === "INSTALLMENT" && quote.installments && (
+                {quote.installments && (
                   <p className="mt-4 rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-forest-900/75">
                     {quote.plan.name} installment terms: <strong>{formatBDT(quote.downPaymentBDT ?? 0)}</strong> down payment, then{" "}
                     <strong>{quote.monthlyCount} monthly installments</strong> of about <strong>{formatBDT(quote.monthlyBDT ?? 0)}</strong>.
@@ -286,7 +275,7 @@ export function ApplicationForm({
                 <dl className="mt-6 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
                   {[
                     ["Package", `${quote.plan.name} · ${quote.units} shares`],
-                    ["Payment", f.paymentPlan === "INSTALLMENT" ? `${formatBDT(quote.downPaymentBDT ?? 0)} down + ${quote.monthlyCount} monthly` : "Full payment"],
+                    ["Payment", `${formatBDT(quote.downPaymentBDT ?? 0)} down + ${quote.monthlyCount} monthly`],
                     ["Name", f.fullName],
                     ["NID", f.nid],
                     ["Phone", f.phone],

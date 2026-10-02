@@ -13,7 +13,7 @@ import { getAsset, getContent } from "@/lib/cms";
 export const metadata: Metadata = {
   title: "Wellness",
   description:
-    "Nine wellness therapies at Aven Eco Luxury Resort & Wellness — yoga, nutritional consultation, barefoot mud walk, reflexology, gym training, facial cupping, acupuncture, quartz therapy and sound healing.",
+    "Eleven wellness therapies at Aven Eco Luxury Resort & Wellness — yoga, nutritional consultation, mental health consultancy, physiotherapy, barefoot mud walk, reflexology, gym training, facial cupping, acupuncture, quartz therapy and sound healing.",
 };
 
 export default async function WellnessPage() {
@@ -31,7 +31,7 @@ export default async function WellnessPage() {
         height="tall"
         leaves={false}
         facts={[
-          { value: "9", label: "Therapies" },
+          { value: String(wellnessServices.length), label: "Therapies" },
           { value: "100%", label: "Provided in-resort" },
           { value: "Body", label: "& mind" },
           { value: "Every", label: "Plan includes stays" },
@@ -44,12 +44,12 @@ export default async function WellnessPage() {
           <Reveal className="max-w-2xl">
             <Eyebrow>The programme</Eyebrow>
             <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
-              Nine therapies, one peaceful self.
+              Eleven therapies, one peaceful self.
             </h2>
             <p className="mt-5 text-pretty text-[0.9375rem] leading-relaxed text-forest-900/60">
-              From sunrise yoga and a barefoot mud walk to acupuncture and
-              singing-bowl sound healing — every one of these services is
-              provided within the resort.
+              From sunrise yoga and a barefoot mud walk to mental health
+              consultancy, physiotherapy and singing-bowl sound healing — every
+              one of these services is provided within the resort.
             </p>
           </Reveal>
 
@@ -109,6 +109,27 @@ export default async function WellnessPage() {
                 </TiltCard>
               </RevealItem>
             ))}
+            {/* Closes the grid's last row */}
+            <RevealItem>
+              <div className="relative flex h-full min-h-[22rem] flex-col justify-between overflow-hidden rounded-2xl bg-forest-900 p-7 text-cream-50 shadow-lift">
+                <div className="bg-leaf-swirl-light absolute inset-0 opacity-60" aria-hidden="true" />
+                <div className="relative">
+                  <p className="text-eyebrow text-gold-300">Not sure where to begin?</p>
+                  <p className="mt-4 font-display text-3xl leading-tight">
+                    We&rsquo;ll shape a programme <span className="italic text-gold-300">around you.</span>
+                  </p>
+                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-cream-200/70">
+                    Tell the wellness team how you feel and what you hope to leave with — rest, recovery or a clearer mind — and they will combine the therapies for your stay.
+                  </p>
+                </div>
+                <div className="relative mt-8">
+                  <Button href="/contact" variant="light">
+                    Talk to the wellness team
+                    <ArrowRight />
+                  </Button>
+                </div>
+              </div>
+            </RevealItem>
           </RevealGroup>
         </Container>
       </Section>

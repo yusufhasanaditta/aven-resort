@@ -1,8 +1,8 @@
 /**
  * Accommodation product: what an owner's share actually buys into.
  *
- * Room counts are the current figures from Aven (140 hotel rooms, 40
- * villas); the rest follows the AVEN brochure's "Luxury Hotel" (exclusive
+ * Room counts are the current figures from Aven: 140 rooms in all — 100 in
+ * the main hotel and 20 villas of two rooms each. The rest follows the AVEN brochure's "Luxury Hotel" (exclusive
  * suites, presidential & royal suites, 200-pax ballroom, 50-pax seminar room)
  * and "Luxury Villas" (villas — single, duplex, presidential — with private
  * pools) pages; architectural notes come from the earlier masterplan deck.
@@ -17,7 +17,8 @@ export type Accommodation = {
   description: string;
   specs: { label: string; value: string }[];
   features: string[];
-  image: string;
+  /** Left out for a text-only section. */
+  image?: string;
 };
 
 export const accommodations: Accommodation[] = [
@@ -41,18 +42,17 @@ export const accommodations: Accommodation[] = [
       "Highest point of the estate",
       "Stone & glass architecture",
     ],
-    image: "/renders/main-hotel-aerial.jpg",
   },
   {
     id: "executive-rooms",
     name: "Exclusive Suites",
     collection: "Hotel",
     hill: "Luxury Hotel",
-    tagline: "140 exclusive rooms under one roof",
+    tagline: "100 exclusive rooms under one roof",
     description:
-      "The luxury hotel carries 140 exclusive rooms alongside a 200-pax Grand Ballroom, a 50-pax Seminar Room and a Meeting Room — stone and glass against the forested hills, with the wellness programme a short walk away.",
+      "The one main hotel carries 100 exclusive rooms alongside a 200-pax Grand Ballroom, a 50-pax Seminar Room and a Meeting Room — stone and glass against the forested hills, with the wellness programme a short walk away.",
     specs: [
-      { label: "Rooms", value: "140 exclusive" },
+      { label: "Rooms", value: "100 exclusive" },
       { label: "Grand Ballroom", value: "200 pax" },
       { label: "Seminar Room", value: "50 pax" },
       { label: "Meeting Room", value: "On site" },
@@ -70,11 +70,11 @@ export const accommodations: Accommodation[] = [
     name: "Luxury Villas",
     collection: "Villas",
     hill: "Villa slopes",
-    tagline: "40 exclusive villas, stepping down the hill",
+    tagline: "20 exclusive villas, two rooms each",
     description:
-      "Forty exclusive villas — super deluxe residential, single, duplex and presidential — terraced along the slopes so no villa overlooks another. Floor-to-ceiling glass faces the valley, with private pool and a tranquil, serene hill view.",
+      "Twenty exclusive villas of two rooms each — 40 villa rooms in all — in super deluxe residential, single, duplex and presidential types, terraced along the slopes so no villa overlooks another. Floor-to-ceiling glass faces the valley, with private pool and a tranquil, serene hill view.",
     specs: [
-      { label: "Villas", value: "40 exclusive" },
+      { label: "Villas", value: "20 · 40 rooms" },
       { label: "Types", value: "Super Deluxe Residential · Single · Duplex · Presidential" },
       { label: "Pool", value: "Private, every villa" },
       { label: "Outlook", value: "Serene hill view" },

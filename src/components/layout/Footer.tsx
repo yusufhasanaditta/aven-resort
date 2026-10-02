@@ -105,6 +105,7 @@ export async function Footer({ lang = "en" }: { lang?: Lang }) {
               {[
                 ...navigation.slice(5),
                 { label: t.applyForShares, href: "/apply" },
+                { label: t.careers, href: "/careers" },
                 { label: t.faq, href: "/faq" },
               ].map((item) => (
                 <li key={item.href}>

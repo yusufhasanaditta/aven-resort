@@ -38,12 +38,20 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Enter your password."),
 });
 
+/**
+ * Online buyers pay by installments only. A full payment is arranged with the
+ * management team and recorded by an admin as a share sale.
+ */
+const installmentsOnly = z
+  .literal("INSTALLMENT", { message: "Full payment is arranged directly with the Aven management team." })
+  .default("INSTALLMENT");
+
 export const shareOrderSchema = z.object({
   // Plans are admin-editable rows, so the slug is checked against the database in the route.
   planSlug: z.string().trim().min(1).max(40),
   units: z.coerce.number().int().min(1).max(500),
   // The installment count and down payment are fixed by the plan.
-  paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
+  paymentPlan: installmentsOnly,
 });
 
 const phone = z
@@ -123,7 +131,7 @@ export const applicationSchema = z
     confirmPassword: z.string().optional(),
     planSlug: z.string().trim().min(1).max(40),
     units: z.coerce.number().int().min(1).max(500),
-    paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
+    paymentPlan: installmentsOnly,
     notes: optionalText(2000),
     agree: z.literal(true, { message: "Please accept the terms to continue." }),
   })
@@ -209,4 +217,77 @@ export const messageSchema = z.object({
     .regex(/^(\/(?!\/)|https:\/\/)/, "Use a site path like /account or an https:// link.")
     .optional()
     .or(z.literal("")),
+});
+
+/** Empty means "cleared": stored as null, so an edit can remove a field. */
+const clearableText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((v) => v || null);
+
+/** A job circular as written in admin → Careers; the editor always sends every field. */
+export const jobPostSchema = z.object({
+  title: z.string().trim().min(3, "Give the position a title.").max(140),
+  reference: clearableText(80),
+  level: clearableText(60),
+  department: z.string().trim().min(2, "Name the department.").max(80),
+  employmentType: z.string().trim().min(2).max(40),
+  location: z.string().trim().min(2, "Where is the job based?").max(120),
+  vacancies: z.coerce.number().int().min(1, "At least one vacancy.").max(999).nullish().catch(null),
+  salary: clearableText(120),
+  experience: clearableText(200),
+  education: clearableText(300),
+  deadline: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date.")
+    .nullish()
+    .or(z.literal(""))
+    // Noon UTC keeps the calendar day the same in every time zone.
+    .transform((v) => (v ? new Date(`${v}T12:00:00Z`) : null)),
+  summary: z.string().trim().min(20, "Write a short summary of the role (a sentence or two).").max(600),
+  description: clearableText(20_000),
+  responsibilities: clearableText(8_000),
+  requirements: clearableText(8_000),
+  benefits: clearableText(8_000),
+  howToApply: clearableText(4_000),
+  images: z
+    .array(z.string().trim().regex(/^(\/(?!\/)|https:\/\/)/, "Images must be uploads or https:// links."))
+    .max(12, "Up to 12 images.")
+    .default([]),
+  links: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1, "Every button needs a name.").max(40),
+        url: z.string().trim().min(3, "Every button needs a link.").max(500),
+      }),
+    )
+    .max(6, "Up to 6 buttons.")
+    .default([]),
+  updates: z
+    .array(
+      z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Give every update a date."),
+        title: z.string().trim().min(3, "Give every update a title.").max(140),
+        body: z.string().trim().max(2000).default(""),
+        url: z.string().trim().max(500).default(""),
+      }),
+    )
+    .max(30, "Up to 30 updates.")
+    .default([]),
+  circularUrl: z
+    .string()
+    .trim()
+    .regex(/^(\/media\/[\w-]+|https:\/\/\S+)$/, "Upload the circular as a PDF, or paste an https:// link.")
+    .nullish()
+    .or(z.literal(""))
+    .transform((v) => v || null),
+  circularName: clearableText(200),
+  contactEmail: z.string().trim().email("Enter a valid email.").max(160).nullish().or(z.literal("")).transform((v) => v || null),
+  contactPhone: clearableText(40),
+  status: z.enum(["DRAFT", "PUBLISHED", "CLOSED"]),
+  featured: z.boolean().default(false),
 });

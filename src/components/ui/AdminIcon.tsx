@@ -22,6 +22,7 @@ const paths: Record<string, string> = {
   percent: "M19 5 5 19M7 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
   pie: "M12 3v9h9a9 9 0 1 1-9-9Zm3-.5A9 9 0 0 1 21.5 9H15V2.5Z",
   download: "M12 4v11m0 0-4-4m4 4 4-4M5 20h14",
+  briefcase: "M4 8h16v11H4V8Zm5-3h6v3H9V5Zm-5 8h16",
 };
 
 export function AdminIcon({

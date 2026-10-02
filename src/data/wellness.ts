@@ -1,6 +1,7 @@
 /**
  * The wellness programme — the nine services on the brochure's "Wellness &
- * Retreat" and "Aven Cares for You" pages. Photography is the brochure's own
+ * Retreat" and "Aven Cares for You" pages, plus mental health consultancy and
+ * physiotherapy, added by Aven. Photography is the brochure's own
  * (higher-resolution originals in /renders where they exist, crops from the
  * brochure pages in /brochure where they don't).
  */
@@ -19,7 +20,7 @@ export type WellnessService = {
 export const wellnessIntro = {
   eyebrow: "Wellness & Retreat",
   title: "Aven cares for you.",
-  lede: "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Nine therapies, all provided within the resort.",
+  lede: "The next holiday trend is not simply about escaping — it is about retreating. Retreating your body and mind towards a stronger, more passionate and peaceful self. Eleven therapies, all provided within the resort.",
 };
 
 export const wellnessServices: WellnessService[] = [
@@ -41,6 +42,26 @@ export const wellnessServices: WellnessService[] = [
       "One-on-one consultations with a wellness nutritionist, planning meals around the resort's own organic farm and kitchens.",
     image: "/renders/wellness-nutrition.jpg",
     includes: ["One-on-one consultation", "Farm-to-table planning", "Dietary programmes"],
+    setting: "Wellness centre",
+  },
+  {
+    id: "mental-health",
+    name: "Mental Health Consultancy",
+    tagline: "Someone to talk to, in a quiet place",
+    description:
+      "Private, confidential sessions with a qualified counsellor for stress, anxiety, burnout or simply a mind that needs room — held on a secluded deck looking out over the hills.",
+    image: "/renders/nature-viewing-deck.jpg",
+    includes: ["Qualified counsellor", "Fully confidential", "Stress & burnout care"],
+    setting: "Hillside consultation deck",
+  },
+  {
+    id: "physiotherapy",
+    name: "Physiotherapy",
+    tagline: "Move freely again",
+    description:
+      "Assessment and hands-on treatment from a licensed physiotherapist for back and joint pain, posture and recovery after injury, with an exercise plan to take home.",
+    image: "/renders/spa-wellness-courtyard.jpg",
+    includes: ["Licensed physiotherapist", "Pain & posture", "Injury recovery"],
     setting: "Wellness centre",
   },
   {

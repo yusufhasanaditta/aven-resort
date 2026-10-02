@@ -11,7 +11,7 @@ export async function GET() {
 
   const [rows, files] = await Promise.all([
     prisma.siteAsset.findMany(),
-    prisma.mediaFile.findMany({ where: { NOT: { filename: { startsWith: "profile-" } } }, orderBy: { createdAt: "desc" }, select: { id: true, filename: true, mimeType: true, size: true, uploadedBy: true, createdAt: true } }),
+    prisma.mediaFile.findMany({ where: { NOT: [{ filename: { startsWith: "profile-" } }, { filename: { startsWith: "circular-" } }] }, orderBy: { createdAt: "desc" }, select: { id: true, filename: true, mimeType: true, size: true, uploadedBy: true, createdAt: true } }),
   ]);
   const slots = mediaSlots.map((s) => {
     const row = rows.find((r) => r.key === s.key);

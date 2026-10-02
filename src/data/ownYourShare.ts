@@ -64,7 +64,7 @@ export const shareCopy: Record<Lang, Copy> = {
       facts: [
         { icon: "map", value: "5 Acres · 15.15 Bigha", label: "Land area" },
         { icon: "layers", value: "2,700", label: "Total shares" },
-        { icon: "calendar", value: "140 · 40", label: "Rooms · Villas" },
+        { icon: "calendar", value: "140 · 20", label: "Rooms · Villas" },
         { icon: "crown", value: "5 Plans", label: "Executive to Royal" },
       ],
     },
@@ -84,9 +84,9 @@ export const shareCopy: Record<Lang, Copy> = {
       title: "Where the profit comes from",
       lede: "Five income streams under one roof, shared transparently with every shareholder.",
       items: [
-        { title: "Room & villa booking", body: "140 hotel rooms and 40 private-pool villas, let to guests all year round." },
+        { title: "Room & villa booking", body: "140 rooms — 100 in the hotel and 40 across 20 two-room private-pool villas — let to guests all year round." },
         { title: "Events & conference", body: "Weddings, corporate retreats and conferences in the ballroom and pavilion." },
-        { title: "Wellness & retreat", body: "Yoga, spa and nine wellness therapies set in the tea gardens." },
+        { title: "Wellness & retreat", body: "Yoga, spa and eleven wellness therapies set in the tea gardens." },
         { title: "Restaurant & more", body: "The glass tea restaurant, lounges and adventure activities across the estate." },
         { title: "Organic farm", body: "Fresh produce from the resort's own organic farm." },
       ],
@@ -99,7 +99,7 @@ export const shareCopy: Record<Lang, Copy> = {
       steps: [
         { title: "Initial consultation", body: "Call us or register your interest — an ownership advisor walks you through the plans and pricing." },
         { title: "Site visit & documents", body: "Visit Sreemangal and review the Saf-Kabla papers and project documents." },
-        { title: "Application & payment", body: "Apply online with your NID and nominee details, then pay in full or in monthly installments." },
+        { title: "Application & payment", body: "Apply online with your NID and nominee details, then pay a down payment and monthly installments." },
         { title: "Registration", body: "Your shares are registered and your Aven membership card is issued." },
         { title: "Earn & enjoy", body: "Receive your annual profit and enjoy your free stays at the resort." },
       ],
@@ -131,7 +131,7 @@ export const shareCopy: Record<Lang, Copy> = {
       items: [
         { q: "Is my ownership legally protected?", a: "Yes. Every share is backed by Saf-Kabla registered land, and each purchase is documented with a signed agreement and a money receipt for every payment." },
         { q: "What is the minimum I can buy?", a: "One share. Your plan is set by the number of shares you hold: Executive 1–4, Gold 5–9, Platinum 10–19, Diamond 20–29 and Royal 30 or more." },
-        { q: "Can I pay in installments?", a: "Yes. Pay a down payment, then 12 to 24 monthly installments depending on your plan — or pay in full at once. Every share is ৳5,00,000 either way. Your schedule, amount paid and remaining balance are always visible in your shareholder dashboard." },
+        { q: "Can I pay in installments?", a: "Yes. Pay a down payment, then 12 to 24 monthly installments depending on your plan. Every share is ৳5,00,000. If you would rather pay the whole amount at once, speak to the Aven management team, who arrange full payments directly. Your schedule, amount paid and remaining balance are always visible in your shareholder dashboard." },
         { q: "Can I visit the site before buying?", a: "Of course. Book a guided site visit to Sreemangal and meet the team on the land itself." },
         { q: "Can I sell or transfer my shares later?", a: "Yes. Shares can be transferred or sold at any time." },
       ],
@@ -168,7 +168,7 @@ export const shareCopy: Record<Lang, Copy> = {
       facts: [
         { icon: "map", value: "৫ একর · ১৫.১৫ বিঘা", label: "জমির পরিমাণ" },
         { icon: "layers", value: "২,৭০০", label: "মোট শেয়ার" },
-        { icon: "calendar", value: "১৪০ · ৪০", label: "রুম · ভিলা" },
+        { icon: "calendar", value: "১৪০ · ২০", label: "রুম · ভিলা" },
         { icon: "crown", value: "৫টি প্ল্যান", label: "এক্সিকিউটিভ থেকে রয়্যাল" },
       ],
     },
@@ -188,9 +188,9 @@ export const shareCopy: Record<Lang, Copy> = {
       title: "মুনাফা কোথা থেকে আসে",
       lede: "এক ছাদের নিচে পাঁচটি আয়ের উৎস, প্রত্যেক শেয়ারহোল্ডারের সাথে স্বচ্ছভাবে বণ্টিত।",
       items: [
-        { title: "রুম ও ভিলা বুকিং", body: "১৪০টি হোটেল রুম ও ৪০টি প্রাইভেট-পুল ভিলা, সারা বছর অতিথিদের কাছে ভাড়া।" },
+        { title: "রুম ও ভিলা বুকিং", body: "মোট ১৪০টি রুম — হোটেলে ১০০টি এবং দুই রুমের ২০টি প্রাইভেট-পুল ভিলায় ৪০টি — সারা বছর অতিথিদের কাছে ভাড়া।" },
         { title: "ইভেন্ট ও কনফারেন্স", body: "বলরুম ও প্যাভিলিয়নে বিয়ে, কর্পোরেট রিট্রিট ও কনফারেন্স।" },
-        { title: "ওয়েলনেস এন্ড রিট্রিট", body: "চা-বাগানের মাঝে যোগব্যায়াম, স্পা ও নয়টি ওয়েলনেস থেরাপি।" },
+        { title: "ওয়েলনেস এন্ড রিট্রিট", body: "চা-বাগানের মাঝে যোগব্যায়াম, স্পা ও এগারোটি ওয়েলনেস থেরাপি।" },
         { title: "রেস্টুরেন্ট ও অন্যান্য", body: "গ্লাস টি রেস্টুরেন্ট, লাউঞ্জ ও পুরো এস্টেট জুড়ে অ্যাডভেঞ্চার অ্যাক্টিভিটি।" },
         { title: "অর্গানিক ফার্ম", body: "রিসোর্টের নিজস্ব অর্গানিক ফার্মের তাজা উৎপাদন।" },
       ],
@@ -203,7 +203,7 @@ export const shareCopy: Record<Lang, Copy> = {
       steps: [
         { title: "প্রাথমিক পরামর্শ", body: "আমাদের কল করুন বা আগ্রহ জানান — একজন মালিকানা উপদেষ্টা প্ল্যান ও মূল্য বিস্তারিত জানাবেন।" },
         { title: "সাইট ভিজিট ও কাগজপত্র যাচাই", body: "শ্রীমঙ্গলে সরেজমিনে দেখুন এবং সাফ কাবলা দলিল ও প্রকল্পের কাগজপত্র যাচাই করুন।" },
-        { title: "আবেদন ও পেমেন্ট", body: "এনআইডি ও নমিনির তথ্য দিয়ে অনলাইনে আবেদন করুন, তারপর এককালীন বা মাসিক কিস্তিতে পরিশোধ করুন।" },
+        { title: "আবেদন ও পেমেন্ট", body: "এনআইডি ও নমিনির তথ্য দিয়ে অনলাইনে আবেদন করুন, তারপর ডাউন পেমেন্ট ও মাসিক কিস্তিতে পরিশোধ করুন।" },
         { title: "মালিকানা নিবন্ধন", body: "আপনার শেয়ার নিবন্ধিত হবে এবং অ্যাভেন মেম্বারশিপ কার্ড প্রদান করা হবে।" },
         { title: "আয় ও সুবিধা উপভোগ", body: "প্রতি বছর মুনাফা পান এবং রিসোর্টে আপনার ফ্রি অবকাশ উপভোগ করুন।" },
       ],
@@ -236,7 +236,7 @@ export const shareCopy: Record<Lang, Copy> = {
       items: [
         { q: "আমার মালিকানা কি আইনগতভাবে সুরক্ষিত?", a: "হ্যাঁ। প্রতিটি শেয়ার সাফ কাবলা নিবন্ধিত জমি দ্বারা সুরক্ষিত, এবং প্রতিটি ক্রয় স্বাক্ষরিত চুক্তি ও প্রতিটি পেমেন্টের মানি রিসিটের মাধ্যমে নথিভুক্ত।" },
         { q: "সর্বনিম্ন কতটি শেয়ার কেনা যায়?", a: "একটি শেয়ার। আপনার শেয়ার সংখ্যা অনুযায়ী প্ল্যান নির্ধারিত হয়: এক্সিকিউটিভ ১–৪, গোল্ড ৫–৯, প্লাটিনাম ১০–১৯, ডায়মন্ড ২০–২৯ এবং রয়্যাল ৩০ বা তার বেশি।" },
-        { q: "কিস্তিতে পরিশোধ করা যাবে কি?", a: "হ্যাঁ। প্ল্যান অনুযায়ী ডাউন পেমেন্টের পর ১২ থেকে ২৪টি মাসিক কিস্তিতে পরিশোধ করতে পারবেন — অথবা এককালীন পরিশোধ করতে পারবেন। উভয় ক্ষেত্রেই প্রতি শেয়ার ৫,০০,০০০ টাকা। আপনার কিস্তির সময়সূচি, পরিশোধিত ও বাকি টাকা সবসময় শেয়ারহোল্ডার ড্যাশবোর্ডে দেখা যাবে।" },
+        { q: "কিস্তিতে পরিশোধ করা যাবে কি?", a: "হ্যাঁ। প্ল্যান অনুযায়ী ডাউন পেমেন্টের পর ১২ থেকে ২৪টি মাসিক কিস্তিতে পরিশোধ করতে পারবেন। প্রতি শেয়ার ৫,০০,০০০ টাকা। এককালীন পরিশোধ করতে চাইলে অ্যাভেন ম্যানেজমেন্ট টিমের সাথে যোগাযোগ করুন — তাঁরা সরাসরি এর ব্যবস্থা করেন। আপনার কিস্তির সময়সূচি, পরিশোধিত ও বাকি টাকা সবসময় শেয়ারহোল্ডার ড্যাশবোর্ডে দেখা যাবে।" },
         { q: "কেনার আগে কি সাইট পরিদর্শন করা যাবে?", a: "অবশ্যই। শ্রীমঙ্গলে গাইডেড সাইট ভিজিট বুক করুন এবং সরাসরি জমিতে আমাদের টিমের সাথে দেখা করুন।" },
         { q: "পরে কি শেয়ার বিক্রি বা হস্তান্তর করা যাবে?", a: "হ্যাঁ। যেকোনো সময় শেয়ার হস্তান্তর বা বিক্রি করা যায়।" },
       ],

@@ -45,7 +45,6 @@ export function ShareCalculator() {
   const [plans, setPlans] = useState<PlanRow[]>(fallbackPlans);
   const [plansStatus, setPlansStatus] = useState<PlansStatus>("loading");
   const [units, setUnits] = useState(1);
-  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("INSTALLMENT");
   const [session, setSession] = useState<Session>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,10 +92,8 @@ export function ShareCalculator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const result = useMemo(
-    () => calculate(plans, units, paymentPlan),
-    [plans, units, paymentPlan],
-  );
+  // Online purchases are by installments only; full payment is arranged with management.
+  const result = useMemo(() => calculate(plans, units, "INSTALLMENT"), [plans, units]);
   const schedule = result.installments;
 
   async function purchase() {
@@ -112,7 +109,7 @@ export function ShareCalculator() {
         body: JSON.stringify({
           planSlug: result.plan.slug,
           units: result.units,
-          paymentPlan,
+          paymentPlan: "INSTALLMENT",
         }),
       });
       const json = await res.json();
@@ -214,25 +211,9 @@ export function ShareCalculator() {
 
           <div className="mt-8 border-t border-forest-600/10 pt-6">
             <p className="text-xs font-medium text-forest-900/60">Payment plan</p>
-            <div className="mt-3 flex gap-2">
-              {(["INSTALLMENT", "FULL"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPaymentPlan(p)}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-xs font-medium transition-colors",
-                    paymentPlan === p
-                      ? "bg-forest-600 text-cream-50"
-                      : "bg-forest-600/7 text-forest-800/70 hover:bg-forest-600/12",
-                  )}
-                >
-                  {p === "FULL" ? "Full payment" : "Installments"}
-                </button>
-              ))}
-            </div>
+            <p className="mt-3 inline-flex rounded-full bg-forest-600 px-4 py-2 text-xs font-medium text-cream-50">Installments</p>
 
-            {paymentPlan === "INSTALLMENT" && result?.installments && (
+            {result?.installments && (
               <p className="mt-4 rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-forest-900/75">
                 {result.plan.name} terms: <strong>{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment, then{" "}
                 <strong>{result.monthlyCount} monthly installments</strong> of about{" "}
@@ -270,8 +251,7 @@ export function ShareCalculator() {
                   {formatBDT(result.totalBDT)}
                 </motion.p>
                 <p className="mt-1 text-xs text-cream-200/50">
-                  {result.units} × {formatBDT(result.pricePerShareBDT)} per share ·{" "}
-                  {paymentPlan === "FULL" ? "full payment" : "installment price"}
+                  {result.units} × {formatBDT(result.pricePerShareBDT)} per share · installment price
                 </p>
                 <p className="mt-1 text-[0.6875rem] text-cream-200/35">
                   Prices valid until {PRICE_CHART_VALID_UNTIL}.
@@ -348,7 +328,7 @@ export function ShareCalculator() {
                       >
                         {busy
                           ? "Starting…"
-                          : `Reserve & pay ${paymentPlan === "INSTALLMENT" ? "down payment" : "in full"}`}
+                          : "Reserve & pay down payment"}
                       </ButtonAction>
                       <p className="mt-2 text-center text-[0.6875rem] text-cream-200/40">
                         via SSLCommerz — Bangladesh&rsquo;s national payment gateway
