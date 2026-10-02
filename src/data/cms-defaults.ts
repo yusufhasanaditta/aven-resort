@@ -102,7 +102,7 @@ export const cmsDefaults: CmsContent = {
     primaryHref: "/contact?type=booking#enquiry",
     secondaryLabel: "Own Your Share",
     secondaryHref: "/own-your-share",
-    ticker: "Country's first wellness-based resort and retreat",
+    ticker: "Country's first wellness & retreat based resort",
   },
   resort: {
     headline:

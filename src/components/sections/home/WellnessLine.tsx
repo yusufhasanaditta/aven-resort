@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
  * repeats. The track holds the line twice so the -50% loop is seamless.
  */
 export function WellnessLine({ text, bangla = false }: { text: string; bangla?: boolean }) {
-  const line = text.trim() || "Country's first wellness-based resort and retreat";
+  const line = text.trim() || "Country's first wellness & retreat based resort";
   const repeats = Array.from({ length: 4 });
   return (
     <section aria-label={line} className="relative overflow-hidden bg-forest-950 py-10 sm:py-14">
