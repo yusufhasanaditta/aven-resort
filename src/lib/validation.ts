@@ -161,15 +161,27 @@ export const contactRequestSchema = z.object({
   message: optionalText(1000),
 });
 
-/** An offline payment recorded by the team: cash, bank transfer, bKash… */
-export const manualPaymentSchema = z.object({
-  holdingId: z.string().min(1),
+/** Money received offline — cash, bank transfer, bKash… — covering one or more installments. */
+export const offlinePaymentSchema = z.object({
   installmentNo: z.coerce.number().int().min(1).optional(),
+  /** How many installments this money covers, from the next unpaid one. */
+  count: z.coerce.number().int().min(1).max(60).optional(),
   amountBDT: z.coerce.number().int().min(1, "Enter the amount received."),
   method: z.enum(PAYMENT_METHODS),
   reference: optionalText(120),
   note: optionalText(500),
   paidAt: z.string().date().optional(),
+});
+
+/** An offline payment recorded by the team against an existing holding. */
+export const manualPaymentSchema = offlinePaymentSchema.extend({ holdingId: z.string().min(1) });
+
+/** A share sale closed at the office: shares put in a shareholder's name, with the money received now (if any). */
+export const shareSaleSchema = z.object({
+  userId: z.string().min(1, "Choose the shareholder."),
+  units: z.coerce.number().int().min(1, "At least one share.").max(2700),
+  paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
+  payment: offlinePaymentSchema.omit({ installmentNo: true }).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

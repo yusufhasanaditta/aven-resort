@@ -502,12 +502,15 @@ export function Modal({
   title,
   children,
   footer,
+  wide = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** A larger dialog for multi-part forms. */
+  wide?: boolean;
 }) {
   useEscape(open, onClose);
   return (
@@ -528,7 +531,7 @@ export function Modal({
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className={cn("relative w-full overflow-hidden rounded-2xl bg-white shadow-2xl", wide ? "max-w-2xl" : "max-w-lg")}
           >
             <div className="border-b border-[#EEF0EC] px-6 py-4">
               <h2 className="text-base font-semibold text-[#14201B]">{title}</h2>

@@ -14,8 +14,8 @@ export const ADMIN_TABS = [
 ] as const;
 
 export type AdminTabId = (typeof ADMIN_TABS)[number]["id"];
-/** Where a tab opens: a record (`id`), a filter, or straight into its "new" form (`create`). */
-export type TabFocus = { id?: string; filter?: string; create?: boolean };
+/** Where a tab opens: a record (`id`), a filter, straight into its "new" form (`create`), or a new share sale (`sell`). */
+export type TabFocus = { id?: string; filter?: string; create?: boolean; sell?: boolean };
 
 export function isAdminTab(v: unknown): v is AdminTabId {
   return ADMIN_TABS.some((t) => t.id === v);

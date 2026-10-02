@@ -93,8 +93,8 @@ export function Hero({
       </motion.div>
 
       {/* Grading: darken top for the nav, bottom for the copy */}
-      <div className="absolute inset-0 bg-gradient-to-b from-forest-950/65 via-forest-950/15 to-forest-950/85" />
-      <div className="absolute inset-0 bg-gradient-to-r from-forest-950/70 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-forest-950/75 via-forest-950/25 to-forest-950/90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-forest-950/80 via-forest-950/30 to-transparent" />
 
       {/* Plane 2 — drifting leaves */}
       {leaves && (
@@ -152,9 +152,8 @@ export function Hero({
                       delay: 0.34,
                     }}
                     className={cn(
-                      "inline-block text-gold-300",
-                      !bangla && "italic",
-                      accentStyle === "line" && "mt-2 text-[clamp(1.35rem,4.2vw,3.4rem)] leading-tight sm:whitespace-nowrap",
+                      "inline-block font-display font-medium tracking-tight text-gold-300 drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]",
+                      accentStyle === "line" && "mt-2.5 text-[clamp(1.4rem,4.4vw,3.5rem)] font-semibold leading-tight sm:whitespace-nowrap",
                     )}
                   >
                     {titleAccent}

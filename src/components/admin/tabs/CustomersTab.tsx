@@ -23,7 +23,8 @@ import {
 } from "../kit";
 import { HoldingLedger } from "../HoldingLedger";
 import { PhotoUploader } from "@/components/sections/account/PhotoUploader";
-import { AddShareholderModal, AllocateSharesModal, EditCustomerModal, MessageModal, PasswordHelpModal } from "../CustomerActions";
+import { AddShareholderModal, EditCustomerModal, MessageModal, PasswordHelpModal } from "../CustomerActions";
+import { ShareSaleModal } from "../ShareSaleModal";
 import { RecordPaymentModal } from "../RecordPayment";
 import { PaymentRows } from "./PaymentsTab";
 import type { AdminCustomer, AdminCustomerDetail, AdminHolding } from "@/lib/admin-types";
@@ -40,6 +41,7 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
   const [openId, setOpenId] = useState<string | null>(focus.id ?? null);
   const [adding, setAdding] = useState(!!focus.create);
   const [messagingAll, setMessagingAll] = useState(false);
+  const [selling, setSelling] = useState(!!focus.sell);
 
   const customers = useMemo(() => data?.customers ?? [], [data]);
   const shown = customers.filter((c) => {
@@ -59,6 +61,7 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
           <>
             <ExportButton kind="customers" />
             <Btn icon="mail" onClick={() => setMessagingAll(true)}>Message all</Btn>
+            <Btn variant="gold" icon="layers" onClick={() => setSelling(true)}>New share sale</Btn>
             <Btn variant="primary" icon="user" onClick={() => setAdding(true)}>Add shareholder</Btn>
           </>
         }
@@ -161,6 +164,16 @@ export function CustomersTab({ focus, onChanged }: { focus: TabFocus; onChanged:
         }}
       />
       <MessageModal to={messagingAll ? "all" : null} onClose={() => setMessagingAll(false)} />
+      <ShareSaleModal
+        open={selling}
+        onClose={() => setSelling(false)}
+        onDone={reload}
+        onOpenCustomer={setOpenId}
+        onAddShareholder={() => {
+          setSelling(false);
+          setAdding(true);
+        }}
+      />
     </>
   );
 }
@@ -170,7 +183,7 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
   const c = id && data?.customer.id === id ? data.customer : null;
   const [section, setSection] = useState<"holdings" | "payments" | "applications">("holdings");
   const [recording, setRecording] = useState<{ holding: AdminHolding; step?: number } | null>(null);
-  const [action, setAction] = useState<"edit" | "message" | "password" | "allocate" | null>(null);
+  const [action, setAction] = useState<"edit" | "message" | "password" | "sale" | null>(null);
   const [now] = useState(() => new Date().toISOString());
 
   const refresh = () => {
@@ -230,7 +243,7 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
             </Card>
 
             <div className="flex flex-wrap gap-2">
-              <Btn size="sm" variant="primary" icon="layers" onClick={() => setAction("allocate")}>Allocate shares</Btn>
+              <Btn size="sm" variant="primary" icon="layers" onClick={() => setAction("sale")}>Add shares (sale)</Btn>
               <Btn size="sm" icon="mail" onClick={() => setAction("message")}>Send message</Btn>
               <Btn size="sm" icon="user" onClick={() => setAction("edit")}>Edit details</Btn>
               <Btn size="sm" icon="bell" onClick={() => setAction("password")}>Password help</Btn>
@@ -301,7 +314,7 @@ export function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; 
       <EditCustomerModal key={`edit-${c?.id ?? ""}`} person={action === "edit" ? c : null} onClose={() => setAction(null)} onSaved={refresh} />
       <MessageModal to={action === "message" ? c : null} onClose={() => setAction(null)} />
       <PasswordHelpModal person={action === "password" ? c : null} onClose={() => setAction(null)} />
-      <AllocateSharesModal person={action === "allocate" ? c : null} onClose={() => setAction(null)} onDone={refresh} />
+      <ShareSaleModal key={`sale-${c?.id ?? ""}`} open={action === "sale" && !!c} person={c} onClose={() => setAction(null)} onDone={refresh} />
       <RecordPaymentModal
         key={recording ? `${recording.holding.id}-${recording.step ?? "next"}` : "none"}
         holding={recording?.holding ?? null}

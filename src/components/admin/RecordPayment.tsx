@@ -39,7 +39,7 @@ export function RecordPaymentModal({
   const toast = useToast();
   const unpaid = holding?.steps.filter((s) => s.status !== "SUCCESS") ?? [];
   const [n, setN] = useState<number | undefined>(initialStep ?? unpaid[0]?.n);
-  const [method, setMethod] = useState("BANK_TRANSFER");
+  const [method, setMethod] = useState("CASH");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [paidAt, setPaidAt] = useState(todayDhaka());
@@ -48,6 +48,11 @@ export function RecordPaymentModal({
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const step = unpaid.find((s) => s.n === n) ?? unpaid[0];
+  // Money can cover several installments at once — e.g. a shareholder paying three months in cash.
+  const [count, setCount] = useState(1);
+  const [recorded, setRecorded] = useState(0);
+  const covered = step ? unpaid.filter((s) => s.n >= step.n).slice(0, count) : [];
+  const amountBDT = covered.reduce((sum, s) => sum + s.amountBDT, 0);
 
   async function submit() {
     if (!holding || !step) return;
@@ -56,7 +61,8 @@ export function RecordPaymentModal({
     const { ok, json } = await send("/api/admin/payments", "POST", {
       holdingId: holding.id,
       installmentNo: step.n,
-      amountBDT: step.amountBDT,
+      count: covered.length,
+      amountBDT,
       method,
       reference: reference || undefined,
       note: note || undefined,
@@ -64,7 +70,8 @@ export function RecordPaymentModal({
     });
     setBusy(false);
     if (!ok) return setError(firstError(json));
-    toast(`${formatBDT(step.amountBDT)} recorded for ${holding.customer.name}`);
+    toast(`${formatBDT(amountBDT)} recorded for ${holding.customer.name}`);
+    setRecorded(covered.length);
     setReceiptId(String(json.paymentId));
     onRecorded();
   }
@@ -96,7 +103,7 @@ export function RecordPaymentModal({
           <>
             <Btn onClick={close}>Cancel</Btn>
             <Btn variant="primary" onClick={submit} disabled={busy || !step}>
-              {busy ? "Saving…" : step ? `Record ${formatBDT(step.amountBDT)}` : "Nothing due"}
+              {busy ? "Saving…" : step ? `Record ${formatBDT(amountBDT)}` : "Nothing due"}
             </Btn>
           </>
         )
@@ -107,7 +114,7 @@ export function RecordPaymentModal({
           <div className="text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl text-emerald-600">✓</span>
             <p className="mt-4 text-sm text-[#3D4A44]">
-              The installment is marked paid, the holding is active and a money receipt has been generated for{" "}
+              {recorded > 1 ? `${recorded} installments are` : "The installment is"} marked paid, the holding is active and a money receipt has been generated for{" "}
               <strong>{holding.customer.name}</strong>.
             </p>
           </div>
@@ -125,7 +132,7 @@ export function RecordPaymentModal({
               <>
                 <Field label="Installment">
                   {(id) => (
-                    <SelectInput id={id} value={step?.n} onChange={(e) => setN(Number(e.target.value))}>
+                    <SelectInput id={id} value={step?.n} onChange={(e) => { setN(Number(e.target.value)); setCount(1); }}>
                       {unpaid.map((s) => (
                         <option key={s.n} value={s.n}>
                           {s.label} — {formatBDT(s.amountBDT)}
@@ -135,6 +142,21 @@ export function RecordPaymentModal({
                     </SelectInput>
                   )}
                 </Field>
+                {step && unpaid.filter((s) => s.n >= step.n).length > 1 && (
+                  <Field label="This money covers" hint="Pick more than one if they paid several installments together.">
+                    {(id) => (
+                      <SelectInput id={id} value={count} onChange={(e) => setCount(Number(e.target.value))}>
+                        {unpaid
+                          .filter((s) => s.n >= step.n)
+                          .map((s, i, rest) => (
+                            <option key={s.n} value={i + 1}>
+                              {i === 0 ? s.label : `${step.label} to ${s.label} (${i + 1} payments)`} — {formatBDT(rest.slice(0, i + 1).reduce((sum, x) => sum + x.amountBDT, 0))}
+                            </option>
+                          ))}
+                      </SelectInput>
+                    )}
+                  </Field>
+                )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Method">
                     {(id) => (
@@ -161,7 +183,7 @@ export function RecordPaymentModal({
                 </Field>
                 <div className="flex items-baseline justify-between rounded-xl border border-dashed border-[#D5DAD3] px-4 py-3">
                   <span className="text-xs text-[#6B756F]">Amount (fixed to the schedule)</span>
-                  <span className="text-lg font-semibold tabular-nums text-[#14201B]">{step ? formatBDT(step.amountBDT) : "—"}</span>
+                  <span className="text-lg font-semibold tabular-nums text-[#14201B]">{step ? formatBDT(amountBDT) : "—"}</span>
                 </div>
                 {error && <p className="text-xs text-red-600">{error}</p>}
               </>

@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Btn, Field, Modal, Segmented, SelectInput, TextArea, TextInput, firstError, send, useToast } from "./kit";
-import { calculate, formatBDT, stayDays, type PlanLike } from "@/lib/shares";
+import { useState } from "react";
+import { Btn, Field, Modal, Segmented, TextArea, TextInput, firstError, send, useToast } from "./kit";
 
 type Errors = Record<string, string>;
 type Person = {
@@ -316,75 +315,3 @@ export function PasswordHelpModal({ person, onClose }: { person: Person | null; 
   );
 }
 
-/** Reserves shares in a shareholder's name, priced exactly as the website prices them. */
-export function AllocateSharesModal({ person, onClose, onDone }: { person: Person | null; onClose: () => void; onDone: () => void }) {
-  const toast = useToast();
-  const [plans, setPlans] = useState<(PlanLike & { name: string })[]>([]);
-  const [units, setUnits] = useState(1);
-  const [paymentPlan, setPaymentPlan] = useState<"FULL" | "INSTALLMENT">("INSTALLMENT");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!person || plans.length) return;
-    fetch("/api/plans").then((r) => r.json()).then((j) => setPlans(j.plans ?? [])).catch(() => setError("Could not load the plans."));
-  }, [person, plans.length]);
-
-  const result = useMemo(() => (plans.length ? calculate(plans, units, paymentPlan) : null), [plans, units, paymentPlan]);
-
-  async function save() {
-    if (!person) return;
-    setBusy(true);
-    setError(null);
-    const { ok, json } = await send("/api/admin/holdings", "POST", { userId: person.id, units, paymentPlan });
-    setBusy(false);
-    if (!ok) return setError(firstError(json));
-    toast(`${units} share${units > 1 ? "s" : ""} allocated to ${person.name}`);
-    onDone();
-    onClose();
-  }
-
-  return (
-    <Modal
-      open={!!person}
-      onClose={onClose}
-      title={`Allocate shares${person ? ` — ${person.name}` : ""}`}
-      footer={
-        <>
-          <Btn onClick={onClose}>Cancel</Btn>
-          <Btn variant="primary" onClick={save} disabled={busy || !result}>{busy ? "Allocating…" : "Allocate shares"}</Btn>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Number of shares">
-            {(id) => <TextInput id={id} type="number" min={1} max={2700} value={units} onChange={(e) => setUnits(Math.max(1, Math.min(2700, Number(e.target.value) || 1)))} />}
-          </Field>
-          <Field label="Payment">
-            {(id) => (
-              <SelectInput id={id} value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value as "FULL" | "INSTALLMENT")}>
-                <option value="INSTALLMENT">Installments (down payment + monthly)</option>
-                <option value="FULL">Pay in full</option>
-              </SelectInput>
-            )}
-          </Field>
-        </div>
-        {result && (
-          <dl className="space-y-1.5 rounded-xl bg-[#F5F7F3] p-4 text-[0.8125rem]">
-            <div className="flex justify-between"><dt className="text-[#6B756F]">Plan</dt><dd className="font-medium">{result.plan.name} · {stayDays(result.freeStayNights)} free days / yr</dd></div>
-            <div className="flex justify-between"><dt className="text-[#6B756F]">Total</dt><dd className="font-semibold tabular-nums">{formatBDT(result.totalBDT)}</dd></div>
-            {result.installments && (
-              <div className="flex justify-between">
-                <dt className="text-[#6B756F]">Schedule</dt>
-                <dd className="tabular-nums">{formatBDT(result.downPaymentBDT ?? 0)} down + {result.monthlyCount} × ~{formatBDT(result.monthlyBDT ?? 0)}</dd>
-              </div>
-            )}
-          </dl>
-        )}
-        <p className="text-xs text-[#6B756F]">The holding appears in their dashboard with its payment schedule, and they&rsquo;re notified. Record payments against it as they come in.</p>
-        {error && <p className="text-xs text-red-600">{error}</p>}
-      </div>
-    </Modal>
-  );
-}

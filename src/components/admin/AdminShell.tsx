@@ -266,6 +266,7 @@ function TopBar({
               <Menu>
                 <MenuItem icon="users" onClick={() => { setMenu(null); nav("leads", { create: true }); }}>Lead</MenuItem>
                 <MenuItem icon="user" onClick={() => { setMenu(null); nav("customers", { create: true }); }}>Shareholder account</MenuItem>
+                <MenuItem icon="layers" onClick={() => { setMenu(null); nav("customers", { sell: true }); }}>Share sale (cash / bank)</MenuItem>
                 <MenuItem icon="wallet" onClick={() => { setMenu(null); nav("payments", { create: true }); }}>Payment record</MenuItem>
                 <MenuItem icon="layers" onClick={() => { setMenu(null); nav("content"); }}>FAQ or page content</MenuItem>
               </Menu>
