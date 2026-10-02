@@ -9,8 +9,14 @@ import { Terrain } from "./Terrain";
 import { Lake } from "./Lake";
 import { Structures } from "./Structures";
 import { ZonePins } from "./ZonePins";
+import { Trees } from "./Trees";
+import { SiteLines } from "./SiteLines";
 import { zones, getZone } from "@/data/zones";
 import { terrainHeight } from "@/lib/terrain";
+
+/** The opening view: from the south over the road, like the survey sheet, the whole site in frame. */
+const OVERVIEW_POS: [number, number, number] = [5, 50, 68];
+const OVERVIEW_LOOK: [number, number, number] = [1.5, 2, -2];
 
 /**
  * Flies the camera to frame a zone when one is selected, and drifts back to the
@@ -25,8 +31,8 @@ function CameraDirector({
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
 }) {
   const { camera } = useThree();
-  const targetPos = useRef(new THREE.Vector3(30, 24, 34));
-  const targetLook = useRef(new THREE.Vector3(0, 1.5, -2));
+  const targetPos = useRef(new THREE.Vector3(...OVERVIEW_POS));
+  const targetLook = useRef(new THREE.Vector3(...OVERVIEW_LOOK));
   const userEngaged = useRef(false);
 
   useEffect(() => {
@@ -44,8 +50,8 @@ function CameraDirector({
 
     const zone = selected ? getZone(selected) : null;
     if (!zone) {
-      targetPos.current.set(30, 24, 34);
-      targetLook.current.set(0, 1.5, -2);
+      targetPos.current.set(...OVERVIEW_POS);
+      targetLook.current.set(...OVERVIEW_LOOK);
       return;
     }
 
@@ -56,8 +62,8 @@ function CameraDirector({
     // fall back to the default viewing axis.
     const outward = new THREE.Vector2(x, z);
     if (outward.length() < 0.5) outward.set(0.6, 0.8);
-    outward.normalize().multiplyScalar(13);
-    targetPos.current.set(x + outward.x, ground + 9, z + outward.y + 3);
+    outward.normalize().multiplyScalar(17);
+    targetPos.current.set(x + outward.x, ground + 13, z + outward.y + 4);
     targetLook.current.set(x, ground + 1, z);
   }, [selected]);
 
@@ -75,35 +81,29 @@ function CameraDirector({
   return null;
 }
 
-/** Warm late-afternoon light, matching the golden hour in the project renders. */
+/** Warm late-afternoon sun from the south-west, matching the golden hour in the project renders. */
 function Lighting() {
   return (
     <>
-      <hemisphereLight
-        args={["#cfe4ff", "#3d5a2a", 0.85]}
-        position={[0, 20, 0]}
-      />
-      <ambientLight intensity={0.35} color="#fff4e0" />
+      <hemisphereLight args={["#d6e8ff", "#4a5a33", 0.9]} position={[0, 30, 0]} />
+      <ambientLight intensity={0.3} color="#fff4e0" />
       <directionalLight
-        position={[16, 22, 10]}
-        intensity={2.1}
+        position={[-20, 30, 22]}
+        intensity={2.2}
         color="#ffd9a0"
         castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-26}
-        shadow-camera-right={26}
-        shadow-camera-top={26}
-        shadow-camera-bottom={-26}
+        shadow-mapSize={[4096, 4096]}
+        shadow-camera-left={-34}
+        shadow-camera-right={34}
+        shadow-camera-top={34}
+        shadow-camera-bottom={-34}
         shadow-camera-near={1}
-        shadow-camera-far={70}
-        shadow-bias={-0.0006}
+        shadow-camera-far={110}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.02}
       />
-      {/* Cool fill from the opposite side, so shadowed slopes keep detail. */}
-      <directionalLight
-        position={[-14, 10, -12]}
-        intensity={0.5}
-        color="#9fc6e8"
-      />
+      {/* Cool fill from the north-east, so shadowed slopes keep their detail. */}
+      <directionalLight position={[18, 14, -20]} intensity={0.55} color="#a9cdee" />
     </>
   );
 }
@@ -113,30 +113,33 @@ export function MasterplanScene({
   filter,
   onSelect,
   autoRotate = true,
+  survey = false,
+  onBearing,
 }: {
   selected: string | null;
   filter: string | null;
   onSelect: (id: string) => void;
   autoRotate?: boolean;
+  /** Show the land in the topographical survey's colours, with contours and spot heights. */
+  survey?: boolean;
+  /** Called with the view's compass bearing in degrees as the camera turns. */
+  onBearing?: (deg: number) => void;
 }) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
   return (
     <>
-      <color attach="background" args={["#dfe9e4"]} />
-      <fog attach="fog" args={["#dfe9e4", 48, 105]} />
+      <color attach="background" args={["#e4ece6"]} />
+      <fog attach="fog" args={["#e4ece6", 90, 190]} />
 
       <Lighting />
 
-      <Terrain />
+      <Terrain survey={survey} />
       <Lake />
+      <SiteLines survey={survey} onBearing={onBearing} />
+      <Trees />
       <Structures />
-      <ZonePins
-        zones={zones}
-        selected={selected}
-        filter={filter}
-        onSelect={onSelect}
-      />
+      <ZonePins zones={zones} selected={selected} filter={filter} onSelect={onSelect} />
 
       <CameraDirector selected={selected} controlsRef={controlsRef} />
 
@@ -146,13 +149,13 @@ export function MasterplanScene({
         enablePan={false}
         enableDamping
         dampingFactor={0.06}
-        minDistance={18}
-        maxDistance={72}
-        minPolarAngle={0.25}
-        maxPolarAngle={Math.PI / 2.4}
+        minDistance={12}
+        maxDistance={90}
+        minPolarAngle={0.2}
+        maxPolarAngle={Math.PI / 2.3}
         autoRotate={autoRotate && !selected}
-        autoRotateSpeed={0.28}
-        target={[0, 1.5, -2]}
+        autoRotateSpeed={0.22}
+        target={OVERVIEW_LOOK}
       />
     </>
   );

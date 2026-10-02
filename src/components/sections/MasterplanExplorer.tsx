@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,6 +37,12 @@ const categoryKeys = Object.keys(zoneCategories) as ZoneCategory[];
 export function MasterplanExplorer() {
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<ZoneCategory | null>(null);
+  const [survey, setSurvey] = useState(false);
+  const needle = useRef<HTMLSpanElement>(null);
+  // The compass needle turns with the view, straight on the DOM — no re-render each frame.
+  const onBearing = useCallback((deg: number) => {
+    if (needle.current) needle.current.style.transform = `rotate(${-deg}deg)`;
+  }, []);
 
   const zone = selected ? getZone(selected) : null;
   const visible = filter ? zones.filter((z) => z.category === filter) : zones;
@@ -126,7 +132,7 @@ export function MasterplanExplorer() {
             <SceneCanvas
               className="absolute inset-0 h-full w-full"
               shadows
-              camera={{ position: [20, 16, 22], fov: 38 }}
+              camera={{ position: [5, 50, 68], fov: 38 }}
               fallback={
                 <Image
                   src="/renders/masterplan-aerial.jpg"
@@ -142,17 +148,84 @@ export function MasterplanExplorer() {
                 selected={selected}
                 filter={filter}
                 onSelect={(id) => setSelected(id === selected ? null : id)}
+                survey={survey}
+                onBearing={onBearing}
               />
             </SceneCanvas>
 
             {/* Canvas chrome */}
-            <div className="pointer-events-none absolute left-5 top-5 flex flex-col gap-2">
+            <div className="pointer-events-none absolute left-4 top-4 flex flex-col gap-2 sm:left-5 sm:top-5">
               <span className="w-fit rounded-full bg-forest-950/70 px-3 py-1.5 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-cream-100 backdrop-blur">
-                Interactive masterplan
+                Interactive masterplan · 5 acres
               </span>
-              <span className="w-fit rounded-full bg-forest-950/50 px-3 py-1.5 text-[0.625rem] text-cream-200/80 backdrop-blur">
+              <span className="hidden w-fit rounded-full bg-forest-950/50 px-3 py-1.5 text-[0.625rem] text-cream-200/80 backdrop-blur sm:block">
                 Drag to orbit · scroll to zoom · tap a pin
               </span>
+              {/* Resort / survey view */}
+              <div className="pointer-events-auto mt-1 inline-flex w-fit rounded-full bg-forest-950/70 p-1 backdrop-blur" role="tablist" aria-label="Map view">
+                {[
+                  { on: false, label: "Resort view" },
+                  { on: true, label: "Survey view" },
+                ].map((v) => (
+                  <button
+                    key={v.label}
+                    type="button"
+                    role="tab"
+                    aria-selected={survey === v.on}
+                    onClick={() => setSurvey(v.on)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold transition-colors",
+                      survey === v.on ? "bg-cream-50 text-forest-900" : "text-cream-100/75 hover:text-cream-50",
+                    )}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Compass — turns with the view */}
+            <div
+              className={cn(
+                "pointer-events-none absolute flex h-12 w-12 items-center justify-center rounded-full bg-cream-50/90 shadow-lg backdrop-blur",
+                selected ? "right-5 top-16" : "right-4 top-4 sm:right-5 sm:top-5",
+              )}
+              aria-hidden="true"
+            >
+              <span ref={needle} className="relative flex h-10 w-10 items-center justify-center transition-transform duration-75">
+                <svg viewBox="0 0 40 40" className="h-10 w-10">
+                  <path d="M20 5 L25 21 L20 18 L15 21 Z" fill="#e8352a" />
+                  <path d="M20 35 L15 19 L20 22 L25 19 Z" fill="#9aa39e" />
+                </svg>
+                <span className="absolute -top-0.5 text-[0.5625rem] font-bold text-forest-950">N</span>
+              </span>
+            </div>
+
+            {/* Legend */}
+            <div className="pointer-events-none absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-xl bg-forest-950/75 px-3.5 py-3 text-[0.6875rem] text-cream-100 backdrop-blur sm:bottom-5 sm:left-5">
+              {survey ? (
+                <>
+                  <p className="font-semibold">Elevation above sea level</p>
+                  <div
+                    className="mt-2 h-2.5 w-52 rounded-full"
+                    style={{ background: "linear-gradient(90deg,#a885f5,#3345f5 14%,#1ac7cc 29%,#33d140 39%,#f2ed26 57%,#f79921 75%,#e8211f)" }}
+                  />
+                  <div className="mt-1 flex w-52 justify-between tabular-nums text-cream-200/70">
+                    <span>36 m</span>
+                    <span>44</span>
+                    <span>52</span>
+                    <span>64 m</span>
+                  </div>
+                  <p className="mt-1.5 text-cream-200/60">Contours every 2 m · from the digital topographical survey</p>
+                </>
+              ) : (
+                <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  <li className="flex items-center gap-1.5"><span className="h-0.5 w-5 rounded bg-[#e8352a]" />Site boundary</li>
+                  <li className="flex items-center gap-1.5"><span className="h-1.5 w-5 rounded bg-[#55595b]" />Access road</li>
+                  <li className="flex items-center gap-1.5"><span className="h-1 w-5 rounded bg-[#e6dac0]" />Buggy paths</li>
+                  <li className="flex items-center gap-1.5"><span className="h-0.5 w-5 border-t-2 border-dashed border-[#c08a52]" />Nature trail</li>
+                </ul>
+              )}
             </div>
 
             {selected && (

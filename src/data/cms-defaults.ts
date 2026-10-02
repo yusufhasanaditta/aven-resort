@@ -95,7 +95,7 @@ export const cmsDefaults: CmsContent = {
   hero: {
     eyebrow: "",
     title: "Welcome",
-    titleAccent: "Aven Eco Luxury Resort and Wellness",
+    titleAccent: "Aven Eco Luxury Resort & Wellness, Sreemangal",
     lede: "",
     image: "/renders/hanging-bridge-dusk.jpg",
     primaryLabel: "Book Now",

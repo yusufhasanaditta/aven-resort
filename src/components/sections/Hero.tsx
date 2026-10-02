@@ -152,11 +152,22 @@ export function Hero({
                       delay: 0.34,
                     }}
                     className={cn(
-                      "inline-block font-display font-medium tracking-tight text-gold-300 drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]",
-                      accentStyle === "line" && "mt-2.5 text-[clamp(1.4rem,4.4vw,3.5rem)] font-semibold leading-tight sm:whitespace-nowrap",
+                      "inline-block font-display font-medium tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]",
+                      accentStyle === "line"
+                        ? // Warm ivory reads clearly over both the dark tea hills and the lit walkway;
+                          // the place name after the last comma is picked out in bright gold.
+                          "mt-2.5 text-[clamp(1.35rem,3.7vw,3.1rem)] font-semibold leading-tight text-[#FFF3D6] [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]"
+                        : "text-gold-300",
                     )}
                   >
-                    {titleAccent}
+                    {accentStyle === "line" && titleAccent.includes(", ") ? (
+                      <>
+                        <span className="sm:whitespace-nowrap">{titleAccent.slice(0, titleAccent.lastIndexOf(", ") + 1)}</span>{" "}
+                        <span className="whitespace-nowrap text-[#F7C948]">{titleAccent.slice(titleAccent.lastIndexOf(", ") + 2)}</span>
+                      </>
+                    ) : (
+                      titleAccent
+                    )}
                   </motion.span>
                 </span>
               )}

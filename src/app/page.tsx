@@ -35,7 +35,7 @@ export default async function HomePage() {
         bangla={bn}
         eyebrow={bn ? undefined : hero.eyebrow}
         title={bn ? "স্বাগতম" : hero.title}
-        titleAccent={bn ? "অ্যাভেন ইকো লাক্সারি রিসোর্ট অ্যান্ড ওয়েলনেস" : hero.titleAccent}
+        titleAccent={bn ? "অ্যাভেন ইকো লাক্সারি রিসোর্ট অ্যান্ড ওয়েলনেস, শ্রীমঙ্গল" : hero.titleAccent}
         accentStyle="line"
         lede={bn ? undefined : hero.lede || undefined}
         image={hero.image}

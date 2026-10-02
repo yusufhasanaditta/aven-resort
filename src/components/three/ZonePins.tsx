@@ -69,7 +69,7 @@ function ZonePin({
       <Html
         position={[0, stem + 0.28, 0]}
         center
-        distanceFactor={16}
+        distanceFactor={20}
         occlude={false}
         zIndexRange={[20, 0]}
         style={{ pointerEvents: dimmed ? "none" : "auto" }}

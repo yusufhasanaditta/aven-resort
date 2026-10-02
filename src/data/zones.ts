@@ -9,6 +9,7 @@
  * `position` / `hill` drive the interactive 3D masterplan in
  * `components/three/MasterplanScene.tsx`.
  */
+import { layout } from "./site-layout";
 
 export type ZoneCategory =
   | "hospitality"
@@ -89,7 +90,7 @@ export const zones: Zone[] = [
     ],
     land: null,
     image: "/renders/parking-ev-buggy.jpg",
-    position: [-6, 9],
+    position: [layout.gatehouse.x, layout.gatehouse.z],
   },
   {
     id: "parking",
@@ -114,18 +115,18 @@ export const zones: Zone[] = [
       buffer: { decimals: 20, sqft: 8712 },
     },
     image: "/renders/parking-ev-buggy.jpg",
-    position: [-8, 11],
+    position: [layout.parking.x, layout.parking.z],
   },
   {
     id: "hanging-bridge",
     number: 3,
     name: "The Hanging Bridge",
-    hill: "Hill 1 → Hill 2",
+    hill: "Hill 2 → Hill 3",
     category: "hospitality",
     zoneType: "Built-Up",
     tagline: "An architectural marvel between hills",
     description:
-      "A 50-foot bridge spanning the valley between Hill 1 and Hill 2 — steel structure, teak decking, glass railings for unobstructed views. It offers a canopy-level walk above the tea bushes, with stairs down to the Signature Valley Restaurant nestled between the hills. At night the lighting turns the bridge into a golden floating line across the tillas.",
+      "A suspension bridge spanning the lake valley between Hill 2 and Hill 3 — steel structure, teak decking, glass railings for unobstructed views. It offers a canopy-level walk above the tea bushes, with stairs down to the Signature Valley Restaurant nestled between the hills. At night the lighting turns the bridge into a golden floating line across the tillas.",
     highlights: [
       "50-foot span",
       "Teak deck & glass railings",
@@ -134,7 +135,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 30, sqft: 13068, percent: 8.34 },
     image: "/renders/hanging-bridge-dusk.jpg",
-    position: [-7, 4],
+    position: [-1.8, 2.9],
   },
   {
     id: "valley-restaurant",
@@ -145,7 +146,7 @@ export const zones: Zone[] = [
     zoneType: "Built-Up",
     tagline: "Dining in the fold between two hills",
     description:
-      "Reached by stairs directly from the hanging bridge, the signature restaurant sits in the valley floor between Hill 1 and Hill 2 — a glass and timber pavilion cantilevered over the tea, open on every side to the slope.",
+      "Reached by stairs directly from the hanging bridge, the signature restaurant sits on the valley floor at the head of the lake — a glass and timber pavilion on a deck over the water, open on every side to the slopes.",
     highlights: [
       "Direct bridge access",
       "Glass & timber pavilion",
@@ -154,7 +155,7 @@ export const zones: Zone[] = [
     ],
     land: null,
     image: "/renders/glass-tea-restaurant.jpg",
-    position: [-4, 3],
+    position: [layout.restaurant.x, layout.restaurant.z],
   },
   {
     id: "hotel",
@@ -174,7 +175,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 40, sqft: 17400, percent: 11.1 },
     image: "/renders/main-hotel-aerial.jpg",
-    position: [-8, -4],
+    position: [layout.hotel.x, layout.hotel.z],
   },
   {
     id: "common-pool",
@@ -185,7 +186,7 @@ export const zones: Zone[] = [
     zoneType: "Built-Up",
     tagline: "Aquatic luxury over the tea estates",
     description:
-      "Set on Hill 2 directly in front of the main building, with panoramic views across the tea gardens. The infinity edge faces south over the Sreemangal estates, with a dedicated shallow zone for children in natural stone finish.",
+      "Set on Hill 2 directly in front of the main building, with panoramic views across the tea gardens. The infinity edge looks out over the lake valley and the Sreemangal estates, with a dedicated shallow zone for children in natural stone finish.",
     highlights: [
       "Infinity edge facing south",
       "Kids' safe shallow zone",
@@ -194,7 +195,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 15, sqft: 6534, percent: 4.1 },
     image: "/renders/common-pool-aerial.jpg",
-    position: [-5.5, -6],
+    position: [layout.pool.x, layout.pool.z],
   },
   {
     id: "spa",
@@ -215,18 +216,18 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 10, sqft: 4356, percent: 2.8 },
     image: "/renders/spa-wellness-courtyard.jpg",
-    position: [-10, -7],
+    position: [layout.spa.x, layout.spa.z],
   },
   {
     id: "conference",
     number: 8,
     name: "Conference Hall",
-    hill: "Hill 2 → Hill 3",
+    hill: "Hill 4",
     category: "hospitality",
     zoneType: "Built-Up",
     tagline: "Sreemangal's only hilltop MICE venue",
     description:
-      "Modern glass and steel on the mid-slope between Hill 2 and Hill 3, surrounded by tea bushes for privacy with views. Built for corporate retreats, MICE events and destination weddings, with glass walls that open onto the tea garden for indoor-outdoor events.",
+      "Modern glass and steel on the eastern spur, Hill 4, surrounded by tea bushes for privacy with views. Built for corporate retreats, MICE events and destination weddings, with glass walls that open onto the tea garden for indoor-outdoor events.",
     highlights: [
       "200+ pax theatre",
       "Pre-function tea garden lawn",
@@ -235,7 +236,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 15, sqft: 6804, percent: 4.1 },
     image: "/renders/conference-pavilion.jpg",
-    position: [0, -6],
+    position: [layout.conference.x, layout.conference.z],
   },
   {
     id: "villas",
@@ -255,7 +256,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 70, sqft: 78408, percent: 19.4 },
     image: "/renders/hillside-villas-valley.jpg",
-    position: [9, 0],
+    position: [-3, -13.4],
   },
   {
     id: "lake",
@@ -275,7 +276,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 30, sqft: 13068, percent: 8.3 },
     image: "/renders/kayaking-lake-aerial.jpg",
-    position: [1.5, -3],
+    position: [1.0, -3.8],
   },
   {
     id: "tea-house",
@@ -290,7 +291,7 @@ export const zones: Zone[] = [
     highlights: ["Tasting bar", "Library", "Viewing deck", "Tea ceremony"],
     land: { decimals: 5, sqft: 2178, percent: 1.3 },
     image: "/renders/tea-house-lounge.jpg",
-    position: [7, 4],
+    position: [layout.teaHouse.x, layout.teaHouse.z],
   },
   {
     id: "tea-tree-house",
@@ -310,7 +311,7 @@ export const zones: Zone[] = [
     ],
     land: null,
     image: "/renders/tea-tree-house.jpg",
-    position: [4, -11],
+    position: [11, -14.4],
   },
   {
     id: "kids-zone",
@@ -335,7 +336,7 @@ export const zones: Zone[] = [
       buffer: { decimals: 25, sqft: 10890 },
     },
     image: "/renders/kids-zone.jpg",
-    position: [-3, 8],
+    position: [layout.kids.x, layout.kids.z],
   },
   {
     id: "barbecue",
@@ -355,7 +356,7 @@ export const zones: Zone[] = [
     ],
     land: { decimals: 10, sqft: 4356, percent: 2.7 },
     image: "/renders/barbecue-lakeside.jpg",
-    position: [5.5, 0.5],
+    position: [layout.barbecue.x, layout.barbecue.z],
   },
   {
     id: "event-lawn",
@@ -380,7 +381,7 @@ export const zones: Zone[] = [
       buffer: { decimals: 90, sqft: 39204 },
     },
     image: "/renders/amphitheatre-event-lawn.jpg",
-    position: [1, -11],
+    position: [layout.eventLawn.x, layout.eventLawn.z],
   },
   {
     id: "organic-farm",
@@ -400,7 +401,7 @@ export const zones: Zone[] = [
     ],
     land: null,
     image: "/renders/organic-farm.jpg",
-    position: [12, -9],
+    position: [layout.farm.x, layout.farm.z],
   },
   {
     id: "nature-trail",
@@ -420,7 +421,7 @@ export const zones: Zone[] = [
     ],
     land: null,
     image: "/renders/sports-turf.jpg",
-    position: [13, 4],
+    position: [3.8, -6.4],
   },
 ];
 
