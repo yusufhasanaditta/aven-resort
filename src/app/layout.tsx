@@ -8,6 +8,10 @@ import { HideOn } from "@/components/layout/HideOn";
 import { getContent } from "@/lib/cms";
 import { getLang } from "@/lib/i18n-server";
 import { AutoTranslate } from "@/components/layout/AutoTranslate";
+import { SiteEditsBridge } from "@/components/editor/SiteEditsBridge";
+import { PageEditorLoader } from "@/components/editor/PageEditorLoader";
+import { loadSiteEdits } from "@/lib/site-edits";
+import { getSession } from "@/lib/auth";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -80,7 +84,13 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [announcement, contact, lang] = await Promise.all([getContent("announcement"), getContent("contact"), getLang()]);
+  const [announcement, contact, lang, edits, session] = await Promise.all([
+    getContent("announcement"),
+    getContent("contact"),
+    getLang(),
+    loadSiteEdits(),
+    getSession(),
+  ]);
   const showAnnouncement = announcement.enabled && !!announcement.text.trim();
 
   return (
@@ -89,6 +99,7 @@ export default async function RootLayout({
       className={`${display.variable} ${sans.variable} ${bangla.variable}${showAnnouncement ? " has-announcement" : ""}`}
     >
       <body className="min-h-screen antialiased">
+        <SiteEditsBridge edits={edits} />
         {/* Tells search engines the site's name and logo — the logo Google shows beside "Aven Resort" results. */}
         <script
           type="application/ld+json"
@@ -133,6 +144,11 @@ export default async function RootLayout({
         <HideOn prefixes={["/admin", "/pay"]}>
           <Footer lang={lang} />
         </HideOn>
+        {session?.role === "ADMIN" && (
+          <HideOn prefixes={["/admin", "/pay"]}>
+            <PageEditorLoader />
+          </HideOn>
+        )}
         {lang === "bn" && (
           <HideOn prefixes={["/admin", "/pay"]}>
             <AutoTranslate />

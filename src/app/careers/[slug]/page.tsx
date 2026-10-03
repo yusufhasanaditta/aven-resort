@@ -8,9 +8,10 @@ import { BriefcaseIcon, PdfBadge } from "@/components/sections/careers/CareersBo
 import { CareersNav, FraudNotice } from "@/components/sections/careers/CareersChrome";
 import { getContent } from "@/lib/cms";
 import { JobGallery, ShareJob } from "@/components/sections/careers/JobExtras";
+import { ApplyForm } from "@/components/sections/careers/ApplyForm";
 import { getSession } from "@/lib/auth";
 import { getJob, getPublicJobs, requestTime } from "@/lib/careers-server";
-import { daysLeft, deadlineNote, formatDeadline, formatPublished, hrefFor, isExternal, isOpen, lines, paragraphs, shortDate, type Job } from "@/lib/careers";
+import { daysLeft, deadlineNote, formatDeadline, formatPublished, hrefFor, isExternal, isOpen, lines, paragraphs, shortDate, type Job, type JobLink } from "@/lib/careers";
 import { site } from "@/data/site";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +92,9 @@ export default async function JobPage({ params }: Props) {
   // The circular's own HR contact, else the Careers page's.
   const email = job.contactEmail || careers.hrEmail;
   const phone = job.contactPhone || careers.hrPhone;
+  // The form on this page comes first; the circular's own buttons follow it.
+  const applyHere = open && job.applyOnline;
+  const buttons: JobLink[] = applyHere ? [{ label: "Apply online", url: "#apply" }, ...job.links] : job.links;
   const contactLinks = [email && { label: email, url: email }, phone && { label: phone, url: phone }].filter(
     (x): x is { label: string; url: string } => !!x,
   );
@@ -151,9 +155,9 @@ export default async function JobPage({ params }: Props) {
                 </li>
               </ul>
             </div>
-            {open && job.links.length > 0 && (
+            {open && buttons.length > 0 && (
               <div className="flex flex-wrap gap-3 lg:justify-end">
-                <ApplyButtons job={job} tone="dark" />
+                <ApplyButtons links={buttons} tone="dark" />
               </div>
             )}
           </div>
@@ -283,16 +287,33 @@ export default async function JobPage({ params }: Props) {
                 </Block>
               )}
 
+              {applyHere && (
+                <section id="apply" className="scroll-mt-40">
+                  <Block title="Apply online">
+                    <p className="-mt-2 mb-6 max-w-2xl text-[0.9375rem] leading-relaxed text-forest-900/65">
+                      Fill in the form and attach your CV — it goes straight to our HR team. It takes about five minutes.
+                      {job.deadline && (
+                        <>
+                          {" "}
+                          Applications close at the end of <strong className="font-semibold text-forest-900">{formatDeadline(job.deadline)}</strong>.
+                        </>
+                      )}
+                    </p>
+                    <ApplyForm jobId={job.id} jobTitle={job.title} />
+                  </Block>
+                </section>
+              )}
+
               {open && (job.howToApply || job.links.length > 0 || contactLinks.length > 0) && (
-                <Block title="How to apply">
+                <Block title={applyHere ? "Other ways to apply" : "How to apply"}>
                   <div className="rounded-3xl bg-forest-900 p-7 text-cream-50 sm:p-9">
                     {job.howToApply && <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-cream-100/85">{job.howToApply}</p>}
                     {job.links.length > 0 && (
                       <div className={cn("flex flex-wrap gap-3", job.howToApply && "mt-6")}>
-                        <ApplyButtons job={job} tone="dark" />
+                        <ApplyButtons links={job.links} tone="dark" />
                       </div>
                     )}
-                    {job.deadline && (
+                    {job.deadline && !applyHere && (
                       <p className="mt-6 text-xs text-cream-200/60">
                         Applications close at the end of <strong className="font-semibold text-cream-100">{formatDeadline(job.deadline)}</strong>.
                       </p>
@@ -330,9 +351,9 @@ export default async function JobPage({ params }: Props) {
                   </div>
                 )}
 
-                {open && job.links.length > 0 && (
+                {open && buttons.length > 0 && (
                   <div className="mt-5 grid gap-2">
-                    <ApplyButtons job={job} tone="light" stacked />
+                    <ApplyButtons links={buttons} tone="light" stacked />
                   </div>
                 )}
 
@@ -431,17 +452,18 @@ function Fact({ k, v }: { k: string; v: string }) {
   );
 }
 
-/** The circular's buttons: the first filled, the rest outlined. */
-function ApplyButtons({ job, tone, stacked = false }: { job: Job; tone: "dark" | "light"; stacked?: boolean }) {
+/** The circular's buttons: the first filled, the rest outlined. "#apply" jumps to the form on the page. */
+function ApplyButtons({ links, tone, stacked = false }: { links: JobLink[]; tone: "dark" | "light"; stacked?: boolean }) {
   return (
     <>
-      {job.links.map((l, i) => {
-        const external = isExternal(l.url);
+      {links.map((l, i) => {
+        const anchor = l.url.startsWith("#");
+        const external = !anchor && isExternal(l.url);
         const primary = i === 0;
         return (
           <a
             key={`${l.label}-${i}`}
-            href={hrefFor(l.url)}
+            href={anchor ? l.url : hrefFor(l.url)}
             {...(external && { target: "_blank", rel: "noopener noreferrer" })}
             className={cn(
               "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors",

@@ -18,6 +18,7 @@ import { PaymentsTab } from "./tabs/PaymentsTab";
 import { PackagesTab } from "./tabs/PackagesTab";
 import { CareersTab } from "./tabs/CareersTab";
 import { ContentTab } from "./tabs/ContentTab";
+import { PageEditorTab } from "./tabs/PageEditorTab";
 import { MediaTab } from "./tabs/MediaTab";
 import { ActivityTab } from "./tabs/ActivityTab";
 import type { OverviewData } from "@/lib/admin-types";
@@ -68,6 +69,7 @@ function Shell({ adminName, initialTab }: { adminName: string; initialTab: Admin
         applications: { n: o.pendingApplications, tone: "amber" },
         installments: { n: o.money.overdueHoldings, tone: "red" },
         payments: { n: o.money.pendingPayments, tone: "amber" },
+        careers: { n: o.newCandidates ?? 0, tone: "amber" },
       }
     : {};
 
@@ -113,8 +115,9 @@ function Shell({ adminName, initialTab }: { adminName: string; initialTab: Admin
           {tab === "installments" && <InstallmentsTab key={key} focus={focus} nav={nav} onChanged={changed} />}
           {tab === "payments" && <PaymentsTab key={key} focus={focus} onChanged={changed} />}
           {tab === "packages" && <PackagesTab key={key} />}
+          {tab === "editor" && <PageEditorTab key={key} />}
           {tab === "content" && <ContentTab key={key} />}
-          {tab === "careers" && <CareersTab key={key} focus={focus} />}
+          {tab === "careers" && <CareersTab key={key} focus={focus} onChanged={changed} />}
           {tab === "media" && <MediaTab key={key} />}
           {tab === "activity" && <ActivityTab key={key} />}
         </main>

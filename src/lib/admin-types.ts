@@ -24,6 +24,8 @@ export type OverviewData = {
     }[];
   };
   pendingApplications: number;
+  /** Job applications nobody has opened yet. */
+  newCandidates: number;
   shareholderCount: number;
   shares: { total: number; sold: number; active: number };
   money: {

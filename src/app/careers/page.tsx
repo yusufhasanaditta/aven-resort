@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ApplyForm } from "@/components/sections/careers/ApplyForm";
 import { Hero } from "@/components/sections/Hero";
 import { CareersBoard } from "@/components/sections/careers/CareersBoard";
 import { CareersNav, FraudNotice, HrContact } from "@/components/sections/careers/CareersChrome";
@@ -8,7 +9,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { getAsset, getContent } from "@/lib/cms";
 import { getPublicJobs, requestTime } from "@/lib/careers-server";
-import { hrefFor, isOpen, latestUpdates, pairs, shortDate } from "@/lib/careers";
+import { isOpen, latestUpdates, pairs, shortDate } from "@/lib/careers";
 
 export const metadata: Metadata = {
   title: "Careers — Vacancy Announcements",
@@ -96,14 +97,9 @@ export default async function CareersPage() {
                 <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-gold-300">Human Resources</p>
                 <p className="mt-2 font-display text-2xl leading-tight">Questions about a vacancy?</p>
                 <HrContact content={content} tone="dark" className="mt-4" />
-                {content.hrEmail && (
-                  <a
-                    href={`${hrefFor(content.hrEmail)}?subject=${encodeURIComponent("CV — Aven careers")}`}
-                    className="mt-5 inline-flex h-10 items-center rounded-full bg-gold-400 px-5 text-[0.8125rem] font-semibold text-forest-950 hover:bg-gold-300"
-                  >
-                    Send your CV
-                  </a>
-                )}
+                <a href="#cv" className="mt-5 inline-flex h-10 items-center rounded-full bg-gold-400 px-5 text-[0.8125rem] font-semibold text-forest-950 hover:bg-gold-300">
+                  Send your CV
+                </a>
               </div>
 
               <FraudNotice text={content.fraudNotice} />
@@ -138,6 +134,27 @@ export default async function CareersPage() {
           </Container>
         </Section>
       )}
+
+      {/* A CV for future openings */}
+      <Section tone="cream" id="cv" className="scroll-mt-32 py-16 sm:py-20 lg:py-24">
+        <Container>
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.35fr] lg:gap-16">
+            <Reveal>
+              <Eyebrow>Future openings</Eyebrow>
+              <h2 className="mt-4 font-display text-display-md text-balance text-forest-900">
+                Don&apos;t see your role?
+                <span className="italic text-forest-600"> Send us your CV.</span>
+              </h2>
+              <p className="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-forest-900/65">
+                We are still building the team that will open Aven. Leave your CV with us and our HR team will contact you when a position that fits you is announced.
+              </p>
+            </Reveal>
+            <Reveal delay={0.06}>
+              <ApplyForm jobTitle="future openings at Aven" collapsed />
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
     </>
   );
 }

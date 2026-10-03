@@ -1,7 +1,7 @@
 import "server-only";
-import type { JobPost } from "@prisma/client";
+import type { JobApplication, JobPost } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { RESERVED_SLUGS, type Job, type JobLink, type JobUpdate } from "@/lib/careers";
+import { RESERVED_SLUGS, type Candidate, type Job, type JobLink, type JobUpdate } from "@/lib/careers";
 
 function parseList<T>(raw: string, keep: (v: unknown) => v is T): T[] {
   try {
@@ -84,3 +84,53 @@ export async function uniqueSlug(title: string, exceptId?: string) {
 export function requestTime() {
   return Date.now();
 }
+
+/**
+ * What a CV really is, from its first bytes rather than its name: a PDF, a
+ * Word document (.docx, a zip) or an old Word file (.doc). Anything else is
+ * refused.
+ */
+export function sniffCv(bytes: Buffer, name: string): { type: string; ext: "pdf" | "docx" | "doc" } | null {
+  if (bytes.subarray(0, 4).toString("latin1") === "%PDF") return { type: "application/pdf", ext: "pdf" };
+  if (bytes.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04])) && /\.docx$/i.test(name)) {
+    return { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ext: "docx" };
+  }
+  if (bytes.subarray(0, 8).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])) && /\.doc$/i.test(name)) {
+    return { type: "application/msword", ext: "doc" };
+  }
+  return null;
+}
+
+type CandidateRow = Omit<JobApplication, "cvData"> & { job?: { slug: string } | null };
+
+export function toCandidate(row: CandidateRow): Candidate {
+  const { job, ...rest } = row;
+  return { ...rest, jobSlug: job?.slug ?? null, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() };
+}
+
+/** Every field of an application except the CV's bytes. */
+export const candidateSelect = {
+  id: true,
+  jobId: true,
+  jobTitle: true,
+  name: true,
+  email: true,
+  phone: true,
+  address: true,
+  currentPosition: true,
+  experience: true,
+  education: true,
+  expectedSalary: true,
+  noticePeriod: true,
+  profileUrl: true,
+  coverLetter: true,
+  cvName: true,
+  cvType: true,
+  cvSize: true,
+  status: true,
+  rating: true,
+  notes: true,
+  createdAt: true,
+  updatedAt: true,
+  job: { select: { slug: true } },
+} as const;

@@ -46,10 +46,65 @@ export type Job = {
   contactPhone: string | null;
   status: JobStatus;
   featured: boolean;
+  /** Takes applications, with a CV, through the form on the circular. */
+  applyOnline: boolean;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+/** Applications received, for the admin list (not sent to the public). */
+export type JobWithCounts = Job & { applicationCount?: number; newApplicationCount?: number };
+
+export type CandidateStatus = "NEW" | "REVIEWING" | "SHORTLISTED" | "INTERVIEW" | "OFFERED" | "HIRED" | "REJECTED";
+
+/** The hiring pipeline, in order, with the admin badge colour of each stage. */
+export const CANDIDATE_STAGES: { value: CandidateStatus; label: string; tone: "gray" | "blue" | "violet" | "amber" | "green" | "red" | "teal" }[] = [
+  { value: "NEW", label: "New", tone: "amber" },
+  { value: "REVIEWING", label: "Reviewing", tone: "gray" },
+  { value: "SHORTLISTED", label: "Shortlisted", tone: "blue" },
+  { value: "INTERVIEW", label: "Interview", tone: "violet" },
+  { value: "OFFERED", label: "Offered", tone: "teal" },
+  { value: "HIRED", label: "Hired", tone: "green" },
+  { value: "REJECTED", label: "Not selected", tone: "red" },
+];
+
+/** A job application as the admin sees it (the CV itself is fetched on its own). */
+export type Candidate = {
+  id: string;
+  jobId: string | null;
+  jobTitle: string;
+  jobSlug: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  currentPosition: string | null;
+  experience: string | null;
+  education: string | null;
+  expectedSalary: string | null;
+  noticePeriod: string | null;
+  profileUrl: string | null;
+  coverLetter: string | null;
+  cvName: string;
+  cvType: string;
+  cvSize: number;
+  status: CandidateStatus;
+  rating: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** What an applicant can attach as a CV. */
+export const CV_MAX_BYTES = 4 * 1024 * 1024;
+export const CV_ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+/** Experience bands for the application form. */
+export const EXPERIENCE_BANDS = ["Fresher", "Less than 1 year", "1–2 years", "3–5 years", "6–10 years", "More than 10 years"];
+
+/** The job title on a CV sent without a particular vacancy. */
+export const GENERAL_APPLICATION = "General application (future openings)";
 
 /** Job levels, so a board can be read like a university's vacancy announcements. */
 export const JOB_LEVELS = ["Management", "Executive / Officer", "Staff", "Internship / Trainee"] as const;

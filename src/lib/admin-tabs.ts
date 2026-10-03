@@ -8,6 +8,7 @@ export const ADMIN_TABS = [
   { id: "installments", label: "Installments & dues", icon: "calendar", group: "Investors" },
   { id: "payments", label: "Payments & receipts", icon: "wallet", group: "Investors" },
   { id: "packages", label: "Packages", icon: "tag", group: "Catalogue" },
+  { id: "editor", label: "Page editor", icon: "sun", group: "Website" },
   { id: "content", label: "Website content", icon: "layers", group: "Website" },
   { id: "careers", label: "Careers", icon: "briefcase", group: "Website" },
   { id: "media", label: "Media library", icon: "image", group: "Website" },

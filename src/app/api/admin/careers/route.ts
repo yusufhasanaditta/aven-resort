@@ -4,12 +4,20 @@ import { adminGuard, logActivity, readJson, revalidateSite } from "@/lib/admin";
 import { toJob, uniqueSlug } from "@/lib/careers-server";
 import { jobPostSchema, zodErrors } from "@/lib/validation";
 
-/** Every circular, drafts included, newest first. */
+/** Every circular, drafts included, newest first, with how many applications each has had. */
 export async function GET() {
   const guard = await adminGuard();
   if (guard instanceof NextResponse) return guard;
-  const rows = await prisma.jobPost.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json({ jobs: rows.map(toJob) });
+  const [rows, counts] = await Promise.all([
+    prisma.jobPost.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.jobApplication.groupBy({ by: ["jobId", "status"], _count: { _all: true } }),
+  ]);
+  const tally = (jobId: string | null, status?: string) =>
+    counts.filter((c) => c.jobId === jobId && (!status || c.status === status)).reduce((n, c) => n + c._count._all, 0);
+  return NextResponse.json({
+    jobs: rows.map((r) => ({ ...toJob(r), applicationCount: tally(r.id), newApplicationCount: tally(r.id, "NEW") })),
+    general: { applicationCount: tally(null), newApplicationCount: tally(null, "NEW") },
+  });
 }
 
 /** Creates a circular; its web address comes from the title. */

@@ -38,11 +38,13 @@ import {
   deadlineNote,
   isOpen,
   type Job,
+  type JobWithCounts,
   type JobLink,
   type JobUpdate,
   type JobStatus,
 } from "@/lib/careers";
 import { cn } from "@/lib/utils";
+import { CandidatesView } from "./CandidatesView";
 
 type Filter = "ALL" | "OPEN" | "DRAFT" | "CLOSED";
 
@@ -60,8 +62,12 @@ function jobBadge(job: Job): [BadgeTone, string] {
  * printed circular can go in too) and buttons that take applicants to an
  * application form, a registration page, an email or a phone number.
  */
-export function CareersTab({ focus }: { focus?: TabFocus }) {
-  const { data, error, loading, reload } = useAdminFetch<{ jobs: Job[] }>("/api/admin/careers");
+type Counts = { applicationCount: number; newApplicationCount: number };
+
+export function CareersTab({ focus, onChanged }: { focus?: TabFocus; onChanged?: () => void }) {
+  const { data, error, loading, reload } = useAdminFetch<{ jobs: JobWithCounts[]; general: Counts }>("/api/admin/careers");
+  const [view, setView] = useState<"circulars" | "applications">(focus?.filter === "applications" ? "applications" : "circulars");
+  const [position, setPosition] = useState("all");
   const [filter, setFilter] = useState<Filter>("ALL");
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Job | "new" | null>(focus?.create ? "new" : null);
@@ -69,6 +75,8 @@ export function CareersTab({ focus }: { focus?: TabFocus }) {
   const toast = useToast();
 
   const all = useMemo(() => data?.jobs ?? [], [data]);
+  const applied = all.reduce((n, j) => n + (j.applicationCount ?? 0), data?.general.applicationCount ?? 0);
+  const unread = all.reduce((n, j) => n + (j.newApplicationCount ?? 0), data?.general.newApplicationCount ?? 0);
   const counts = {
     open: all.filter((j) => isOpen(j)).length,
     draft: all.filter((j) => j.status === "DRAFT").length,
@@ -108,7 +116,7 @@ export function CareersTab({ focus }: { focus?: TabFocus }) {
     <>
       <PageHeader
         title="Careers"
-        description="Job circulars on the website's Careers page — with photos, the full details and buttons to apply, register or contact."
+        description="Job circulars on the website's Careers page, and everyone who applied — with their CVs."
         actions={
           <>
             <a href="/careers" target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DDE1DB] bg-white px-3.5 text-[0.8125rem] font-medium text-[#24312B] hover:bg-[#F5F7F3]">
@@ -121,6 +129,28 @@ export function CareersTab({ focus }: { focus?: TabFocus }) {
         }
       />
 
+      <Segmented<"circulars" | "applications">
+        className="mb-5"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "circulars", label: "Job circulars", count: all.length },
+          { value: "applications", label: unread ? `Applications · ${unread} new` : "Applications", count: applied },
+        ]}
+      />
+
+      {view === "applications" ? (
+        <CandidatesView
+          jobs={all}
+          position={position}
+          onPosition={setPosition}
+          onChanged={() => {
+            reload();
+            onChanged?.();
+          }}
+        />
+      ) : (
+      <>
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Open positions" value={counts.open} icon="briefcase" sub="Live on the website" onClick={() => setFilter("OPEN")} />
         <Stat label="Closing within 7 days" value={counts.soon} icon="calendar" tone="gold" sub="Deadline coming up" onClick={() => setFilter("OPEN")} />
@@ -202,6 +232,20 @@ export function CareersTab({ focus }: { focus?: TabFocus }) {
                     {job.circularUrl && " · PDF"}
                     {job.updates.length > 0 && ` · ${job.updates.length} update${job.updates.length > 1 ? "s" : ""}`}
                   </p>
+                  {!!job.applicationCount && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPosition(job.id);
+                        setView("applications");
+                      }}
+                      className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg bg-[#F0F2EF] px-2.5 py-1 text-xs font-medium text-[#24312B] hover:bg-[#E6E9E4]"
+                    >
+                      <AdminIcon icon="users" className="h-3.5 w-3.5" />
+                      {job.applicationCount} application{job.applicationCount > 1 ? "s" : ""}
+                      {!!job.newApplicationCount && <span className="rounded-full bg-amber-100 px-1.5 text-[0.625rem] font-semibold text-amber-800">{job.newApplicationCount} new</span>}
+                    </button>
+                  )}
                   <div className="mt-auto flex flex-wrap gap-2 pt-3">
                     <Btn size="sm" onClick={() => setEditing(job)}>
                       Edit
@@ -237,6 +281,8 @@ export function CareersTab({ focus }: { focus?: TabFocus }) {
             );
           })}
         </div>
+      )}
+      </>
       )}
 
       {editing && (
@@ -282,6 +328,7 @@ type Draft = {
   contactEmail: string;
   contactPhone: string;
   featured: boolean;
+  applyOnline: boolean;
 };
 
 function toDraft(job: Job | null): Draft {
@@ -305,13 +352,14 @@ function toDraft(job: Job | null): Draft {
     benefits: job?.benefits ?? "",
     howToApply: job?.howToApply ?? "",
     images: job?.images ?? [],
-    links: job?.links.length ? job.links : [{ label: "Apply online", url: "" }],
+    links: job?.links ?? [],
     updates: job?.updates ?? [],
     circularUrl: job?.circularUrl ?? "",
     circularName: job?.circularName ?? "",
     contactEmail: job?.contactEmail ?? "",
     contactPhone: job?.contactPhone ?? "",
     featured: job?.featured ?? false,
+    applyOnline: job?.applyOnline ?? true,
   };
 }
 
@@ -639,7 +687,16 @@ function JobEditor({ job, onClose, onSaved }: { job: Job | null; onClose: () => 
 
         {/* Buttons */}
         <section className={section}>
-          <h3 className="text-[0.8125rem] font-semibold text-[#14201B]">Apply, register &amp; contact buttons</h3>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#F5F7F3] p-4">
+            <div className="max-w-md">
+              <p className="text-[0.8125rem] font-semibold text-[#14201B]">Take applications on the website</p>
+              <p className="mt-0.5 text-xs text-[#6B756F]">
+                An “Apply online” form on the circular: applicants fill in their details and upload a CV, and you read them under Careers → Applications.
+              </p>
+            </div>
+            <Toggle checked={d.applyOnline} onChange={(v) => set("applyOnline", v)} label={d.applyOnline ? "On" : "Off"} />
+          </div>
+          <h3 className="text-[0.8125rem] font-semibold text-[#14201B]">{d.applyOnline ? "Other buttons (optional)" : "Apply, register & contact buttons"}</h3>
           <p className="mb-4 mt-1 text-xs text-[#6B756F]">
             Each becomes a button on the circular. The link can be a web address (a Google Form, a registration page), an email or a phone number. The first is the main button.
           </p>

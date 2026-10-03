@@ -46,7 +46,18 @@ function escapeHtml(s: string) {
 }
 
 /** The branded shell every Aven email is sent in. */
-export function emailHtml({ title, body, cta }: { title: string; body: string; cta?: { label: string; href: string } }) {
+export function emailHtml({
+  title,
+  body,
+  cta,
+  footer = "You receive this because you hold shares in Aven Eco Luxury Resort & Wellness.",
+}: {
+  title: string;
+  body: string;
+  cta?: { label: string; href: string };
+  /** Why the reader got this email. */
+  footer?: string;
+}) {
   const paragraphs = body
     .split(/\n+/)
     .map((p) => `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#3d4a44">${escapeHtml(p)}</p>`)
@@ -61,7 +72,7 @@ export function emailHtml({ title, body, cta }: { title: string; body: string; c
 <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-weight:400;font-size:24px;color:#0b2a20">${escapeHtml(title)}</h1>
 ${paragraphs}${button}
 </td></tr>
-<tr><td style="padding:18px 28px;border-top:1px solid #e6e2d6;font-size:12px;color:#8a948e">Aven Limited · Radhanagar, Sreemangal · You receive this because you hold shares in Aven Eco Luxury Resort &amp; Wellness.</td></tr>
+<tr><td style="padding:18px 28px;border-top:1px solid #e6e2d6;font-size:12px;color:#8a948e">Aven Limited · Radhanagar, Sreemangal · ${escapeHtml(footer)}</td></tr>
 </table></body></html>`;
 }
 

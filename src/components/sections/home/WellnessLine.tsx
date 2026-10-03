@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The homepage band under the banner: one line — set in admin → Website
- * content → Homepage banner — scrolling endlessly, with a leaf star between
+ * content → Homepage banner — scrolling endlessly, with the Aven mark between
  * repeats. The track holds the line twice so the -50% loop is seamless.
  */
 export function WellnessLine({ text, bangla = false }: { text: string; bangla?: boolean }) {
@@ -25,9 +25,8 @@ export function WellnessLine({ text, bangla = false }: { text: string; bangla?: 
                   >
                     {line}
                   </span>
-                  <svg viewBox="0 0 12 12" className="h-5 w-5 shrink-0 text-gold-400 sm:h-6 sm:w-6">
-                    <path d="M6 0c1 3 3 5 6 6-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6Z" fill="currentColor" />
-                  </svg>
+                  {/* The Aven mark, drawn in gold through its own silhouette */}
+                  <span className="h-6 w-[1.85rem] shrink-0 bg-gold-400 [mask:url(/brand/aven-mark.png)_center/contain_no-repeat] sm:h-9 sm:w-11" />
                 </span>
               ))}
             </p>

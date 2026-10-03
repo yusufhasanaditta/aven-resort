@@ -290,4 +290,48 @@ export const jobPostSchema = z.object({
   contactPhone: clearableText(40),
   status: z.enum(["DRAFT", "PUBLISHED", "CLOSED"]),
   featured: z.boolean().default(false),
+  applyOnline: z.boolean().default(true),
 });
+
+/** A job application from the website's form (the CV travels beside it, checked on its own). */
+export const jobApplicationSchema = z.object({
+  jobId: z.string().trim().max(40).nullish().transform((v) => v || null),
+  name: z.string().trim().min(2, "Enter your full name.").max(120),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(160),
+  phone,
+  address: clearableText(200),
+  currentPosition: clearableText(160),
+  experience: clearableText(80),
+  education: clearableText(200),
+  expectedSalary: clearableText(80),
+  noticePeriod: clearableText(80),
+  profileUrl: z
+    .string()
+    .trim()
+    .max(300)
+    .regex(/^https?:\/\/\S+$/, "Paste a full link starting with https://")
+    .nullish()
+    .or(z.literal(""))
+    .transform((v) => v || null),
+  coverLetter: clearableText(5_000),
+  consent: z.literal("yes", { message: "Please confirm the details are true." }),
+});
+
+export const CANDIDATE_STATUSES = ["NEW", "REVIEWING", "SHORTLISTED", "INTERVIEW", "OFFERED", "HIRED", "REJECTED"] as const;
+
+/** The hiring team's notes on an application. */
+export const candidateUpdateSchema = z.object({
+  status: z.enum(CANDIDATE_STATUSES).optional(),
+  rating: z.number().int().min(0).max(5).nullish(),
+  notes: z.string().trim().max(5_000).nullish(),
+});
+
+/** One change from the page editor. An image must be a file on this site (an upload or a built-in picture). */
+export const siteEditSchema = z
+  .object({
+    kind: z.enum(["text", "image"]),
+    original: z.string().trim().min(1).max(10_000),
+    value: z.string().trim().max(20_000),
+    page: z.string().trim().max(300).nullish(),
+  })
+  .refine((e) => e.kind === "text" || /^\/(?!\/)\S+$/.test(e.value), { message: "Choose an uploaded image.", path: ["value"] });

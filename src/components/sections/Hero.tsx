@@ -9,6 +9,7 @@ import { Container } from "@/components/ui/Section";
 import { Num } from "@/components/ui/Number";
 import { easeOutExpo } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { editText } from "@/jsx/edits";
 
 /**
  * The landing hero.
@@ -19,8 +20,8 @@ import { cn } from "@/lib/utils";
  */
 export function Hero({
   eyebrow,
-  title,
-  titleAccent,
+  title: rawTitle,
+  titleAccent: rawAccent,
   lede,
   image,
   imageAlt,
@@ -48,6 +49,9 @@ export function Hero({
   bangla?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
+  // The title is split into words below, so page-editor edits apply to it whole, here.
+  const title = editText(rawTitle);
+  const titleAccent = rawAccent && editText(rawAccent);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -124,7 +128,7 @@ export function Hero({
               </motion.p>
             )}
 
-            <h1 className={cn("text-balance text-cream-50", bangla ? "text-[clamp(2.6rem,7vw,5.5rem)] font-semibold leading-[1.15]" : "font-display text-display-xl")}>
+            <h1 data-edit-text={title} className={cn("text-balance text-cream-50", bangla ? "text-[clamp(2.6rem,7vw,5.5rem)] font-semibold leading-[1.15]" : "font-display text-display-xl")}>
               {title.split(" ").map((word, i) => (
                 <span key={i} className="inline-block overflow-hidden">
                   <motion.span
@@ -151,6 +155,7 @@ export function Hero({
                       ease: easeOutExpo,
                       delay: 0.34,
                     }}
+                    data-edit-text={titleAccent}
                     className={cn(
                       "inline-block font-display font-medium tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]",
                       accentStyle === "line"

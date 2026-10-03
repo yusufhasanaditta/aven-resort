@@ -109,6 +109,7 @@ export async function GET() {
       })),
     },
     pendingApplications,
+    newCandidates: await prisma.jobApplication.count({ where: { status: "NEW" } }).catch(() => 0),
     shareholderCount,
     shares: { total: TOTAL_SHARES, sold: soldUnits, active: live.filter(({ h }) => h.status === "ACTIVE").reduce((s, { h }) => s + h.units, 0) },
     money: {

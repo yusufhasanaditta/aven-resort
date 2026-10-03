@@ -413,11 +413,77 @@ model JobPost {
   contactPhone     String?
   status           JobStatus @default(DRAFT)
   featured         Boolean   @default(false)
+  /// Take applications (with a CV) through a form on the circular itself.
+  applyOnline      Boolean   @default(true)
   publishedAt      DateTime?
   createdBy        String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  applications     JobApplication[]
 
   @@index([status])
   @@map("job_posts")
+}
+
+enum CandidateStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  HIRED
+  REJECTED
+}
+
+/// A job application sent from the website, with its CV. The CV is kept here,
+/// not in the public media library, and only admins can open it. jobId is
+/// empty for a CV sent "for future openings"; jobTitle keeps the position's
+/// name even if its circular is later deleted.
+model JobApplication {
+  id              String          @id @default(cuid())
+  jobId           String?
+  job             JobPost?        @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  jobTitle        String
+  name            String
+  email           String
+  phone           String
+  address         String?
+  currentPosition String?
+  experience      String?
+  education       String?
+  expectedSalary  String?
+  noticePeriod    String?
+  profileUrl      String?
+  coverLetter     String?         @db.Text
+  cvName          String
+  cvType          String
+  cvSize          Int
+  cvData          Bytes           @db.LongBlob
+  status          CandidateStatus @default(NEW)
+  rating          Int?
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([jobId])
+  @@index([status])
+  @@index([email])
+  @@map("job_applications")
+}
+
+/// A change made in the page editor: one piece of text, or one image, swapped
+/// wherever it appears on the site. `hash` is a SHA-256 of kind + original,
+/// so each original is edited at most once.
+model SiteEdit {
+  id        String   @id @default(cuid())
+  hash      String   @unique @db.VarChar(64)
+  kind      String
+  original  String   @db.Text
+  value     String   @db.Text
+  page      String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_edits")
 }
