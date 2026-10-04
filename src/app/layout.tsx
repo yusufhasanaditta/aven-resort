@@ -10,7 +10,7 @@ import { getLang } from "@/lib/i18n-server";
 import { AutoTranslate } from "@/components/layout/AutoTranslate";
 import { SiteEditsBridge } from "@/components/editor/SiteEditsBridge";
 import { PageEditorLoader } from "@/components/editor/PageEditorLoader";
-import { loadSiteEdits } from "@/lib/site-edits";
+import { ensureSiteEdits } from "@/lib/site-edits";
 import { getSession } from "@/lib/auth";
 import "./globals.css";
 
@@ -88,7 +88,7 @@ export default async function RootLayout({
     getContent("announcement"),
     getContent("contact"),
     getLang(),
-    loadSiteEdits(),
+    ensureSiteEdits(),
     getSession(),
   ]);
   const showAnnouncement = announcement.enabled && !!announcement.text.trim();

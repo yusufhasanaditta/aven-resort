@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { ensureSiteEdits } from "@/lib/site-edits";
 import { ApplicationForm } from "@/components/sections/ApplicationForm";
 import { Container, Eyebrow } from "@/components/ui/Section";
 import { fallbackPlans } from "@/data/planFallback";
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ApplyPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
-  const [user, { plan }] = await Promise.all([getCurrentUser(), searchParams]);
+  const [user, { plan }] = await Promise.all([getCurrentUser(), searchParams, ensureSiteEdits()]);
 
   const plans = await prisma.membershipPlan
     .findMany({ orderBy: { sortOrder: "asc" } })

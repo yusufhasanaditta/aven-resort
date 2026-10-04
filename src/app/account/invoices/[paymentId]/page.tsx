@@ -69,7 +69,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
           <PrintButton />
         </div>
 
-        <article className="relative overflow-hidden rounded-3xl bg-white p-8 shadow-lift-lg sm:p-12 print:rounded-none print:shadow-none">
+        <article className="relative overflow-hidden rounded-3xl bg-white p-5 shadow-lift-lg min-[400px]:p-8 sm:p-12 print:rounded-none print:shadow-none">
           <div className="bg-leaf-swirl pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
           <div className="relative">
@@ -103,7 +103,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                 <p className="text-xs text-forest-900/65">{user.location}</p>
                 <p className="mt-1 font-mono text-[0.6875rem] text-forest-900/55">Member {memberIdFor(user)}</p>
               </div>
-              <dl className="space-y-2 text-xs sm:text-right">
+              <dl className="grid grid-cols-3 gap-3 text-xs sm:block sm:space-y-2 sm:text-right">
                 <div>
                   <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">Issued</dt>
                   <dd className="mt-0.5 text-forest-900">{formatDate(payment.createdAt.toISOString())}</dd>
@@ -143,15 +143,15 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                       {stayDays(plan.freeStayNights)} days free stay a year
                     </p>
                   </td>
-                  <td className="py-4 text-right font-numeral text-forest-900">{formatBDT(payment.amountBDT)}</td>
+                  <td className="whitespace-nowrap py-4 text-right font-numeral text-forest-900">{formatBDT(payment.amountBDT)}</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td className="pt-5 text-right text-xs font-semibold uppercase tracking-[0.14em] text-forest-900/55">
+                  <td className="pr-3 pt-5 text-right text-xs font-semibold uppercase tracking-[0.14em] text-forest-900/55">
                     {paid ? "Amount received" : "Amount due"}
                   </td>
-                  <td className="pt-5 text-right font-numeral text-2xl text-forest-900">{formatBDT(payment.amountBDT)}</td>
+                  <td className="whitespace-nowrap pt-5 text-right font-numeral text-xl text-forest-900 sm:text-2xl">{formatBDT(payment.amountBDT)}</td>
                 </tr>
               </tfoot>
             </table>

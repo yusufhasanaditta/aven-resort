@@ -34,7 +34,7 @@ export function OverviewPanel({
   ];
 
   return (
-    <div className="grid gap-5 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
       {/* Identity */}
       <Glass className="overflow-hidden xl:col-span-2">
         <div
@@ -42,7 +42,7 @@ export function OverviewPanel({
           className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full blur-3xl"
           style={{ background: `${cardPlan?.accentColor ?? "#0E4D38"}55` }}
         />
-        <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto]">
+        <div className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-[minmax(0,1fr)_auto]">
           <div>
             <div className="flex items-center gap-4">
               {user.photoUrl ? (
@@ -62,7 +62,7 @@ export function OverviewPanel({
                 <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold-400/80">
                   Shareholder · ID {user.memberId}
                 </p>
-                <h2 className="mt-1 font-display text-4xl text-cream-50 sm:text-5xl">Welcome back, {firstName}.</h2>
+                <h2 className="mt-1 font-display text-[2rem] leading-[1.05] text-cream-50 sm:text-5xl">Welcome back, {firstName}.</h2>
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -86,12 +86,12 @@ export function OverviewPanel({
           </div>
 
           {cardPlan && (
-            <div className={cn("justify-self-center [perspective:1200px]", !summary.currentPlan && "opacity-60 grayscale")}>
+            <div className={cn("justify-self-center [perspective:1200px] max-[400px]:[zoom:0.86] max-[360px]:[zoom:0.78]", !summary.currentPlan && "opacity-60 grayscale")}>
               <TiltCard intensity={12} innerClassName="rounded-[1.6rem]">
                 <MembershipCard
                   plan={cardPlan}
                   holder={{ name: user.name, memberId: user.memberId, photoUrl: user.photoUrl, shareNo: user.shareNumbers[0] }}
-                  className="w-[17rem] sm:w-[21rem]"
+                  className="w-[21rem]"
                 />
               </TiltCard>
               {!summary.currentPlan && (

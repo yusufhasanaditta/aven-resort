@@ -89,7 +89,7 @@ export function BuyPanel({
   const dueToday = result.installments ? result.installments[0].amountBDT : result.totalBDT;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.25fr_1fr]">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
       {/* Configure */}
       <div className="space-y-5">
         <Glass>
@@ -128,7 +128,7 @@ export function BuyPanel({
 
         <Glass>
           <PanelTitle eyebrow="Step 2" title="How many shares?" />
-          <div className="mt-5 flex items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={() => setClamped(units - 1)}
@@ -145,7 +145,7 @@ export function BuyPanel({
               value={units}
               onChange={(e) => setClamped(Number(e.target.value))}
               aria-label="Unit shares"
-              className="h-12 w-24 rounded-2xl border border-white/12 bg-white/[0.04] text-center font-numeral text-2xl text-cream-50 outline-none focus:border-gold-300/60"
+              className="h-12 w-20 rounded-2xl sm:w-24 border border-white/12 bg-white/[0.04] text-center font-numeral text-2xl text-cream-50 outline-none focus:border-gold-300/60"
             />
             <button
               type="button"
@@ -155,7 +155,7 @@ export function BuyPanel({
             >
               +
             </button>
-            <p className="ml-2 text-sm text-cream-200/60">
+            <p className="text-sm text-cream-200/60 sm:ml-2">
               {formatBDT(result.pricePerShareBDT)} <span className="text-cream-200/40">/ share</span>
             </p>
           </div>
@@ -214,7 +214,7 @@ export function BuyPanel({
             action={<AdminIcon icon="cart" className="h-5 w-5 text-gold-300" />}
           />
 
-          <div className="mt-5 flex items-center gap-4">
+          <div className="mt-5 flex flex-col gap-4 min-[420px]:flex-row min-[420px]:items-center">
             <div className="relative h-[6.9rem] w-[11.2rem] shrink-0">
               <AnimatePresence mode="popLayout">
                 <motion.div
@@ -300,7 +300,7 @@ export function BuyPanel({
             <PanelTitle eyebrow="Also payable" title="Due on your holdings" />
             <ul className="mt-4 divide-y divide-white/6">
               {dueItems.map((h) => (
-                <li key={h.id} className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+                <li key={h.id} className="flex items-center justify-between gap-3 py-3.5">
                   <span>
                     <span className="block text-[0.8125rem] text-cream-100">
                       {h.plan.name} · {h.paymentPlan === "INSTALLMENT" ? `installment ${h.nextDue!.n} of ${h.steps.length}` : "full payment"}

@@ -14,7 +14,10 @@ export function Glass({
   return (
     <Tag
       className={cn(
-        "relative rounded-3xl border border-white/[0.08] bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl sm:p-6",
+        "relative border border-white/[0.08] bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl",
+        // A caller's padding or radius replaces the default (cn() joins classes, it does not merge them).
+        !/(^|\s)p-/.test(className ?? "") && "p-4 sm:p-6",
+        !/(^|\s)rounded-/.test(className ?? "") && "rounded-3xl",
         className,
       )}
     >

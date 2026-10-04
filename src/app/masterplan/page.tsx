@@ -6,6 +6,7 @@ import { Button, ArrowRight } from "@/components/ui/Button";
 import { Container, Eyebrow, Section } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { zoneCategories, zones } from "@/data/zones";
+import { ensureSiteEdits } from "@/lib/site-edits";
 
 export const metadata: Metadata = {
   title: "Interactive Masterplan",
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
     "Explore all 17 zones and 26 named functions of Aven Eco Luxury Resort in 3D — five tea hills on 5 acres of land, with land allocation and zone type for every parcel.",
 };
 
-export default function MasterplanPage() {
+export default async function MasterplanPage() {
+  await ensureSiteEdits();
   return (
     <>
       {/* The explorer sits directly under the header — it is the page */}

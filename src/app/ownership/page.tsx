@@ -129,7 +129,7 @@ export default async function OwnershipPage() {
             </h2>
           </Reveal>
 
-          <RevealGroup className="mt-10 grid gap-4 md:grid-cols-[1.4fr_1fr]">
+          <RevealGroup className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             {[
               { bn: "জমির পরিমাণ", en: "Land", value: `${projectFacts.landAcres} Acres · ${projectFacts.landBigha} Bigha · ${projectFacts.landDecimal} Decimal`, sub: `${projectFacts.landSqft} sq ft`, bnValue: "৫ একর · ১৫.১৫ বিঘা · ৫০০ শতাংশ" },
               { bn: "শেয়ার পরিমাণ", en: "Shares", value: projectFacts.totalShares.toLocaleString("en-US"), sub: "Unit shares in total", bnValue: "২৭০০" },
@@ -137,10 +137,10 @@ export default async function OwnershipPage() {
               <RevealItem key={f.en}>
                 <div className="h-full rounded-2xl border border-forest-600/10 bg-cream-50/80 p-6 backdrop-blur-sm">
                   <p className="font-bangla text-sm text-forest-900/55">{f.bn}</p>
-                  <p className="mt-3 inline-block whitespace-nowrap rounded-xl bg-[#E9E3C4] px-3.5 py-1.5 font-bangla text-2xl font-medium text-forest-700">
+                  <p className="mt-3 inline-block rounded-xl bg-[#E9E3C4] px-3.5 py-1.5 font-bangla text-xl sm:whitespace-nowrap sm:text-2xl font-medium text-forest-700">
                     {f.bnValue}
                   </p>
-                  <p className="mt-4 whitespace-nowrap font-numeral text-2xl text-forest-900">{f.value}</p>
+                  <p className="mt-4 font-numeral text-xl text-forest-900 sm:whitespace-nowrap sm:text-2xl">{f.value}</p>
                   <p className="mt-0.5 text-xs text-forest-900/50">
                     {f.en} · {f.sub}
                   </p>

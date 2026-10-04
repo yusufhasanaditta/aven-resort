@@ -90,7 +90,7 @@ export function AccountDashboard({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
       </div>
 
-      <div className="relative mx-auto flex max-w-[92rem] gap-8 px-4 pb-28 pt-8 sm:px-6 lg:px-8 lg:pb-16">
+      <div className="relative mx-auto flex max-w-[92rem] gap-8 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
         {/* Rail */}
         <aside className="hidden w-60 shrink-0 lg:block">
           <nav
@@ -223,7 +223,7 @@ export function AccountDashboard({
       {/* Phone dock */}
       <nav
         aria-label="Account"
-        className="fixed inset-x-3 bottom-3 z-40 rounded-3xl border border-white/10 bg-[#03130e]/85 p-1.5 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 rounded-3xl border border-white/10 bg-[#03130e]/85 p-1.5 backdrop-blur-xl lg:hidden"
       >
         <ul className="grid grid-cols-6">
           {accountTabs.map((t) => {
@@ -235,12 +235,15 @@ export function AccountDashboard({
                   onClick={() => select(t.id)}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex w-full flex-col items-center gap-1 rounded-2xl py-2 text-[0.625rem] font-medium transition-colors",
+                    "relative flex w-full flex-col items-center gap-1 rounded-2xl py-2 text-[0.625rem] font-medium transition-colors",
                     active ? "bg-cream-50 text-forest-950" : "text-cream-200/60",
                   )}
                 >
                   <AdminIcon icon={t.icon} className="h-4.5 w-4.5" />
-                  {t.label.replace("My ", "").replace(" shares", "").replace("Applications", "Apps")}
+                  <span className="relative max-w-full truncate px-0.5">{t.short}</span>
+                  {t.id === "applications" && counts.applications ? (
+                    <span className="absolute right-[calc(50%-1.1rem)] top-1 h-2 w-2 rounded-full bg-gold-400 ring-2 ring-[#03130e]" aria-label={`${counts.applications} in review`} />
+                  ) : null}
                 </button>
               </li>
             );

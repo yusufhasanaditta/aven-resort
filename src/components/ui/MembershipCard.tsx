@@ -90,8 +90,9 @@ export function MembershipCard({
   return (
     <div
       className={cn(
-        "group/card relative flex aspect-[1.62] w-[21rem] overflow-hidden rounded-[1.6rem] backface-hidden sm:w-[25rem]",
-        className,
+        "group/card relative flex aspect-[1.62] overflow-hidden rounded-[1.6rem] backface-hidden",
+        // A caller's width replaces the default (cn() joins classes, it does not merge them).
+        /(^|\s)w-/.test(className ?? "") ? className : ["w-[21rem] sm:w-[25rem]", className],
       )}
       style={{
         background: t.bg,

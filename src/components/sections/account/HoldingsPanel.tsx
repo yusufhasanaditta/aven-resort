@@ -47,8 +47,8 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
   return (
     <Glass as="article" className="overflow-hidden p-0 sm:p-0">
       <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px]" style={{ background: h.plan.accentColor }} />
-      <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-6">
+        <div className="flex min-w-0 items-center gap-4">
           <TierIcon tierId={h.plan.slug} color={accentOnDark(h.plan.accentColor)} />
           <div>
             <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-cream-200/50">
@@ -72,7 +72,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
           { k: "Of the resort", v: `${ownershipPercent(h.units).toFixed(2)}%` },
           { k: "Free stay", v: `${stayDays(h.plan.freeStayNights)} days / yr` },
         ].map((d) => (
-          <div key={d.k} className="bg-forest-950/60 px-5 py-3.5 sm:px-6">
+          <div key={d.k} className="bg-forest-950/60 px-4 py-3 sm:px-6 sm:py-3.5">
             <dt className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/40">{d.k}</dt>
             <dd className="mt-1 text-sm font-medium text-cream-100">{d.v}</dd>
           </div>
@@ -81,10 +81,10 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
 
       {/* Installment tracker */}
       {h.status !== "CANCELLED" && h.steps.length > 1 && (
-        <div className="grid gap-3 p-5 pb-0 sm:grid-cols-2 sm:p-6 sm:pb-0 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 p-4 pb-0 sm:gap-3 sm:p-6 sm:pb-0 lg:grid-cols-4">
           <TrackerStat label="Paid" value={`${paidCount} of ${h.steps.length}`} sub={`${formatBDT(h.paidBDT)} · ${pct}%`} tone="emerald" />
           <TrackerStat
-            label="Installments left"
+            label="Left to pay"
             value={String(h.leftCount)}
             sub={h.leftCount ? `${formatBDT(h.remainingBDT)} remaining` : "Nothing left to pay"}
             tone="gold"
@@ -104,13 +104,13 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         </div>
       )}
 
-      <div className="p-5 sm:p-6">
-        <div className="flex items-center justify-between text-xs">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-4 text-xs">
           <p className="text-cream-200/55">
             {paidCount} of {h.steps.length} paid · {h.leftCount} left · {formatBDT(h.paidBDT)} of {formatBDT(h.totalAmountBDT)}
           </p>
           {h.steps.length > 1 && (
-            <button type="button" onClick={() => setOpen((o) => !o)} className="font-medium text-gold-300 hover:underline">
+            <button type="button" onClick={() => setOpen((o) => !o)} className="shrink-0 font-medium text-gold-300 hover:underline">
               {open ? "Hide schedule" : "Show schedule"}
             </button>
           )}
@@ -141,7 +141,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                 <li
                   key={s.n}
                   className={cn(
-                    "grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-[0.8125rem] sm:grid-cols-[auto_1fr_auto_auto]",
+                    "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-3.5 py-3 text-[0.8125rem] sm:gap-x-4 sm:px-4",
                     isNext && "bg-gold-400/[0.06]",
                   )}
                 >
@@ -153,25 +153,23 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                   >
                     {s.status === "SUCCESS" ? "✓" : s.n}
                   </span>
-                  <span>
+                  <span className="min-w-0">
                     <span className="block text-cream-100">
                       {s.part}
-                      {s.part !== s.label && <span className="text-cream-200/40"> · {s.label.replace(s.part, "").replace(/^ /, "") || ""}</span>}
+                      {s.part !== s.label && <span className="hidden text-cream-200/40 sm:inline"> {s.label.replace(s.part, "").trim()}</span>}
                     </span>
-                    <span className="block text-[0.6875rem] text-cream-200/45">
+                    <span className={cn("block text-[0.6875rem]", !s.paidAt && d < 0 ? "text-red-300/80" : "text-cream-200/45")}>
                       {s.paidAt
                         ? `Paid ${formatDate(s.paidAt)}`
-                        : isNext
-                          ? d < 0
-                            ? `Next payment · ${-d} days overdue`
-                            : d === 0
-                              ? "Next payment · due today"
-                              : "Next payment"
-                          : "Upcoming"}
+                        : d < 0
+                          ? `${-d} day${d === -1 ? "" : "s"} late · due ${formatDate(s.dueDate)}`
+                          : d === 0
+                            ? "Due today"
+                            : `${isNext ? "Next · " : ""}Due ${formatDate(s.dueDate)}`}
                     </span>
                   </span>
-                  <span className="font-numeral text-cream-50">{formatBDT(s.amountBDT)}</span>
-                  <span className="col-span-3 sm:col-span-1 sm:justify-self-end">
+                  <span className="flex flex-col items-end gap-1 sm:flex-row-reverse sm:items-center sm:gap-4">
+                    <span className="whitespace-nowrap font-numeral text-cream-50">{formatBDT(s.amountBDT)}</span>
                     <StatusChip status={s.status === "UPCOMING" && d < 0 ? "OVERDUE" : s.status} />
                   </span>
                 </li>
@@ -192,11 +190,12 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                   ? "A payment was started but not finished — you can pay again."
                   : `Next: ${formatBDT(h.nextDue?.amountBDT ?? 0)} · due ${h.nextDue ? formatDate(h.nextDue.dueDate) : "—"}`}
               </p>
-              <div className="flex flex-wrap items-start gap-2">
+              <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-start">
                 {paidCount === 0 && <CancelReservationButton holdingId={h.id} />}
                 <PayNextButton
                   holdingId={h.id}
                   tone="light"
+                  className="w-full justify-center sm:w-auto"
                   label={`${h.paymentPlan === "INSTALLMENT" && nextStep ? `Pay ${nextStep.part.toLowerCase()}` : "Pay now"} · ${formatBDT(h.nextDue?.amountBDT ?? 0)}`}
                 />
               </div>
@@ -218,10 +217,10 @@ const trackerTones = {
 
 function TrackerStat({ label, value, sub, tone }: { label: string; value: string; sub: string; tone: keyof typeof trackerTones }) {
   return (
-    <div className="rounded-2xl bg-white/[0.04] px-4 py-3.5 ring-1 ring-white/6">
-      <p className="text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/45">{label}</p>
-      <p className={cn("mt-1 font-display text-2xl leading-tight", trackerTones[tone])}>{value}</p>
-      <p className="mt-0.5 text-[0.6875rem] text-cream-200/50">{sub}</p>
+    <div className="min-w-0 rounded-2xl bg-white/[0.04] px-3.5 py-3 ring-1 ring-white/6 sm:px-4 sm:py-3.5">
+      <p className="truncate text-[0.625rem] uppercase tracking-[0.14em] text-cream-200/45">{label}</p>
+      <p className={cn("mt-1 font-display text-lg leading-tight sm:text-2xl", trackerTones[tone])}>{value}</p>
+      <p className="mt-0.5 text-[0.6875rem] leading-snug text-cream-200/50">{sub}</p>
     </div>
   );
 }

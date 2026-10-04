@@ -30,22 +30,22 @@ export function InvoicesPanel({ data }: { data: DashboardData }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
           { label: "Invoices issued", value: String(data.invoices.length) },
           { label: "Total paid", value: formatBDTCompact(paidTotal) },
           { label: "Outstanding", value: formatBDTCompact(data.summary.outstandingBDT) },
         ].map((t) => (
-          <Glass key={t.label} className="p-4 sm:p-5">
-            <p className="font-numeral text-2xl text-cream-50">{t.value}</p>
-            <p className="mt-1 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-cream-200/50">{t.label}</p>
+          <Glass key={t.label} className="min-w-0 rounded-2xl p-3 sm:rounded-3xl sm:p-5">
+            <p className="truncate font-numeral text-lg text-cream-50 sm:text-2xl">{t.value}</p>
+            <p className="mt-1 text-[0.5625rem] font-semibold uppercase leading-snug tracking-[0.1em] text-cream-200/50 sm:text-[0.6875rem] sm:tracking-[0.12em]">{t.label}</p>
           </Glass>
         ))}
       </div>
 
       <Glass className="p-0 sm:p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/6 p-4 sm:px-6">
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter invoices">
+          <div className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]" role="group" aria-label="Filter invoices">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
@@ -53,7 +53,7 @@ export function InvoicesPanel({ data }: { data: DashboardData }) {
                 onClick={() => setFilter(f.id)}
                 aria-pressed={filter === f.id}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
+                  "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
                   filter === f.id ? "bg-cream-50 text-forest-900" : "text-cream-200/70 hover:bg-white/8",
                 )}
               >
@@ -125,7 +125,7 @@ export function InvoicesPanel({ data }: { data: DashboardData }) {
                   <Link href={`/account/invoices/${inv.id}`} className="flex items-start justify-between gap-3 p-4">
                     <span className="min-w-0">
                       <span className="block font-mono text-xs text-cream-100">{inv.invoiceNo}</span>
-                      <span className="mt-1 block truncate text-[0.8125rem] text-cream-100">
+                      <span className="mt-1 line-clamp-2 text-[0.8125rem] text-cream-100">
                         {inv.planName} · {inv.label}
                       </span>
                       <span className="block text-[0.6875rem] text-cream-200/45">{formatDate(inv.issuedAt)}</span>
