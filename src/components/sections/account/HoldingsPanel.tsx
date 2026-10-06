@@ -61,8 +61,19 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <StatusChip status={h.status === "CANCELLED" ? "CANCELLED" : h.status} />
-          <p className="font-numeral text-xl text-cream-50">{formatBDT(h.totalAmountBDT)}</p>
+          <p className="font-numeral text-xl text-cream-50">
+            {h.discountBDT > 0 && (
+              <span className="mr-2 align-middle text-sm text-cream-200/40 line-through">{formatBDT(h.listPriceBDT)}</span>
+            )}
+            {formatBDT(h.totalAmountBDT)}
+          </p>
         </div>
+        {h.discountBDT > 0 && (
+          <p className="w-full rounded-xl bg-emerald-400/10 px-3.5 py-2 text-xs text-emerald-200">
+            You received a <strong className="font-semibold">{formatBDT(h.discountBDT)}</strong> discount
+            {h.discountNote ? <> · {h.discountNote}</> : null} — your installments are worked out on the discounted price.
+          </p>
+        )}
       </div>
 
       <dl className="grid grid-cols-2 gap-px border-y border-white/6 bg-white/6 sm:grid-cols-4">

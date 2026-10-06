@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { shareSaleSchema, zodErrors } from "@/lib/validation";
 import { SaleError, allocateHolding, notifyAllocated, settleInstallments } from "@/lib/sales";
-import { calculate, formatBDT } from "@/lib/shares";
+import { calculate, discountProblem, formatBDT, withDiscount } from "@/lib/shares";
 
 /**
  * A share sale closed at the office, in one step: the shares go into the
@@ -19,11 +19,15 @@ export async function POST(request: Request) {
 
   const parsed = shareSaleSchema.safeParse((await readJson(request)) ?? {});
   if (!parsed.success) return NextResponse.json({ errors: zodErrors(parsed.error) }, { status: 422 });
-  const { userId, units, paymentPlan, payment } = parsed.data;
+  const { userId, units, paymentPlan, payment, discountBDT, discountNote } = parsed.data;
+  const discount = { amountBDT: discountBDT, note: discountNote };
 
   // Check the money against the schedule first, so a typo never uses up share numbers.
+  const chart = calculate(await prisma.membershipPlan.findMany(), units, paymentPlan);
+  const problem = discountProblem(chart, discountBDT);
+  if (problem) return NextResponse.json({ errors: { discountBDT: problem } }, { status: 422 });
   if (payment) {
-    const quote = calculate(await prisma.membershipPlan.findMany(), units, paymentPlan);
+    const quote = withDiscount(chart, discountBDT);
     const parts = quote.installments?.map((l) => l.amountBDT) ?? [quote.totalBDT];
     const count = payment.count ?? 1;
     if (count > parts.length) {
@@ -37,9 +41,11 @@ export async function POST(request: Request) {
 
   let sale;
   try {
-    sale = await allocateHolding(userId, units, paymentPlan);
+    sale = await allocateHolding(userId, units, paymentPlan, discount);
   } catch (err) {
-    if (err instanceof SaleError) return NextResponse.json({ error: err.message }, { status: err.status });
+    if (err instanceof SaleError) {
+      return NextResponse.json(err.field ? { errors: { [err.field]: err.message } } : { error: err.message }, { status: err.status });
+    }
     throw err;
   }
   const { user, holding, result } = sale;
@@ -58,12 +64,14 @@ export async function POST(request: Request) {
     }
   }
 
-  await notifyAllocated(user, holding.id, result, !!settled);
+  await notifyAllocated(user, holding.id, result, !!settled, discountBDT);
   await logActivity(
     guard.name,
     "Share sale",
     user.name,
     `${result.units} × ${result.plan.name} · ${formatBDT(result.totalBDT)}${
+      discountBDT ? ` (${formatBDT(discountBDT)} discount${discountNote ? `: ${discountNote}` : ""})` : ""
+    }${
       settled ? ` · received ${formatBDT(settled.totalBDT)} (${payment!.method.replace("_", " ").toLowerCase()})` : " · no payment yet"
     }`,
   );

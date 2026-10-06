@@ -42,6 +42,8 @@ export type HoldingRow = {
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
   downPaymentBDT?: number | null;
+  discountBDT?: number;
+  discountNote?: string | null;
   shareFrom?: number | null;
   shareTo?: number | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
@@ -98,7 +100,12 @@ export type DashHolding = {
   id: string;
   plan: MembershipCardData;
   units: number;
+  /** What the shareholder pays: the chart price less any office discount. */
   totalAmountBDT: number;
+  /** Chart price before the discount; equals totalAmountBDT when there is none. */
+  listPriceBDT: number;
+  discountBDT: number;
+  discountNote: string | null;
   paidBDT: number;
   remainingBDT: number;
   /** Past-due installments not yet paid, in Bangladesh calendar days. */
@@ -278,6 +285,9 @@ export function holdingLedger(h: HoldingRow): DashHolding {
     plan: toCard(h.plan),
     units: h.units,
     totalAmountBDT: h.totalAmountBDT,
+    listPriceBDT: h.totalAmountBDT + (h.discountBDT ?? 0),
+    discountBDT: h.discountBDT ?? 0,
+    discountNote: h.discountNote ?? null,
     paidBDT,
     remainingBDT: h.status === "CANCELLED" ? 0 : h.totalAmountBDT - paidBDT,
     overdueCount,

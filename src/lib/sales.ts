@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { holdingInclude } from "@/lib/admin-serialize";
 import { holdingLedger } from "@/lib/account";
-import { calculate, formatBDT, type CalculatorResult, type PlanLike } from "@/lib/shares";
+import { calculate, discountProblem, formatBDT, withDiscount, type CalculatorResult, type PlanLike } from "@/lib/shares";
 import { nextShareNumbers } from "@/lib/member";
 import { notify, notifyPaymentReceived } from "@/lib/notify";
 import { convertLeadsFor } from "@/lib/crm";
@@ -26,13 +26,22 @@ export class SaleError extends Error {
   }
 }
 
-/** Puts shares in a shareholder's name at the chart price, with the next share numbers. */
-export async function allocateHolding(userId: string, units: number, paymentPlan: "FULL" | "INSTALLMENT") {
+export type SaleDiscount = { amountBDT: number; note?: string };
+
+/**
+ * Puts shares in a shareholder's name at the chart price less any office
+ * discount, with the next share numbers.
+ */
+export async function allocateHolding(userId: string, units: number, paymentPlan: "FULL" | "INSTALLMENT", discount?: SaleDiscount) {
   const [user, plans] = await Promise.all([prisma.user.findUnique({ where: { id: userId } }), prisma.membershipPlan.findMany()]);
   if (!user) throw new SaleError("Shareholder not found.", 404);
   if (!plans.length) throw new SaleError("No membership plans are set up.");
 
-  const result = calculate(plans, units, paymentPlan);
+  const quote = calculate(plans, units, paymentPlan);
+  const discountBDT = discount?.amountBDT ?? 0;
+  const problem = discountProblem(quote, discountBDT);
+  if (problem) throw new SaleError(problem, 422, "discountBDT");
+  const result = withDiscount(quote, discountBDT);
   const holding = await prisma.$transaction(async (tx) =>
     tx.shareHolding.create({
       data: {
@@ -44,10 +53,12 @@ export async function allocateHolding(userId: string, units: number, paymentPlan
         paymentPlan,
         installmentMonths: result.installments ? result.installments.length : null,
         downPaymentBDT: result.downPaymentBDT,
+        discountBDT,
+        discountNote: discountBDT ? discount?.note || null : null,
       },
     }),
   );
-  return { user, holding, result };
+  return { user, holding, result, discountBDT };
 }
 
 /** Tells the shareholder their new shares are on their dashboard. */
@@ -56,12 +67,15 @@ export async function notifyAllocated(
   holdingId: string,
   result: CalculatorResult<PlanLike & { name: string }>,
   paidNow: boolean,
+  discountBDT = 0,
 ) {
   const shares = `${result.units} unit share${result.units > 1 ? "s" : ""}`;
   await notify(user, {
     kind: "MESSAGE",
     title: `${result.units} ${result.plan.name} share${result.units > 1 ? "s" : ""} added to your account`,
     body: `The Aven team has added ${shares} (${result.plan.name}) in your name — ${formatBDT(result.totalBDT)}${
+      discountBDT ? ` after a ${formatBDT(discountBDT)} discount` : ""
+    }${
       !paidNow && result.installments ? `, starting with a ${formatBDT(result.installments[0].amountBDT)} down payment` : ""
     }. Your payment schedule${paidNow ? " and money receipt are" : " is"} in your dashboard.`,
     href: "/account?tab=holdings",

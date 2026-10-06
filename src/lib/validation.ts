@@ -185,11 +185,20 @@ export const offlinePaymentSchema = z.object({
 export const manualPaymentSchema = offlinePaymentSchema.extend({ holdingId: z.string().min(1) });
 
 /** A share sale closed at the office: shares put in a shareholder's name, with the money received now (if any). */
+/** An office discount, in whole taka, with an optional reason ("Early-bird", "Referral"…). */
+export const discountAmount = z.coerce.number().int("Whole taka only.").min(0, "The discount can't be negative.").max(1_000_000_000);
+
+export const discountFields = {
+  discountBDT: discountAmount.optional().default(0),
+  discountNote: z.string().trim().max(200).optional(),
+};
+
 export const shareSaleSchema = z.object({
   userId: z.string().min(1, "Choose the shareholder."),
   units: z.coerce.number().int().min(1, "At least one share.").max(2700),
   paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
   payment: offlinePaymentSchema.omit({ installmentNo: true }).optional(),
+  ...discountFields,
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

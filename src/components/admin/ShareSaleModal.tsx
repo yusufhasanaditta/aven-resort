@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminIcon } from "@/components/ui/AdminIcon";
 import { Avatar, Btn, Field, Modal, Segmented, TextArea, TextInput, firstError, send, useToast } from "./kit";
 import { METHOD_LABEL } from "./RecordPayment";
-import { calculate, formatBDT, stayDays, type PlanLike } from "@/lib/shares";
+import { DiscountField, NO_DISCOUNT, type DiscountValue } from "./DiscountField";
+import { calculate, discountProblem, formatBDT, maxDiscountBDT, stayDays, withDiscount, type PlanLike } from "@/lib/shares";
 import type { AdminCustomer } from "@/lib/admin-types";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ type Done = {
   units: number;
   planName: string;
   totalBDT: number;
+  discountBDT: number;
   receivedBDT: number;
   covered: string[];
   next: { label: string; amountBDT: number } | null;
@@ -61,6 +63,8 @@ export function ShareSaleModal({
   const [units, setUnits] = useState(1);
   const [paymentPlan, setPaymentPlan] = useState<"INSTALLMENT" | "FULL">("INSTALLMENT");
   const [paidNow, setPaidNow] = useState(true);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [discount, setDiscount] = useState<DiscountValue>(NO_DISCOUNT);
   const [count, setCount] = useState(1);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<Method>("CASH");
@@ -82,7 +86,11 @@ export function ShareSaleModal({
     }
   }, [open, plans.length, preset, people]);
 
-  const result = useMemo(() => (plans.length ? calculate(plans, units, paymentPlan) : null), [plans, units, paymentPlan]);
+  const chart = useMemo(() => (plans.length ? calculate(plans, units, paymentPlan) : null), [plans, units, paymentPlan]);
+  // The price after the office discount — what the schedule and the receipt use.
+  const discountIssue = chart && discount.amountBDT ? discountProblem(chart, discount.amountBDT) : null;
+  const discountBDT = discountIssue ? 0 : discount.amountBDT;
+  const result = useMemo(() => (chart ? withDiscount(chart, discountBDT) : null), [chart, discountBDT]);
   const parts = useMemo(
     () => (result ? (result.installments ?? [{ index: 1, label: "Full payment", amountBDT: result.totalBDT }]) : []),
     [result],
@@ -115,6 +123,8 @@ export function ShareSaleModal({
     setUnits(1);
     setPaymentPlan("INSTALLMENT");
     setPaidNow(true);
+    setDiscountOpen(false);
+    setDiscount(NO_DISCOUNT);
     setCount(1);
     setAmount("");
     setMethod("CASH");
@@ -133,6 +143,7 @@ export function ShareSaleModal({
   async function save() {
     if (!buyer) return setErrors({ userId: "Choose who is buying." });
     if (!result) return;
+    if (discountIssue) return setErrors({ discountBDT: discountIssue });
     if (!amountOk) return setErrors({ amountBDT: `Must match whole payments — e.g. ${cumulative.slice(0, 3).map(formatBDT).join(", ")}.` });
     setBusy(true);
     setErrors({});
@@ -140,6 +151,8 @@ export function ShareSaleModal({
       userId: buyer.id,
       units,
       paymentPlan,
+      discountBDT,
+      discountNote: discountBDT ? discount.note.trim() || undefined : undefined,
       payment: paidNow ? { count: n, amountBDT: due, method, reference, note, paidAt } : undefined,
     });
     setBusy(false);
@@ -153,6 +166,7 @@ export function ShareSaleModal({
       units: result.units,
       planName: result.plan.name,
       totalBDT: result.totalBDT,
+      discountBDT,
       receivedBDT: Number(json.receivedBDT),
       covered: json.covered as string[],
       next: json.next as Done["next"],
@@ -300,7 +314,7 @@ export function ShareSaleModal({
               <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-[#E6E8E3] text-[0.8125rem] sm:grid-cols-4">
                 {[
                   { k: "Package", v: result.plan.name },
-                  { k: "Total price", v: formatBDT(result.totalBDT) },
+                  { k: discountBDT ? "Price after discount" : "Total price", v: formatBDT(result.totalBDT) },
                   { k: paymentPlan === "INSTALLMENT" ? "Payments" : "Payment", v: paymentPlan === "INSTALLMENT" ? `${parts.length} (down + ${parts.length - 1})` : "1, in full" },
                   { k: "Free stay", v: `${stayDays(result.freeStayNights)} days / yr` },
                 ].map((c) => (
@@ -311,6 +325,29 @@ export function ShareSaleModal({
                 ))}
               </div>
             )}
+            {chart &&
+              (discountOpen ? (
+                <div className="mt-4 rounded-xl border border-[#E3E7E1] p-3.5">
+                  <DiscountField
+                    listPriceBDT={chart.totalBDT}
+                    maxBDT={maxDiscountBDT(chart)}
+                    value={discount}
+                    onChange={(v) => { setDiscount(v); setCount(1); setAmount(""); }}
+                    error={errors.discountBDT}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountOpen(false); setDiscount(NO_DISCOUNT); setCount(1); setAmount(""); }}
+                    className="mt-2 text-xs font-medium text-[#6B756F] hover:text-red-600"
+                  >
+                    Remove discount
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setDiscountOpen(true)} className="mt-3 text-xs font-semibold text-forest-700 hover:underline">
+                  + Give a discount
+                </button>
+              ))}
           </Section>
 
           {/* 3 · Money received */}
@@ -461,7 +498,8 @@ function SaleDone({ done }: { done: Done }) {
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-[0.8125rem] sm:grid-cols-3">
         {[
           { k: "Share number", v: done.shareNo ?? "—", mono: true },
-          { k: "Total price", v: formatBDT(done.totalBDT) },
+          { k: done.discountBDT ? "Price after discount" : "Total price", v: formatBDT(done.totalBDT) },
+          ...(done.discountBDT ? [{ k: "Discount given", v: formatBDT(done.discountBDT) }] : []),
           { k: "Received", v: done.receivedBDT ? formatBDT(done.receivedBDT) : "Nothing yet" },
           { k: "Covers", v: done.covered.length ? done.covered.join(", ") : "—" },
           { k: "Next payment", v: done.next ? `${done.next.label} · ${formatBDT(done.next.amountBDT)}` : "Fully paid" },

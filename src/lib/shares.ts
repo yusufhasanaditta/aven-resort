@@ -151,6 +151,52 @@ export function calculate<T extends PlanLike>(
   };
 }
 
+/**
+ * The most an office discount can take off a quote. The down payment stays as
+ * it is and the discount comes off the monthly installments, so each of them
+ * must still be at least 1 taka; a full payment must stay at least 1 taka.
+ */
+/** A price and how it is split: a quote, or an existing holding (`installments` only needs its length). */
+export type DiscountBase = { totalBDT: number; downPaymentBDT: number | null; installments: ArrayLike<unknown> | null };
+
+export function maxDiscountBDT(result: DiscountBase): number {
+  const steps = result.installments?.length ?? 1;
+  return result.downPaymentBDT && steps > 1
+    ? result.totalBDT - result.downPaymentBDT - (steps - 1)
+    : result.totalBDT - 1;
+}
+
+/** Why a discount can't be given on this quote, or null when it can. */
+export function discountProblem(result: DiscountBase, discountBDT: number): string | null {
+  if (!Number.isInteger(discountBDT) || discountBDT < 0) return "Enter the discount as a whole number of taka.";
+  const max = maxDiscountBDT(result);
+  if (discountBDT > max) {
+    return result.downPaymentBDT && (result.installments?.length ?? 1) > 1
+      ? `The discount comes off the monthly installments, so it can be at most ${formatBDT(max)}.`
+      : `The discount can be at most ${formatBDT(max)}.`;
+  }
+  return null;
+}
+
+/**
+ * A quote with an office discount taken off: the total drops by the discount
+ * and the monthly installments are re-split over the lower balance, while the
+ * down payment stays the same. Call `discountProblem` first.
+ */
+export function withDiscount<T extends PlanLike>(result: CalculatorResult<T>, discountBDT: number): CalculatorResult<T> {
+  if (!discountBDT) return result;
+  const totalBDT = result.totalBDT - discountBDT;
+  const installments = result.installments
+    ? buildInstallmentSchedule(totalBDT, result.installments.length, result.downPaymentBDT)
+    : null;
+  return {
+    ...result,
+    totalBDT,
+    installments,
+    monthlyBDT: installments ? installments[1]?.amountBDT ?? null : null,
+  };
+}
+
 export function formatBDT(amount: number): string {
   return new Intl.NumberFormat("en-BD", {
     style: "currency",

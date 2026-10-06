@@ -55,7 +55,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
   const paid = payment.status === "SUCCESS";
   const docNo = invoiceNumberFor(payment).replace(/^INV/, paid ? "RCPT" : "INV");
   const s = stamp[payment.status];
-  const perUnit = holding.units ? Math.round(holding.totalAmountBDT / holding.units) : 0;
+  // The chart price per share; an office discount is shown on its own line.
+  const perUnit = holding.units ? Math.round((holding.totalAmountBDT + holding.discountBDT) / holding.units) : 0;
   const settledOn = (payment.paidAt ?? payment.updatedAt).toISOString();
   const isAdmin = session.role === "ADMIN";
 
@@ -142,6 +143,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                       {formatBDT(perUnit)} per share ({holding.paymentPlan === "INSTALLMENT" ? "installment" : "full-payment"} price) · {ownershipPercent(holding.units).toFixed(2)}% of the resort ·{" "}
                       {stayDays(plan.freeStayNights)} days free stay a year
                     </p>
+                    {holding.discountBDT > 0 && (
+                      <p className="mt-1 text-xs font-medium text-emerald-700">
+                        Discount of {formatBDT(holding.discountBDT)} on this holding{holding.discountNote ? ` (${holding.discountNote})` : ""} — holding
+                        price {formatBDT(holding.totalAmountBDT)} instead of {formatBDT(holding.totalAmountBDT + holding.discountBDT)}
+                      </p>
+                    )}
                   </td>
                   <td className="whitespace-nowrap py-4 text-right font-numeral text-forest-900">{formatBDT(payment.amountBDT)}</td>
                 </tr>
@@ -159,7 +166,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
             {/* Holding position */}
             <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-900/10 sm:grid-cols-4">
               {[
-                ["Holding value", formatBDT(holding.totalAmountBDT)],
+                [holding.discountBDT ? "Holding value (after discount)" : "Holding value", formatBDT(holding.totalAmountBDT)],
                 ["Paid to date", formatBDT(ledger.paidBDT)],
                 ["Remaining balance", formatBDT(ledger.remainingBDT)],
                 ["Next due", ledger.nextDue ? `${formatBDT(ledger.nextDue.amountBDT)} · ${formatDate(ledger.nextDue.dueDate)}` : "Fully paid"],

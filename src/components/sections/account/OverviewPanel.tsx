@@ -21,7 +21,7 @@ export function OverviewPanel({
 }) {
   const { user, summary, holdings, events, now } = data;
   const daysAsMember = Math.max(0, -daysUntil(user.memberSince, now));
-  const firstName = user.name.split(" ")[0];
+
   const cardPlan = summary.currentPlan ?? data.plans[0];
 
   const kpis = [
@@ -62,7 +62,7 @@ export function OverviewPanel({
                 <p className="text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold-400/80">
                   Shareholder · ID {user.memberId}
                 </p>
-                <h2 className="mt-1 font-display text-[2rem] leading-[1.05] text-cream-50 sm:text-5xl">Welcome back, {firstName}.</h2>
+                <h2 className="mt-1 font-display text-[2rem] leading-[1.05] text-cream-50 sm:text-5xl">Welcome back, {user.name}.</h2>
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-2">

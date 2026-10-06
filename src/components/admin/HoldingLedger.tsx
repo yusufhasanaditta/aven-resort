@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Badge, Btn, Card, StatusBadge, firstError, send, useToast } from "./kit";
 import type { AdminHolding } from "@/lib/admin-types";
 import { daysUntil, formatDate, paymentPlanLabel } from "@/lib/account";
-import { formatBDT } from "@/lib/shares";
+import { DiscountField, type DiscountValue } from "./DiscountField";
+import { formatBDT, maxDiscountBDT } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
 /** A holding's full installment ledger with the actions the team takes on it. */
@@ -21,7 +22,27 @@ export function HoldingLedger({
 }) {
   const toast = useToast();
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [editDiscount, setEditDiscount] = useState(false);
+  const [discount, setDiscount] = useState<DiscountValue>({ amountBDT: h.discountBDT, note: h.discountNote ?? "" });
+  const [discountError, setDiscountError] = useState<string | undefined>();
+  const [saving, setSaving] = useState(false);
   const pct = h.totalAmountBDT ? Math.round((h.paidBDT / h.totalAmountBDT) * 100) : 0;
+  // The price can change only while nothing has been paid (or started) on it.
+  const priceOpen = h.status !== "CANCELLED" && h.steps.every((s) => s.status !== "SUCCESS" && s.status !== "PENDING");
+  const maxDiscount = maxDiscountBDT({ totalBDT: h.listPriceBDT, downPaymentBDT: h.downPaymentBDT, installments: h.steps });
+
+  async function saveDiscount() {
+    setSaving(true);
+    const { ok, json } = await send(`/api/admin/holdings/${h.id}`, "PATCH", {
+      discountBDT: discount.amountBDT,
+      discountNote: discount.note.trim() || undefined,
+    });
+    setSaving(false);
+    if (!ok) return setDiscountError(json.errors?.discountBDT ?? firstError(json));
+    toast(discount.amountBDT ? `Discount of ${formatBDT(discount.amountBDT)} saved` : "Discount removed");
+    setEditDiscount(false);
+    onChanged();
+  }
 
   async function setStatus(status: "CANCELLED" | "ACTIVE" | "PENDING_PAYMENT") {
     const { ok, json } = await send(`/api/admin/holdings/${h.id}`, "PATCH", { status });
@@ -48,9 +69,16 @@ export function HoldingLedger({
         </div>
       </div>
 
+      {h.discountBDT > 0 && (
+        <p className="border-t border-[#EEF0EC] bg-emerald-50/60 px-5 py-2 text-xs text-emerald-900">
+          Discount <span className="font-semibold tabular-nums">{formatBDT(h.discountBDT)}</span> off{" "}
+          <span className="tabular-nums line-through decoration-emerald-900/40">{formatBDT(h.listPriceBDT)}</span>
+          {h.discountNote && <span className="text-emerald-800/75"> · {h.discountNote}</span>}
+        </p>
+      )}
       <div className="grid grid-cols-3 border-y border-[#EEF0EC] bg-[#FAFBF9] text-center">
         {[
-          ["Total", formatBDT(h.totalAmountBDT)],
+          [h.discountBDT ? "Total after discount" : "Total", formatBDT(h.totalAmountBDT)],
           ["Paid", formatBDT(h.paidBDT)],
           ["Remaining", formatBDT(h.remainingBDT)],
         ].map(([k, v]) => (
@@ -110,6 +138,26 @@ export function HoldingLedger({
         </tbody>
       </table>
 
+      {editDiscount && (
+        <div className="border-t border-[#EEF0EC] bg-[#FAFBF9] px-5 py-4">
+          <DiscountField
+            listPriceBDT={h.listPriceBDT}
+            maxBDT={maxDiscount}
+            value={discount}
+            onChange={(v) => { setDiscount(v); setDiscountError(undefined); }}
+            error={discountError}
+          />
+          <div className="mt-3 flex justify-end gap-2">
+            <Btn size="sm" onClick={() => { setEditDiscount(false); setDiscount({ amountBDT: h.discountBDT, note: h.discountNote ?? "" }); setDiscountError(undefined); }}>
+              Cancel
+            </Btn>
+            <Btn size="sm" variant="primary" icon="check" onClick={saveDiscount} disabled={saving || discount.amountBDT > maxDiscount}>
+              {saving ? "Saving…" : "Save discount"}
+            </Btn>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EEF0EC] px-5 py-3">
         {h.status === "CANCELLED" ? (
           <Btn size="sm" onClick={() => setStatus(h.paidBDT > 0 ? "ACTIVE" : "PENDING_PAYMENT")}>Reinstate</Btn>
@@ -120,7 +168,14 @@ export function HoldingLedger({
             <Btn size="sm" variant="ghost" onClick={() => setConfirmCancel(false)}>No</Btn>
           </span>
         ) : (
-          <Btn size="sm" variant="ghost" onClick={() => setConfirmCancel(true)}>Cancel holding</Btn>
+          <span className="flex flex-wrap gap-1">
+            <Btn size="sm" variant="ghost" onClick={() => setConfirmCancel(true)}>Cancel holding</Btn>
+            {priceOpen && !editDiscount && (
+              <Btn size="sm" variant="ghost" icon="percent" onClick={() => setEditDiscount(true)}>
+                {h.discountBDT ? "Change discount" : "Give a discount"}
+              </Btn>
+            )}
+          </span>
         )}
         {!h.fullyPaid && h.status !== "CANCELLED" && (
           <Btn size="sm" variant="primary" icon="wallet" onClick={() => onRecord(h)}>

@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
-import { calculate } from "@/lib/shares";
+import { calculate, discountProblem, formatBDT, withDiscount } from "@/lib/shares";
 import { convertLeadsFor } from "@/lib/crm";
-import { registerSchema, zodErrors } from "@/lib/validation";
+import { discountFields, registerSchema, zodErrors } from "@/lib/validation";
 import { nextShareNumbers, openAccount, sendWelcome } from "@/lib/member";
 
 const actionSchema = z.object({
@@ -12,6 +12,8 @@ const actionSchema = z.object({
   adminNote: z.string().trim().max(1000).optional(),
   /** On approve: a password the admin gives the new shareholder (they can change it later). */
   password: registerSchema.shape.password.optional().or(z.literal("")),
+  /** On approve: an office discount off the chart price. */
+  ...discountFields,
 });
 
 /**
@@ -28,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const parsed = actionSchema.safeParse((await readJson(request)) ?? {});
   if (!parsed.success) return NextResponse.json({ errors: zodErrors(parsed.error) }, { status: 422 });
-  const { action, adminNote, password } = parsed.data;
+  const { action, adminNote, password, discountBDT, discountNote } = parsed.data;
 
   const app = await prisma.application.findUnique({ where: { id } });
   if (!app) return NextResponse.json({ error: "Application not found." }, { status: 404 });
@@ -51,7 +53,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const plans = await prisma.membershipPlan.findMany();
-  const quote = calculate(plans, app.units, app.paymentPlan);
+  const chart = calculate(plans, app.units, app.paymentPlan);
+  const problem = discountProblem(chart, discountBDT);
+  if (problem) return NextResponse.json({ errors: { discountBDT: problem } }, { status: 422 });
+  const quote = withDiscount(chart, discountBDT);
 
   const kyc = {
     nid: app.nid,
@@ -98,6 +103,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         paymentPlan: app.paymentPlan,
         installmentMonths: quote.installments ? quote.installments.length : null,
         downPaymentBDT: quote.downPaymentBDT,
+        discountBDT,
+        discountNote: discountBDT ? discountNote || null : null,
       },
     });
     await tx.application.update({
@@ -112,7 +119,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     guard.name,
     "Approved application",
     app.fullName,
-    `${quote.units} × ${quote.plan.name} · ৳${quote.totalBDT.toLocaleString("en-US")}${opened ? ` · account ${opened.memberNo} opened` : ""}`,
+    `${quote.units} × ${quote.plan.name} · ৳${quote.totalBDT.toLocaleString("en-US")}${
+      discountBDT ? ` (${formatBDT(discountBDT)} discount${discountNote ? `: ${discountNote}` : ""})` : ""
+    }${opened ? ` · account ${opened.memberNo} opened` : ""}`,
   );
   return NextResponse.json({ ok: true, holdingId: holding.id, memberNo: opened?.memberNo ?? null, oneTimePassword: opened?.oneTimePassword ?? null });
 }

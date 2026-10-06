@@ -26,7 +26,8 @@ import {
 import type { AdminApplication, ApplicationStatus } from "@/lib/admin-types";
 import type { AdminNav, TabFocus } from "../AdminShell";
 import { formatDate } from "@/lib/account";
-import { formatBDT } from "@/lib/shares";
+import { DiscountField, NO_DISCOUNT, type DiscountValue } from "../DiscountField";
+import { calculate, discountProblem, formatBDT, maxDiscountBDT, withDiscount, type PlanLike } from "@/lib/shares";
 
 type Filter = "OPEN" | ApplicationStatus | "ALL";
 
@@ -147,18 +148,37 @@ function ApplicationDrawer({
   const [confirm, setConfirm] = useState<"approve" | "reject" | null>(null);
   const [password, setPassword] = useState("");
   const [issued, setIssued] = useState<{ memberNo: string; oneTimePassword: string | null; passwordNote: string } | null>(null);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [discount, setDiscount] = useState<DiscountValue>(NO_DISCOUNT);
+  const [discountError, setDiscountError] = useState<string | undefined>();
+  // The chart price for this application, so the discount can be checked before approving.
+  const { data: planData } = useAdminFetch<{ plans: PlanLike[] }>(confirm === "approve" ? "/api/plans" : null);
+  const chart = useMemo(
+    () => (app && planData?.plans?.length ? calculate(planData.plans, app.units, app.paymentPlan) : null),
+    [app, planData],
+  );
+  const discountIssue = chart && discount.amountBDT ? discountProblem(chart, discount.amountBDT) : null;
+  const priceNow = chart ? withDiscount(chart, discountIssue ? 0 : discount.amountBDT).totalBDT : app?.quotedTotalBDT ?? 0;
 
   async function act(action: "review" | "approve" | "reject") {
     if (!app) return;
+    if (action === "approve" && discountIssue) return setDiscountError(discountIssue);
     setBusy(action);
+    const approve = action === "approve";
     const { ok, json } = await send(`/api/admin/applications/${app.id}`, "PATCH", {
       action,
       adminNote: note || undefined,
-      password: action === "approve" ? password : undefined,
+      password: approve ? password : undefined,
+      discountBDT: approve ? discount.amountBDT : undefined,
+      discountNote: approve && discount.amountBDT ? discount.note.trim() || undefined : undefined,
     });
     setBusy(null);
+    if (!ok && json.errors?.discountBDT) return setDiscountError(String(json.errors.discountBDT));
     setConfirm(null);
     if (!ok) return toast(firstError(json), "error");
+    setDiscount(NO_DISCOUNT);
+    setDiscountOpen(false);
+    setDiscountError(undefined);
     if (json.memberNo) {
       setIssued({
         memberNo: String(json.memberNo),
@@ -205,16 +225,40 @@ function ApplicationDrawer({
               {(id) => <TextInput id={id} type="text" autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} />}
             </Field>
           )}
+          {confirm === "approve" &&
+            chart &&
+            (discountOpen ? (
+              <div className="rounded-xl border border-[#E3E7E1] p-3">
+                <DiscountField
+                  listPriceBDT={chart.totalBDT}
+                  maxBDT={maxDiscountBDT(chart)}
+                  value={discount}
+                  onChange={(v) => { setDiscount(v); setDiscountError(undefined); }}
+                  error={discountError}
+                />
+                <button
+                  type="button"
+                  onClick={() => { setDiscountOpen(false); setDiscount(NO_DISCOUNT); setDiscountError(undefined); }}
+                  className="mt-2 text-xs font-medium text-[#6B756F] hover:text-red-600"
+                >
+                  Remove discount
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setDiscountOpen(true)} className="text-xs font-semibold text-forest-700 hover:underline">
+                + Give a discount
+              </button>
+            ))}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-[#3D4A44]">
               {confirm === "approve"
                 ? app.user
-                  ? `Create a ${app.units}-share holding worth ${formatBDT(app.quotedTotalBDT)}?`
-                  : `Open ${app.fullName.split(" ")[0]}'s account and a ${app.units}-share holding (${formatBDT(app.quotedTotalBDT)})?`
+                  ? `Create a ${app.units}-share holding worth ${formatBDT(priceNow)}?`
+                  : `Open ${app.fullName.split(" ")[0]}'s account and a ${app.units}-share holding (${formatBDT(priceNow)})?`
                 : "Reject this application?"}
             </p>
             <div className="flex gap-2">
-              <Btn onClick={() => setConfirm(null)}>Back</Btn>
+              <Btn onClick={() => { setConfirm(null); setDiscountOpen(false); setDiscount(NO_DISCOUNT); setDiscountError(undefined); }}>Back</Btn>
               <Btn variant={confirm === "approve" ? "primary" : "danger"} onClick={() => act(confirm)} disabled={!!busy}>
                 {busy ? "Working…" : confirm === "approve" ? "Yes, approve" : "Yes, reject"}
               </Btn>

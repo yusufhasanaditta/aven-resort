@@ -159,6 +159,9 @@ model ShareHolding {
   /// down payment and the rest are equal monthly instalments.
   installmentMonths Int?
   downPaymentBDT    Int?
+  /// Office discount off the chart price; totalAmountBDT is already net of it.
+  discountBDT       Int            @default(0)
+  discountNote      String?        @db.VarChar(200)
   /// Share numbers: a holding of 5 shares gets a consecutive run, e.g. 12–16.
   shareFrom         Int?
   shareTo           Int?
@@ -383,42 +386,42 @@ enum JobStatus {
 /// after publication (shortlist, interview dates…). Line-based fields hold
 /// one point per line. `circularUrl` is the official circular as a PDF.
 model JobPost {
-  id               String    @id @default(cuid())
-  slug             String    @unique
+  id               String           @id @default(cuid())
+  slug             String           @unique
   title            String
   /// Memo / reference number printed on the circular, e.g. AVEN/HR/2026/014.
   reference        String?
   department       String
   /// Job level: Management, Executive, Staff, Internship…
   level            String?
-  employmentType   String    @default("Full-time")
-  location         String    @default("Sreemangal, Moulvibazar")
+  employmentType   String           @default("Full-time")
+  location         String           @default("Sreemangal, Moulvibazar")
   vacancies        Int?
   salary           String?
   experience       String?
   education        String?
   deadline         DateTime?
-  summary          String    @db.Text
-  description      String?   @db.MediumText
-  responsibilities String?   @db.Text
-  requirements     String?   @db.Text
-  benefits         String?   @db.Text
-  howToApply       String?   @db.Text
-  images           String    @db.Text
-  links            String    @db.Text
-  updates          String    @db.Text
+  summary          String           @db.Text
+  description      String?          @db.MediumText
+  responsibilities String?          @db.Text
+  requirements     String?          @db.Text
+  benefits         String?          @db.Text
+  howToApply       String?          @db.Text
+  images           String           @db.Text
+  links            String           @db.Text
+  updates          String           @db.Text
   circularUrl      String?
   circularName     String?
   contactEmail     String?
   contactPhone     String?
-  status           JobStatus @default(DRAFT)
-  featured         Boolean   @default(false)
+  status           JobStatus        @default(DRAFT)
+  featured         Boolean          @default(false)
   /// Take applications (with a CV) through a form on the circular itself.
-  applyOnline      Boolean   @default(true)
+  applyOnline      Boolean          @default(true)
   publishedAt      DateTime?
   createdBy        String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   applications     JobApplication[]
 
   @@index([status])
