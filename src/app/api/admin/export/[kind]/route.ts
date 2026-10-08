@@ -52,11 +52,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ kind: stri
     } else if (kind === "dues") {
       const ledgers = holdings.filter((h) => h.status !== "CANCELLED").map(toAdminHolding);
       rows = [
-        ["Customer", "Phone", "Plan", "Installment", "Due date", "Amount (BDT)", "Status"],
+        ["Customer", "Phone", "Plan", "Installment", "Due date", "Scheduled (BDT)", "Paid (BDT)", "Still due (BDT)", "Status"],
         ...ledgers.flatMap((h) =>
           h.steps
             .filter((s) => s.status !== "SUCCESS")
-            .map((s) => [h.customer.name, h.customer.phone, h.plan.name, `${s.n} of ${h.steps.length}`, s.dueDate.slice(0, 10), s.amountBDT, s.status]),
+            .map((s) => [h.customer.name, h.customer.phone, h.plan.name, `${s.part} (${s.n} of ${h.steps.length})`, s.dueDate.slice(0, 10), s.amountBDT, s.paidBDT, s.dueBDT, s.status]),
         ),
       ];
     } else {

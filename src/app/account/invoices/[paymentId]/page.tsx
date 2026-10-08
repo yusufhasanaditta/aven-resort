@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getContent } from "@/lib/cms";
-import { formatDate, holdingLedger, invoiceNumberFor, memberIdFor, paymentLabel } from "@/lib/account";
+import { formatDate, holdingLedger, invoiceNumberFor, memberIdFor, paymentCovers, paymentLabels } from "@/lib/account";
 import { formatBDT, ownershipPercent, stayDays } from "@/lib/shares";
 import { LogoMark } from "@/components/ui/Logo";
 import { PrintButton } from "@/components/sections/account/PrintButton";
@@ -53,6 +53,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
   const { user, plan } = holding;
   const ledger = holdingLedger(holding);
   const paid = payment.status === "SUCCESS";
+  const label = paymentLabels(holding)[payment.id] ?? "Payment";
+  // Where this money went on the schedule — one line per installment it touched.
+  const covers = paid ? paymentCovers(holding, payment.id) : [];
   const docNo = invoiceNumberFor(payment).replace(/^INV/, paid ? "RCPT" : "INV");
   const s = stamp[payment.status];
   // The chart price per share; an office discount is shown on its own line.
@@ -116,9 +119,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                   </div>
                 )}
                 <div>
-                  <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">Installment</dt>
+                  <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">{paid ? "Covers" : "Installment"}</dt>
                   <dd className="mt-0.5 text-forest-900">
-                    {paymentLabel(holding, payment.installmentNo)}
+                    {label}
                   </dd>
                 </div>
               </dl>
@@ -138,7 +141,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                     <p className="font-semibold text-forest-900">
                       {plan.name} Membership — {holding.units} unit share{holding.units > 1 ? "s" : ""}
                     </p>
-                    <p className="mt-1 text-xs text-forest-900/60">{paymentLabel(holding, payment.installmentNo)}</p>
+                    <p className="mt-1 text-xs text-forest-900/60">{label}</p>
                     <p className="mt-1 text-xs text-forest-900/60">
                       {formatBDT(perUnit)} per share ({holding.paymentPlan === "INSTALLMENT" ? "installment" : "full-payment"} price) · {ownershipPercent(holding.units).toFixed(2)}% of the resort ·{" "}
                       {stayDays(plan.freeStayNights)} days free stay a year
@@ -162,6 +165,29 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
                 </tr>
               </tfoot>
             </table>
+
+            {/* Where the money went on the schedule — shown when it isn't simply one whole installment */}
+            {(covers.length > 1 || covers.some((c) => c.appliedBDT !== c.scheduledBDT)) && (
+              <div className="mt-6 rounded-2xl border border-forest-900/10 px-4 py-3">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-forest-900/45">How this payment was applied</p>
+                <ul className="mt-2 divide-y divide-forest-900/5 text-xs">
+                  {covers.map((c) => (
+                    <li key={c.n} className="flex items-baseline justify-between gap-4 py-1.5">
+                      <span className="text-forest-900">
+                        {c.part}
+                        {c.appliedBDT !== c.scheduledBDT && (
+                          <span className="block text-[0.6875rem] text-forest-900/50 sm:inline">
+                            <span className="hidden sm:inline"> · </span>
+                            {c.settles ? "balance — now paid in full" : `part of ${formatBDT(c.scheduledBDT)}`}
+                          </span>
+                        )}
+                      </span>
+                      <span className="whitespace-nowrap font-numeral text-forest-900">{formatBDT(c.appliedBDT)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Holding position */}
             <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-900/10 sm:grid-cols-4">

@@ -85,13 +85,22 @@ export async function startPayment(input: StartInput): Promise<StartResult> {
 
 export type Outcome = "SUCCESS" | "FAILED" | "CANCELLED";
 
+/** True when adding `amountBDT` to what's already paid would go past the holding's price. */
+export async function wouldOverpay(holdingId: string, amountBDT: number) {
+  const [holding, paid] = await Promise.all([
+    prisma.shareHolding.findUnique({ where: { id: holdingId }, select: { totalAmountBDT: true } }),
+    prisma.payment.aggregate({ where: { holdingId, status: "SUCCESS" }, _sum: { amountBDT: true } }),
+  ]);
+  return !holding || (paid._sum.amountBDT ?? 0) + amountBDT > holding.totalAmountBDT;
+}
+
 /**
  * Applies a gateway result to a payment. Safe to call more than once for the
  * same transaction (IPN and browser redirect both report it): a payment that
  * already succeeded never changes again. A success that arrives for an
  * attempt already abandoned is still honoured — the money did arrive — unless
- * that installment was paid another way, in which case it is flagged for a
- * refund instead of being counted twice.
+ * it would take the holding past its price (it was paid another way in the
+ * meantime), in which case it is flagged for a refund instead.
  */
 export async function settlePayment(
   tranId: string,
@@ -114,10 +123,7 @@ export async function settlePayment(
     return { ok: true, paymentId: payment.id, status: outcome };
   }
 
-  const alreadyPaid = await prisma.payment.count({
-    where: { holdingId: payment.holdingId, installmentNo: payment.installmentNo, status: "SUCCESS" },
-  });
-  if (alreadyPaid) {
+  if (await wouldOverpay(payment.holdingId, payment.amountBDT)) {
     await prisma.payment.update({
       where: { id: payment.id },
       data: { status: "FAILED", valId: details.valId, gatewayResponse, note: "Duplicate payment received — refund required" },

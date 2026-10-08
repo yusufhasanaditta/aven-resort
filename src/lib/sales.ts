@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { holdingInclude } from "@/lib/admin-serialize";
-import { holdingLedger } from "@/lib/account";
+import { holdingLedger, paymentLabels } from "@/lib/account";
 import { calculate, discountProblem, formatBDT, withDiscount, type CalculatorResult, type PlanLike } from "@/lib/shares";
 import { nextShareNumbers } from "@/lib/member";
 import { notify, notifyPaymentReceived } from "@/lib/notify";
@@ -85,9 +85,7 @@ export async function notifyAllocated(
 }
 
 export type OfflinePayment = {
-  /** How many installments the money covers, in order from the next unpaid one (or from `installmentNo`). */
-  count?: number;
-  installmentNo?: number;
+  /** Any amount from 1 taka up to what's still owed on the holding. */
   amountBDT: number;
   method: (typeof PAYMENT_METHODS)[number];
   reference?: string;
@@ -97,77 +95,61 @@ export type OfflinePayment = {
 };
 
 /**
- * Settles one or more installments in full with money received offline. Each
- * installment gets its own payment and money receipt; any gateway attempt
- * still pending for them is voided, and the holding becomes active. The next
- * unpaid installment is then what the shareholder's dashboard shows as due.
+ * Records money received offline — any amount, not just whole installments.
+ * It is one payment with one money receipt, applied to the schedule in order
+ * (see `holdingLedger`): it may finish one installment, part-pay the next,
+ * or clear several at once. Any gateway attempt still pending on the holding
+ * is voided so the same money can't arrive twice, and the holding becomes
+ * active.
  */
-export async function settleInstallments(holdingId: string, p: OfflinePayment, recordedBy: string) {
+export async function recordOfflinePayment(holdingId: string, p: OfflinePayment, recordedBy: string) {
   const holding = await prisma.shareHolding.findUnique({ where: { id: holdingId }, include: holdingInclude });
   if (!holding) throw new SaleError("Holding not found.", 404);
   if (holding.status === "CANCELLED") throw new SaleError("This holding is cancelled.");
 
-  const ledger = holdingLedger(holding);
-  const unpaid = ledger.steps.filter((s) => s.status !== "SUCCESS");
-  if (!unpaid.length) throw new SaleError("This holding is already fully paid.");
-
-  const from = p.installmentNo ?? unpaid[0].n;
-  const first = ledger.steps.find((s) => s.n === from);
-  if (!first) throw new SaleError("That installment doesn't exist.", 422);
-  if (first.status === "SUCCESS") throw new SaleError(`${first.label} is already paid.`);
-
-  const count = Math.max(1, p.count ?? 1);
-  const steps = unpaid.filter((s) => s.n >= from).slice(0, count);
-  if (steps.length < count) throw new SaleError(`Only ${steps.length} payment${steps.length > 1 ? "s are" : " is"} left to pay.`, 422, "count");
-
-  const due = steps.reduce((s, x) => s + x.amountBDT, 0);
-  if (p.amountBDT !== due) {
-    throw new SaleError(
-      `${steps.length > 1 ? `These ${steps.length} payments come` : `${steps[0].label} comes`} to ${formatBDT(due)} — record that amount.`,
-      422,
-      "amountBDT",
-    );
+  const before = holdingLedger(holding);
+  if (before.fullyPaid || !before.nextDue) throw new SaleError("This holding is already fully paid.");
+  if (!Number.isInteger(p.amountBDT) || p.amountBDT < 1) throw new SaleError("Enter the amount received.", 422, "amountBDT");
+  if (p.amountBDT > before.remainingBDT) {
+    throw new SaleError(`Only ${formatBDT(before.remainingBDT)} is left to pay on this holding.`, 422, "amountBDT");
   }
 
   const paidAt = p.paidAt ? new Date(`${p.paidAt}T12:00:00+06:00`) : new Date();
-  const batch = randomUUID().slice(0, 6).toUpperCase();
-  const payments = await prisma.$transaction(async (tx) => {
+  const payment = await prisma.$transaction(async (tx) => {
     await tx.payment.updateMany({
-      where: { holdingId, installmentNo: { in: steps.map((s) => s.n) }, status: "PENDING" },
-      data: { status: "CANCELLED", note: "Superseded by a manually recorded payment" },
+      where: { holdingId, status: "PENDING" },
+      data: { status: "CANCELLED", note: "Superseded by a payment recorded by the Aven team" },
     });
-    const created = [];
-    for (const s of steps) {
-      created.push(
-        await tx.payment.create({
-          data: {
-            holdingId,
-            amountBDT: s.amountBDT,
-            method: p.method,
-            tranId: `MAN-${Date.now().toString(36).toUpperCase()}-${batch}-${s.n}`,
-            installmentNo: s.n,
-            status: "SUCCESS",
-            reference: p.reference,
-            note: p.note,
-            recordedBy,
-            paidAt,
-          },
-        }),
-      );
-    }
+    const created = await tx.payment.create({
+      data: {
+        holdingId,
+        amountBDT: p.amountBDT,
+        method: p.method,
+        tranId: `MAN-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 6).toUpperCase()}`,
+        installmentNo: before.nextDue!.n,
+        status: "SUCCESS",
+        reference: p.reference,
+        note: p.note,
+        recordedBy,
+        paidAt,
+      },
+    });
     if (holding.status === "PENDING_PAYMENT") await tx.shareHolding.update({ where: { id: holdingId }, data: { status: "ACTIVE" } });
     return created;
   });
 
   await convertLeadsFor(holding.user.email, "payment received");
-  for (const pay of payments) await notifyPaymentReceived(pay.id);
+  await notifyPaymentReceived(payment.id);
 
-  const after = ledger.steps.find((s) => s.status !== "SUCCESS" && !steps.some((x) => x.n === s.n));
+  const fresh = await prisma.shareHolding.findUniqueOrThrow({ where: { id: holdingId }, include: holdingInclude });
+  const after = holdingLedger(fresh);
+  const next = after.nextDue ? after.steps.find((s) => s.n === after.nextDue!.n)! : null;
   return {
     holding,
-    payments,
-    covered: steps.map((s) => s.label),
-    totalBDT: due,
-    next: after ? { label: after.label, amountBDT: after.amountBDT } : null,
+    payment,
+    covered: paymentLabels(fresh)[payment.id] ?? "Payment",
+    totalBDT: p.amountBDT,
+    remainingBDT: after.remainingBDT,
+    next: next ? { label: next.paidBDT ? `Rest of ${next.part.toLowerCase()}` : next.part, amountBDT: next.dueBDT } : null,
   };
 }

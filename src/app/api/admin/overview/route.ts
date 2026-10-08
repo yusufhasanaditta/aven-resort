@@ -58,7 +58,7 @@ export async function GET() {
       sum +
       l.steps
         .filter((s) => s.status !== "SUCCESS" && s.status !== "PENDING" && daysUntil(s.dueDate, nowIso) < 0)
-        .reduce((a, s) => a + s.amountBDT, 0),
+        .reduce((a, s) => a + s.dueBDT, 0),
     0,
   );
 
@@ -74,7 +74,7 @@ export async function GET() {
           planName: h.plan.name,
           n: s.n,
           of: l.steps.length,
-          amountBDT: s.amountBDT,
+          amountBDT: s.dueBDT,
           dueDate: s.dueDate,
           days: daysUntil(s.dueDate, nowIso),
         })),

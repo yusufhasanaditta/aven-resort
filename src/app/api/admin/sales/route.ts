@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { shareSaleSchema, zodErrors } from "@/lib/validation";
-import { SaleError, allocateHolding, notifyAllocated, settleInstallments } from "@/lib/sales";
+import { SaleError, allocateHolding, notifyAllocated, recordOfflinePayment } from "@/lib/sales";
 import { calculate, discountProblem, formatBDT, withDiscount } from "@/lib/shares";
 
 /**
  * A share sale closed at the office, in one step: the shares go into the
- * shareholder's account at the chart price, and the money they paid (cash,
- * bank, bKash…) settles the first payment(s) with a money receipt for each.
+ * shareholder's account at the chart price (less any discount), and the money
+ * they paid (cash, bank, bKash… — any amount) is recorded with a money receipt.
  * Their dashboard then shows the holding, the receipt and the next
  * installment due. If recording the money fails, the new holding is removed
  * again so nothing is left half-done.
@@ -26,16 +26,11 @@ export async function POST(request: Request) {
   const chart = calculate(await prisma.membershipPlan.findMany(), units, paymentPlan);
   const problem = discountProblem(chart, discountBDT);
   if (problem) return NextResponse.json({ errors: { discountBDT: problem } }, { status: 422 });
+  // Any amount can be paid now — part of the down payment, or several installments at once — but not more than the price.
   if (payment) {
-    const quote = withDiscount(chart, discountBDT);
-    const parts = quote.installments?.map((l) => l.amountBDT) ?? [quote.totalBDT];
-    const count = payment.count ?? 1;
-    if (count > parts.length) {
-      return NextResponse.json({ errors: { count: `This sale has ${parts.length} payment${parts.length > 1 ? "s" : ""} in total.` } }, { status: 422 });
-    }
-    const due = parts.slice(0, count).reduce((s, a) => s + a, 0);
-    if (payment.amountBDT !== due) {
-      return NextResponse.json({ errors: { amountBDT: `That covers ${formatBDT(due)} — the amount must match.` } }, { status: 422 });
+    const totalBDT = withDiscount(chart, discountBDT).totalBDT;
+    if (payment.amountBDT > totalBDT) {
+      return NextResponse.json({ errors: { amountBDT: `The whole sale comes to ${formatBDT(totalBDT)} — that's the most they can pay.` } }, { status: 422 });
     }
   }
 
@@ -50,10 +45,10 @@ export async function POST(request: Request) {
   }
   const { user, holding, result } = sale;
 
-  let settled: Awaited<ReturnType<typeof settleInstallments>> | null = null;
+  let settled: Awaited<ReturnType<typeof recordOfflinePayment>> | null = null;
   if (payment) {
     try {
-      settled = await settleInstallments(holding.id, payment, guard.name);
+      settled = await recordOfflinePayment(holding.id, payment, guard.name);
     } catch (err) {
       await prisma.shareHolding.delete({ where: { id: holding.id } }).catch(() => null);
       if (err instanceof SaleError) {
@@ -80,10 +75,10 @@ export async function POST(request: Request) {
     ok: true,
     holdingId: holding.id,
     shareNo: { from: holding.shareFrom, to: holding.shareTo },
-    paymentIds: settled?.payments.map((p) => p.id) ?? [],
+    paymentIds: settled ? [settled.payment.id] : [],
     receivedBDT: settled?.totalBDT ?? 0,
-    covered: settled?.covered ?? [],
+    covered: settled ? [settled.covered] : [],
     next: settled ? settled.next : result.installments ? { label: result.installments[0].label, amountBDT: result.installments[0].amountBDT } : { label: "Full payment", amountBDT: result.totalBDT },
-    remainingBDT: result.totalBDT - (settled?.totalBDT ?? 0),
+    remainingBDT: settled ? settled.remainingBDT : result.totalBDT,
   });
 }

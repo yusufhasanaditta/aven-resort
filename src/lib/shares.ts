@@ -222,6 +222,90 @@ export function installmentDueDate(openedAt: Date, n: number): Date {
   return new Date(openedAt.getFullYear(), openedAt.getMonth() + n - 1, 1);
 }
 
+/**
+ * A custom payment schedule the team set for one holding — any number of
+ * payments, each with its own due day and amount. Stored as JSON on the
+ * holding; without one, the holding follows its plan's standard split.
+ */
+export type ScheduleRow = {
+  /** Due day in Bangladesh time, YYYY-MM-DD. */
+  due: string;
+  amountBDT: number;
+  /** "Down payment", "3rd installment", or the team's own name for it. */
+  label: string;
+};
+
+export const MAX_SCHEDULE_ROWS = 240;
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The stored custom schedule, or null when there is none (or it can't be read). */
+export function parseSchedule(json?: string | null): ScheduleRow[] | null {
+  if (!json) return null;
+  try {
+    const rows = JSON.parse(json) as unknown;
+    if (!Array.isArray(rows) || !rows.length) return null;
+    const ok = rows.every(
+      (r) => r && typeof r.due === "string" && DAY.test(r.due) && Number.isInteger(r.amountBDT) && r.amountBDT > 0 && typeof r.label === "string",
+    );
+    return ok ? (rows as ScheduleRow[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A YYYY-MM-DD day as the start of that day in Bangladesh. */
+export function dhakaDay(day: string): Date {
+  return new Date(`${day}T00:00:00+06:00`);
+}
+
+/** A date as its YYYY-MM-DD day in Bangladesh. */
+export function toDhakaDay(date: Date): string {
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
+}
+
+/** `day` moved by whole months, keeping the day of month where it exists (31 Jan + 1 → 28/29 Feb). */
+export function addMonths(day: string, months: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + months, 1));
+  const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  first.setUTCDate(Math.min(d, last));
+  return first.toISOString().slice(0, 10);
+}
+
+/** The default name of the payment at `index` (0-based) in a schedule. */
+export function scheduleLabel(index: number, hasDownPayment: boolean): string {
+  return installmentPartName(index + 1, hasDownPayment);
+}
+
+/**
+ * Splits an amount into `count` payments — the first due on `firstDue`, then
+ * every `everyMonths` months. With `roundTo` (e.g. 1000) every payment but the
+ * last is a round figure and the last takes the remainder.
+ */
+export function splitIntoPayments({
+  amountBDT,
+  count,
+  firstDue,
+  everyMonths = 1,
+  roundTo = 1,
+}: {
+  amountBDT: number;
+  count: number;
+  firstDue: string;
+  everyMonths?: number;
+  roundTo?: number;
+}): { due: string; amountBDT: number }[] {
+  const n = Math.max(1, Math.min(MAX_SCHEDULE_ROWS, Math.floor(count)));
+  const step = Math.max(1, Math.floor(roundTo));
+  let each = Math.floor(amountBDT / n / step) * step;
+  if (each < 1 || each * (n - 1) >= amountBDT) each = Math.floor(amountBDT / n);
+  return Array.from({ length: n }, (_, i) => ({
+    due: addMonths(firstDue, i * Math.max(1, everyMonths)),
+    amountBDT: i === n - 1 ? amountBDT - each * (n - 1) : each,
+  })).filter((r) => r.amountBDT > 0);
+}
+
 /** Short form in the lakh/crore notation used in Bangladesh, e.g. "৳39.5 L", "৳1.25 Cr". */
 export function formatBDTCompact(amount: number): string {
   const trim = (n: number) => n.toFixed(2).replace(/\.?0+$/, "");

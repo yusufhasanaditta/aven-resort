@@ -169,12 +169,9 @@ export const contactRequestSchema = z.object({
   message: optionalText(1000),
 });
 
-/** Money received offline — cash, bank transfer, bKash… — covering one or more installments. */
+/** Money received offline — cash, bank transfer, bKash… — any amount; it is applied to the schedule in order. */
 export const offlinePaymentSchema = z.object({
-  installmentNo: z.coerce.number().int().min(1).optional(),
-  /** How many installments this money covers, from the next unpaid one. */
-  count: z.coerce.number().int().min(1).max(60).optional(),
-  amountBDT: z.coerce.number().int().min(1, "Enter the amount received."),
+  amountBDT: z.coerce.number().int("Whole taka only.").min(1, "Enter the amount received.").max(10_000_000_000),
   method: z.enum(PAYMENT_METHODS),
   reference: optionalText(120),
   note: optionalText(500),
@@ -184,7 +181,6 @@ export const offlinePaymentSchema = z.object({
 /** An offline payment recorded by the team against an existing holding. */
 export const manualPaymentSchema = offlinePaymentSchema.extend({ holdingId: z.string().min(1) });
 
-/** A share sale closed at the office: shares put in a shareholder's name, with the money received now (if any). */
 /** An office discount, in whole taka, with an optional reason ("Early-bird", "Referral"…). */
 export const discountAmount = z.coerce.number().int("Whole taka only.").min(0, "The discount can't be negative.").max(1_000_000_000);
 
@@ -193,11 +189,12 @@ export const discountFields = {
   discountNote: z.string().trim().max(200).optional(),
 };
 
+/** A share sale closed at the office: shares put in a shareholder's name, with the money received now (if any). */
 export const shareSaleSchema = z.object({
   userId: z.string().min(1, "Choose the shareholder."),
   units: z.coerce.number().int().min(1, "At least one share.").max(2700),
   paymentPlan: z.enum(["FULL", "INSTALLMENT"]),
-  payment: offlinePaymentSchema.omit({ installmentNo: true }).optional(),
+  payment: offlinePaymentSchema.optional(),
   ...discountFields,
 });
 

@@ -415,6 +415,8 @@ const paymentTone: Record<string, [BadgeTone, string]> = {
   FAILED: ["red", "Failed"],
   CANCELLED: ["gray", "Void"],
   UPCOMING: ["gray", "Upcoming"],
+  PARTIAL: ["blue", "Part paid"],
+  PARTIAL_OVERDUE: ["red", "Part paid · overdue"],
   OVERDUE: ["red", "Overdue"],
   ACTIVE: ["green", "Active"],
   PENDING_PAYMENT: ["amber", "Awaiting payment"],

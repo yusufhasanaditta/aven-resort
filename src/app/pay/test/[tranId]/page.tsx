@@ -4,7 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { paymentMode } from "@/lib/payments";
-import { formatBDT, installmentLabelFor } from "@/lib/shares";
+import { formatBDT } from "@/lib/shares";
+import { paymentLabels } from "@/lib/account";
 import { LogoMark } from "@/components/ui/Logo";
 
 export const metadata: Metadata = { title: "Secure checkout", robots: { index: false } };
@@ -27,13 +28,12 @@ export default async function TestCheckout({ params }: { params: Promise<{ tranI
   const session = await getSession();
   if (!session) redirect(`/login?next=/pay/test/${encodeURIComponent(tranId)}`);
 
-  const payment = await prisma.payment.findUnique({ where: { tranId }, include: { holding: { include: { plan: true, user: true } } } });
+  const payment = await prisma.payment.findUnique({ where: { tranId }, include: { holding: { include: { plan: true, user: true, payments: true } } } });
   if (!payment || payment.holding.userId !== session.sub) notFound();
   if (payment.status !== "PENDING") redirect("/account?tab=holdings");
 
   const h = payment.holding;
-  const steps = h.paymentPlan === "INSTALLMENT" && h.installmentMonths ? h.installmentMonths : 1;
-  const what = steps > 1 ? installmentLabelFor(payment.installmentNo, steps, !!h.downPaymentBDT) : "Full payment";
+  const what = paymentLabels(h)[payment.id] ?? "Payment";
 
   return (
     <div className="min-h-[100svh] bg-[#EEF2F0] px-4 py-8 text-[#14201B] sm:py-14">

@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { holdingLedger, invoiceNumberFor, memberIdFor, paymentLabel } from "@/lib/account";
+import { holdingLedger, invoiceNumberFor, memberIdFor, paymentLabels } from "@/lib/account";
 import type { AdminCustomer, AdminHolding, AdminPayment } from "@/lib/admin-types";
 
 export const holdingInclude = {
@@ -16,6 +16,7 @@ export function toAdminHolding(h: HoldingWithAll): AdminHolding {
 }
 
 export function toAdminPayments(h: HoldingWithAll): AdminPayment[] {
+  const labels = paymentLabels(h);
   return h.payments.map((p) => ({
     id: p.id,
     receiptNo: invoiceNumberFor(p),
@@ -24,7 +25,7 @@ export function toAdminPayments(h: HoldingWithAll): AdminPayment[] {
     planName: h.plan.name,
     units: h.units,
     installmentNo: p.installmentNo,
-    installmentLabel: paymentLabel(h, p.installmentNo),
+    installmentLabel: labels[p.id],
     amountBDT: p.amountBDT,
     method: p.method,
     tranId: p.tranId,

@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { daysUntil, formatDate, holdingLedger, type DashHolding } from "@/lib/account";
+import { daysUntil, formatDate, holdingLedger, paymentLabels, type DashHolding } from "@/lib/account";
 import { emailHtml, sendEmail, siteUrl } from "@/lib/mailer";
 import { formatBDT } from "@/lib/shares";
 
@@ -59,15 +59,19 @@ export async function notifyPaymentReceived(paymentId: string) {
     if (!payment || payment.status !== "SUCCESS") return;
     const h = payment.holding;
     const l = holdingLedger(h);
-    const step = l.steps.find((s) => s.n === payment.installmentNo);
+    const what = paymentLabels(h)[payment.id] ?? "installment";
     const next = l.nextDue ? l.steps.find((s) => s.n === l.nextDue!.n) : undefined;
     await notify(h.user, {
       kind: "PAYMENT_RECEIVED",
-      title: `Payment received — ${step?.part ?? "installment"}`,
+      title: `Payment received — ${what}`,
       body: [
         `We received ${formatBDT(payment.amountBDT)} for your ${l.plan.name} membership (${l.units} shares). Transaction ${payment.reference ?? payment.tranId}.`,
         progressLine(l),
-        next && l.nextDue ? `Next: ${next.part} of ${formatBDT(l.nextDue.amountBDT)}, due ${formatDate(l.nextDue.dueDate)}.` : "Your holding is now fully paid — thank you.",
+        next && l.nextDue
+          ? next.paidBDT > 0
+            ? `Next: ${formatBDT(l.nextDue.amountBDT)} still to pay on your ${next.part}, due ${formatDate(l.nextDue.dueDate)}.`
+            : `Next: ${next.part} of ${formatBDT(l.nextDue.amountBDT)}, due ${formatDate(l.nextDue.dueDate)}.`
+          : "Your holding is now fully paid — thank you.",
       ].join("\n"),
       href: `/account/invoices/${payment.id}`,
       holdingId: h.id,
@@ -103,7 +107,9 @@ function reminderText(l: DashHolding, days: number) {
         ? `Your ${next.part} is due today`
         : `Your ${next.part} is ${-days} ${days === -1 ? "day" : "days"} overdue`;
   const body = [
-    `${next.part} of ${amount} for your ${l.plan.name} membership (${l.units} shares) ${days < 0 ? "was" : "is"} due on ${due}.`,
+    next.paidBDT > 0
+      ? `${amount} is still to pay on your ${next.part} for your ${l.plan.name} membership (${l.units} shares) — ${formatBDT(next.paidBDT)} of ${formatBDT(next.amountBDT)} is paid. It ${days < 0 ? "was" : "is"} due on ${due}.`
+      : `${next.part} of ${amount} for your ${l.plan.name} membership (${l.units} shares) ${days < 0 ? "was" : "is"} due on ${due}.`,
     progressLine(l),
     "Pay online from your dashboard, or by bank or mobile banking using the details there.",
   ].join("\n");

@@ -162,6 +162,8 @@ model ShareHolding {
   /// Office discount off the chart price; totalAmountBDT is already net of it.
   discountBDT       Int            @default(0)
   discountNote      String?        @db.VarChar(200)
+  /// The team's own payment schedule (JSON: [{due, amountBDT, label}]); null follows the plan.
+  scheduleJson      String?        @db.Text
   /// Share numbers: a holding of 5 shares gets a consecutive run, e.g. 12–16.
   shareFrom         Int?
   shareTo           Int?

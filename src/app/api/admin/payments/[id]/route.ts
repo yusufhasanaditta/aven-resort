@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { notifyPaymentReceived } from "@/lib/notify";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { formatBDT } from "@/lib/shares";
+import { wouldOverpay } from "@/lib/payments";
 
 const schema = z.object({
   status: z.enum(["SUCCESS", "FAILED", "CANCELLED"]),
@@ -30,10 +31,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   if (parsed.data.status === "SUCCESS") {
-    const alreadyPaid = await prisma.payment.count({
-      where: { holdingId: payment.holdingId, installmentNo: payment.installmentNo, status: "SUCCESS" },
-    });
-    if (alreadyPaid) return NextResponse.json({ error: "That installment is already paid." }, { status: 409 });
+    if (await wouldOverpay(payment.holdingId, payment.amountBDT)) {
+      return NextResponse.json({ error: "Confirming this would take the holding past its price — it has been paid another way." }, { status: 409 });
+    }
   }
 
   await prisma.$transaction([

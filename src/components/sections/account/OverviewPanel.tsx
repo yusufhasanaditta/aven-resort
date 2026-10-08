@@ -323,6 +323,7 @@ function NextPayment({ data }: { data: DashboardData }) {
 
   const days = daysUntil(next.dueDate, data.now);
   const overdue = days < 0;
+  const step = data.holdings.find((h) => h.id === next.holdingId)?.steps.find((s) => s.n === next.n);
 
   return (
     <Glass className={cn("flex flex-col overflow-hidden", overdue && "border-red-300/25")}>
@@ -335,7 +336,8 @@ function NextPayment({ data }: { data: DashboardData }) {
       />
       <PanelTitle eyebrow="Next payment" title={formatBDT(next.amountBDT)} />
       <p className="mt-1 text-xs text-cream-200/55">
-        {next.planName} · Installment {next.n} of {next.of}
+        {next.planName} · {step?.part ?? `Installment ${next.n}`} · {next.n} of {next.of}
+        {step && step.paidBDT > 0 && <> · the rest, after {formatBDT(step.paidBDT)} paid</>}
       </p>
       <div className="relative mt-6 flex items-end gap-3">
         <p className={cn("font-numeral text-6xl leading-none", overdue ? "text-red-300" : "text-cream-50")}>
@@ -369,9 +371,9 @@ function UpNext({ data, holdingId, after }: { data: DashboardData; holdingId: st
         {later.map((s) => (
           <li key={s.n} className="flex justify-between gap-3">
             <span className="text-cream-200/65">
-              {s.label} · {s.n} of {holding!.steps.length}
+              {s.part} · {formatDate(s.dueDate)}
             </span>
-            <span className="font-numeral text-cream-100">{formatBDT(s.amountBDT)}</span>
+            <span className="font-numeral text-cream-100">{formatBDT(s.dueBDT)}</span>
           </li>
         ))}
       </ul>

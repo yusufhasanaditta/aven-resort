@@ -59,6 +59,7 @@ const chip: Record<StepStatus | "ACTIVE" | "PENDING_PAYMENT" | "OVERDUE", { labe
   CANCELLED: { label: "Cancelled", className: "bg-white/8 text-cream-200/60", dot: "bg-cream-200/50" },
   OVERDUE: { label: "Overdue", className: "bg-red-400/12 text-red-300", dot: "bg-red-300 animate-pulse" },
   UPCOMING: { label: "Upcoming", className: "bg-white/6 text-cream-200/60", dot: "bg-cream-200/40" },
+  PARTIAL: { label: "Part paid", className: "bg-sky-400/12 text-sky-300", dot: "bg-sky-300" },
 };
 
 /** Status with a dot *and* a word — never colour alone. */

@@ -5,6 +5,7 @@ import { Badge, Btn, Card, StatusBadge, firstError, send, useToast } from "./kit
 import type { AdminHolding } from "@/lib/admin-types";
 import { daysUntil, formatDate, paymentPlanLabel } from "@/lib/account";
 import { DiscountField, type DiscountValue } from "./DiscountField";
+import { ScheduleEditor } from "./ScheduleEditor";
 import { formatBDT, maxDiscountBDT } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function HoldingLedger({
   const toast = useToast();
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [editDiscount, setEditDiscount] = useState(false);
+  const [editSchedule, setEditSchedule] = useState(false);
   const [discount, setDiscount] = useState<DiscountValue>({ amountBDT: h.discountBDT, note: h.discountNote ?? "" });
   const [discountError, setDiscountError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
@@ -61,6 +63,7 @@ export function HoldingLedger({
           </p>
           <p className="text-xs text-[#6B756F]">
             Opened {formatDate(h.openedAt)} · {paymentPlanLabel(h)}
+            {h.customSchedule && <Badge tone="violet" className="ml-1.5 align-middle">Custom schedule</Badge>}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -120,12 +123,14 @@ export function HoldingLedger({
                 <td className="py-2.5">
                   <p className="text-[#14201B]">{s.label}</p>
                   <p className="text-[0.6875rem] text-[#8A948E]">
-                    {s.paidAt ? `Paid ${formatDate(s.paidAt)}` : overdue ? `Overdue · ${-d}d late` : "Upcoming"}
+                    {s.paidAt
+                      ? `Paid ${formatDate(s.paidAt)}`
+                      : `Due ${formatDate(s.dueDate)}${overdue ? ` · ${-d}d late` : ""}${s.paidBDT ? ` · ${formatBDT(s.paidBDT)} paid, ${formatBDT(s.dueBDT)} left` : ""}`}
                   </p>
                 </td>
                 <td className="py-2.5 text-right tabular-nums text-[#14201B]">{formatBDT(s.amountBDT)}</td>
                 <td className="py-2.5 pl-4">
-                  <StatusBadge status={overdue ? "OVERDUE" : s.status} />
+                  <StatusBadge status={overdue ? (s.status === "PARTIAL" ? "PARTIAL_OVERDUE" : "OVERDUE") : s.status} />
                 </td>
                 <td className="py-2.5 pr-5 text-right">
                   {s.status !== "SUCCESS" && h.status !== "CANCELLED" && (
@@ -170,6 +175,11 @@ export function HoldingLedger({
         ) : (
           <span className="flex flex-wrap gap-1">
             <Btn size="sm" variant="ghost" onClick={() => setConfirmCancel(true)}>Cancel holding</Btn>
+            {!h.fullyPaid && (
+              <Btn size="sm" variant="ghost" icon="calendar" onClick={() => setEditSchedule(true)}>
+                Edit schedule
+              </Btn>
+            )}
             {priceOpen && !editDiscount && (
               <Btn size="sm" variant="ghost" icon="percent" onClick={() => setEditDiscount(true)}>
                 {h.discountBDT ? "Change discount" : "Give a discount"}
@@ -183,6 +193,16 @@ export function HoldingLedger({
           </Btn>
         )}
       </div>
+      {editSchedule && (
+        <ScheduleEditor
+          holding={h}
+          onClose={() => setEditSchedule(false)}
+          onSaved={() => {
+            setEditSchedule(false);
+            onChanged();
+          }}
+        />
+      )}
     </Card>
   );
 }

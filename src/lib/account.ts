@@ -9,13 +9,18 @@
  */
 import type { MembershipCardData } from "@/components/ui/MembershipCard";
 import {
+  dhakaDay,
+  formatBDT,
   installmentDueDate,
   installmentLabelFor,
   installmentPartName,
+  MAX_SCHEDULE_ROWS,
   ownershipPercent,
+  parseSchedule,
   planForUnits,
   scheduleAmounts,
   stayDays,
+  type ScheduleRow,
 } from "@/lib/shares";
 
 type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED";
@@ -42,6 +47,8 @@ export type HoldingRow = {
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
   downPaymentBDT?: number | null;
+  /** The team's own schedule for this holding (JSON ScheduleRow[]); null follows the plan. */
+  scheduleJson?: string | null;
   discountBDT?: number;
   discountNote?: string | null;
   shareFrom?: number | null;
@@ -67,16 +74,22 @@ type UserRow = {
   referredBy?: string | null;
 };
 
-export type StepStatus = PaymentStatus | "UPCOMING";
+/** PARTIAL: some money is in, not all of it. */
+export type StepStatus = PaymentStatus | "UPCOMING" | "PARTIAL";
 
 export type DashStep = {
   n: number;
   label: string;
   /** Short name of this part: "Down payment", "3rd installment", "Full payment". */
   part: string;
+  /** What the schedule asks for. */
   amountBDT: number;
+  /** Paid toward it so far, and what's still owed on it. */
+  paidBDT: number;
+  dueBDT: number;
   dueDate: string;
   status: StepStatus;
+  /** When it was paid in full. */
   paidAt: string | null;
 };
 
@@ -116,6 +129,8 @@ export type DashHolding = {
   paymentPlan: "FULL" | "INSTALLMENT";
   installmentMonths: number | null;
   downPaymentBDT: number | null;
+  /** True when the team set this holding's schedule by hand. */
+  customSchedule: boolean;
   /** Share numbers, e.g. "#0012–0016"; null for holdings opened before numbering. */
   shareNo: string | null;
   status: "PENDING_PAYMENT" | "ACTIVE" | "CANCELLED";
@@ -210,8 +225,16 @@ export function paymentLabel(
     : "Full payment";
 }
 
-/** "Down payment + 12 monthly" / "6 installments" / "Full payment". */
-export function paymentPlanLabel(holding: { paymentPlan: "FULL" | "INSTALLMENT"; installmentMonths: number | null; downPaymentBDT?: number | null }) {
+/** "Down payment + 12 monthly" / "6 installments" / "Full payment" / "Custom plan · 9 payments". */
+export function paymentPlanLabel(holding: {
+  paymentPlan: "FULL" | "INSTALLMENT";
+  installmentMonths: number | null;
+  downPaymentBDT?: number | null;
+  customSchedule?: boolean;
+  scheduleJson?: string | null;
+}) {
+  const custom = holding.customSchedule ? holding.installmentMonths : parseSchedule(holding.scheduleJson)?.length;
+  if (custom) return custom === 1 ? "Custom plan · 1 payment" : `Custom plan · ${custom} payments`;
   if (holding.paymentPlan !== "INSTALLMENT" || !holding.installmentMonths) return "Full payment";
   return holding.downPaymentBDT
     ? `Down payment + ${holding.installmentMonths - 1} monthly`
@@ -235,50 +258,139 @@ function toCard(plan: PlanRow): MembershipCardData {
   };
 }
 
-/** The attempt that best represents an installment: a success, else an in-flight one, else the latest. */
-function representative(payments: PaymentRow[]) {
-  return (
-    payments.find((p) => p.status === "SUCCESS") ??
-    payments.find((p) => p.status === "PENDING") ??
-    [...payments].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
-  );
+/** One part of a holding's schedule, before any money is applied. */
+type Part = { label: string; part: string; amountBDT: number; due: Date };
+
+/** A holding's schedule: the team's own if they set one, else the plan's standard split. */
+export function holdingSchedule(h: HoldingRow): Part[] {
+  const custom = parseSchedule(h.scheduleJson);
+  if (custom) return custom.map((r) => ({ label: r.label, part: r.label, amountBDT: r.amountBDT, due: dhakaDay(r.due) }));
+  const installments = h.paymentPlan === "INSTALLMENT" && !!h.installmentMonths;
+  const amounts = installments ? scheduleAmounts(h.totalAmountBDT, h.installmentMonths!, h.downPaymentBDT) : [h.totalAmountBDT];
+  return amounts.map((amountBDT, i) => ({
+    label: paymentLabel(h, i + 1),
+    part: installments ? installmentPartName(i + 1, !!h.downPaymentBDT) : "Full payment",
+    amountBDT,
+    due: installmentDueDate(h.createdAt, i + 1),
+  }));
 }
 
-/**
- * One holding's ledger: its dated installment schedule, what's been paid, what
- * remains and what's due next. Shared by the shareholder dashboard and the
- * admin panel so both always show the same numbers.
- */
-export function holdingLedger(h: HoldingRow): DashHolding {
-  const months = h.paymentPlan === "INSTALLMENT" ? h.installmentMonths ?? 1 : 1;
-  const amounts =
-    h.paymentPlan === "INSTALLMENT" && h.installmentMonths
-      ? scheduleAmounts(h.totalAmountBDT, h.installmentMonths, h.downPaymentBDT)
-      : [h.totalAmountBDT];
+/** How much of one payment went to one part of the schedule. */
+export type PaymentCover = { n: number; part: string; appliedBDT: number; scheduledBDT: number; settles: boolean };
 
-  const steps: DashStep[] = Array.from({ length: months }, (_, i) => {
+const settledAt = (p: PaymentRow) => p.paidAt ?? p.updatedAt;
+
+/**
+ * Applies every successful payment to the schedule in order — earliest due
+ * first — whatever its amount: ৳5,000 toward a ৳62,500 installment leaves it
+ * part-paid with ৳57,500 owed; a larger sum can clear one and start the next.
+ * Returns each part's paid total and, per payment, what it covered.
+ */
+function allocate(parts: Part[], payments: PaymentRow[]) {
+  const paid = parts.map(() => 0);
+  const completedAt: (Date | null)[] = parts.map(() => null);
+  const covers: Record<string, PaymentCover[]> = {};
+  const ordered = payments
+    .filter((p) => p.status === "SUCCESS")
+    .sort((a, b) => settledAt(a).getTime() - settledAt(b).getTime() || a.createdAt.getTime() - b.createdAt.getTime());
+  let i = 0;
+  for (const p of ordered) {
+    let left = p.amountBDT;
+    const list: PaymentCover[] = [];
+    while (left > 0 && i < parts.length) {
+      const take = Math.min(left, parts[i].amountBDT - paid[i]);
+      if (take > 0) {
+        paid[i] += take;
+        left -= take;
+        const settles = paid[i] >= parts[i].amountBDT;
+        list.push({ n: i + 1, part: parts[i].part, appliedBDT: take, scheduledBDT: parts[i].amountBDT, settles });
+        if (settles) completedAt[i] = settledAt(p);
+      }
+      if (paid[i] >= parts[i].amountBDT) i++;
+    }
+    covers[p.id] = list;
+  }
+  return { paid, completedAt, covers };
+}
+
+/** "2nd installment", "Down payment (part)", "Down payment (balance) + 1st installment", "1st installment through 6th installment (part) · 6 parts". */
+export function coverLabel(list: PaymentCover[]): string {
+  const name = (c: PaymentCover) =>
+    c.appliedBDT === c.scheduledBDT ? c.part : c.settles ? `${c.part} (balance)` : `${c.part} (part)`;
+  if (!list.length) return "Payment";
+  if (list.length === 1) return name(list[0]);
+  if (list.length === 2) return `${name(list[0])} + ${name(list[1])}`;
+  if (list.length === 3) return `${name(list[0])}, ${name(list[1])} and ${name(list[2])}`;
+  return `${name(list[0])} through ${name(list[list.length - 1])} · ${list.length} parts`;
+}
+
+function computeLedger(h: HoldingRow) {
+  const parts = holdingSchedule(h);
+  const { paid, completedAt, covers } = allocate(parts, h.payments);
+  const latestAttempt = (n: number) =>
+    h.payments
+      .filter((p) => p.installmentNo === n && p.status !== "SUCCESS")
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+  const steps: DashStep[] = parts.map((part, i) => {
     const n = i + 1;
-    const attempt = representative(h.payments.filter((p) => p.installmentNo === n));
+    const done = paid[i] >= part.amountBDT;
+    const attempt = done ? undefined : latestAttempt(n);
+    const status: StepStatus = done
+      ? "SUCCESS"
+      : attempt?.status === "PENDING"
+        ? "PENDING"
+        : paid[i] > 0
+          ? "PARTIAL"
+          : attempt?.status === "FAILED" || attempt?.status === "CANCELLED"
+            ? attempt.status
+            : "UPCOMING";
     return {
       n,
-      label: paymentLabel(h, n),
-      part: h.paymentPlan === "INSTALLMENT" && h.installmentMonths ? installmentPartName(n, !!h.downPaymentBDT) : "Full payment",
-      amountBDT: amounts[i],
-      dueDate: installmentDueDate(h.createdAt, n).toISOString(),
-      status: attempt?.status ?? "UPCOMING",
-      paidAt: attempt?.status === "SUCCESS" ? (attempt.paidAt ?? attempt.updatedAt).toISOString() : null,
+      label: part.label,
+      part: part.part,
+      amountBDT: part.amountBDT,
+      paidBDT: paid[i],
+      dueBDT: part.amountBDT - paid[i],
+      dueDate: part.due.toISOString(),
+      status,
+      paidAt: completedAt[i]?.toISOString() ?? null,
     };
   });
 
-  const paidBDT = steps.filter((s) => s.status === "SUCCESS").reduce((sum, s) => sum + s.amountBDT, 0);
-  const hasPending = steps.some((s) => s.status === "PENDING");
+  // Receipt wording per payment: what a success covered, or which part an attempt was for.
+  const labels: Record<string, string> = {};
+  for (const p of h.payments) {
+    labels[p.id] = p.status === "SUCCESS" ? coverLabel(covers[p.id] ?? []) : (parts[p.installmentNo - 1]?.label ?? "Payment");
+  }
+  return { steps, covers, labels };
+}
+
+/** What each payment on a holding paid for, by payment id — for receipts and payment lists. */
+export function paymentLabels(h: HoldingRow): Record<string, string> {
+  return computeLedger(h).labels;
+}
+
+/** Exactly how one payment was applied to the schedule. */
+export function paymentCovers(h: HoldingRow, paymentId: string): PaymentCover[] {
+  return computeLedger(h).covers[paymentId] ?? [];
+}
+
+/**
+ * One holding's ledger: its dated schedule, what's been paid, what remains
+ * and what's due next. Shared by the shareholder dashboard and the admin
+ * panel so both always show the same numbers.
+ */
+export function holdingLedger(h: HoldingRow): DashHolding {
+  const { steps } = computeLedger(h);
+  const cancelled = h.status === "CANCELLED";
+  const paidBDT = steps.reduce((sum, s) => sum + s.paidBDT, 0);
   const fullyPaid = steps.every((s) => s.status === "SUCCESS");
-  const next = h.status === "CANCELLED" ? undefined : steps.find((s) => s.status !== "SUCCESS");
+  const next = cancelled ? undefined : steps.find((s) => s.status !== "SUCCESS");
   const today = new Date().toISOString();
-  const overdueCount =
-    h.status === "CANCELLED"
-      ? 0
-      : steps.filter((s) => s.status !== "SUCCESS" && s.status !== "PENDING" && daysUntil(s.dueDate, today) < 0).length;
+  const overdueCount = cancelled
+    ? 0
+    : steps.filter((s) => s.status !== "SUCCESS" && s.status !== "PENDING" && daysUntil(s.dueDate, today) < 0).length;
 
   return {
     id: h.id,
@@ -289,21 +401,27 @@ export function holdingLedger(h: HoldingRow): DashHolding {
     discountBDT: h.discountBDT ?? 0,
     discountNote: h.discountNote ?? null,
     paidBDT,
-    remainingBDT: h.status === "CANCELLED" ? 0 : h.totalAmountBDT - paidBDT,
+    remainingBDT: cancelled ? 0 : Math.max(0, h.totalAmountBDT - paidBDT),
     overdueCount,
     paidCount: steps.filter((s) => s.status === "SUCCESS").length,
-    leftCount: h.status === "CANCELLED" ? 0 : steps.filter((s) => s.status !== "SUCCESS").length,
+    leftCount: cancelled ? 0 : steps.filter((s) => s.status !== "SUCCESS").length,
     paymentPlan: h.paymentPlan,
-    installmentMonths: h.installmentMonths,
+    installmentMonths: steps.length,
     downPaymentBDT: h.downPaymentBDT ?? null,
+    customSchedule: !!parseSchedule(h.scheduleJson),
     shareNo: shareNoLabel(h.shareFrom, h.shareTo),
     status: h.status,
     openedAt: h.createdAt.toISOString(),
     steps,
-    nextDue: next ? { n: next.n, amountBDT: next.amountBDT, dueDate: next.dueDate } : null,
-    hasPending,
+    nextDue: next ? { n: next.n, amountBDT: next.dueBDT, dueDate: next.dueDate } : null,
+    hasPending: h.payments.some((p) => p.status === "PENDING"),
     fullyPaid,
   };
+}
+
+/** "৳5,000 of ৳62,500 paid" — for part-paid installments. */
+export function partPaidLine(s: Pick<DashStep, "paidBDT" | "amountBDT">) {
+  return `${formatBDT(s.paidBDT)} of ${formatBDT(s.amountBDT)} paid`;
 }
 
 export function buildDashboard(user: UserRow, holdings: HoldingRow[], plans: PlanRow[]): DashboardData {
@@ -312,23 +430,24 @@ export function buildDashboard(user: UserRow, holdings: HoldingRow[], plans: Pla
   const dashHoldings = holdings.map(holdingLedger);
 
   const invoices: DashInvoice[] = holdings
-    .flatMap((h) =>
-      h.payments.map((p) => ({
+    .flatMap((h) => {
+      const labels = paymentLabels(h);
+      return h.payments.map((p) => ({
         id: p.id,
         invoiceNo: invoiceNumberFor(p),
         holdingId: h.id,
         planName: h.plan.name,
         accentColor: h.plan.accentColor,
         units: h.units,
-        label: paymentLabel(h, p.installmentNo),
+        label: labels[p.id],
         amountBDT: p.amountBDT,
         status: p.status,
         tranId: p.tranId,
         method: p.method,
         issuedAt: p.createdAt.toISOString(),
         settledAt: p.status === "SUCCESS" ? (p.paidAt ?? p.updatedAt).toISOString() : null,
-      })),
-    )
+      }));
+    })
     .sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
 
   const live = dashHoldings.filter((h) => h.status !== "CANCELLED");
@@ -453,4 +572,57 @@ function dayNumber(iso: string) {
 /** Whole calendar days from `nowIso` to `iso` in Bangladesh time; negative when past. */
 export function daysUntil(iso: string, nowIso: string) {
   return dayNumber(iso) - dayNumber(nowIso);
+}
+
+/**
+ * What's wrong with a proposed schedule for a holding, if anything — shared by
+ * the schedule editor (live, as the team types) and the server (on save).
+ * Payments already made stay where they are: parts paid in full keep their
+ * amount, and a part-paid one can't drop below what's been paid on it.
+ */
+export function scheduleProblems(
+  rows: ScheduleRow[],
+  ledger: Pick<DashHolding, "totalAmountBDT" | "steps">,
+): { form: string | null; rows: Record<number, string> } {
+  const out: Record<number, string> = {};
+  if (!rows.length) return { form: "Add at least one payment.", rows: out };
+  if (rows.length > MAX_SCHEDULE_ROWS) return { form: `At most ${MAX_SCHEDULE_ROWS} payments.`, rows: out };
+
+  rows.forEach((r, i) => {
+    const old = ledger.steps[i];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(r.due) || Number.isNaN(dhakaDay(r.due).getTime())) out[i] = "Pick a due date.";
+    else if (i > 0 && r.due < rows[i - 1].due) out[i] = "Due dates must go in order.";
+    else if (!Number.isInteger(r.amountBDT) || r.amountBDT < 1) out[i] = "Enter an amount of at least ৳1.";
+    else if (!r.label.trim()) out[i] = "Give it a name.";
+    else if (old?.status === "SUCCESS" && r.amountBDT !== old.amountBDT) out[i] = `Already paid — keep it at ${formatBDT(old.amountBDT)}.`;
+    else if (old && old.paidBDT > 0 && r.amountBDT < old.paidBDT) out[i] = `${formatBDT(old.paidBDT)} is already paid on this one.`;
+  });
+  const paidParts = ledger.steps.filter((s) => s.paidBDT > 0).length;
+  if (rows.length < paidParts) return { form: "Payments already made can't be removed from the schedule.", rows: out };
+
+  const sum = rows.reduce((s, r) => s + (Number.isInteger(r.amountBDT) ? r.amountBDT : 0), 0);
+  const diff = ledger.totalAmountBDT - sum;
+  const form =
+    diff === 0
+      ? null
+      : diff > 0
+        ? `${formatBDT(diff)} of the ${formatBDT(ledger.totalAmountBDT)} price isn't scheduled yet.`
+        : `The schedule is ${formatBDT(-diff)} more than the ${formatBDT(ledger.totalAmountBDT)} price.`;
+  return { form, rows: out };
+}
+
+/**
+ * Moves a schedule's total by `delta` taka (negative for a discount), taking
+ * it off — or adding it to — the last payments first, so earlier ones stay as
+ * agreed. Null when the payments can't absorb it (each must stay ≥ ৳1).
+ */
+export function shiftScheduleTotal(rows: ScheduleRow[], delta: number): ScheduleRow[] | null {
+  const out = rows.map((r) => ({ ...r }));
+  let left = delta;
+  for (let i = out.length - 1; i >= 0 && left !== 0; i--) {
+    const next = Math.max(1, out[i].amountBDT + left);
+    left -= next - out[i].amountBDT;
+    out[i].amountBDT = next;
+  }
+  return left === 0 ? out : null;
 }

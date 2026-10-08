@@ -101,7 +101,18 @@ export function ShareSaleModal({
   const due = cumulative[n - 1] ?? 0;
   const typed = Number(amount.replace(/[^0-9]/g, "")) || 0;
   const received = amount ? typed : due;
-  const amountOk = !paidNow || received === due;
+  const saleTotal = result?.totalBDT ?? 0;
+  // Any amount from ৳1 to the whole price; it fills the schedule in order.
+  const amountOk = !paidNow || (received >= 1 && received <= saleTotal);
+  // What's due next once today's money is in — the same in-order rule the ledger uses.
+  const afterPay = (() => {
+    let left = paidNow ? received : 0;
+    for (const l of parts) {
+      if (left < l.amountBDT) return { label: left > 0 ? `Rest of ${l.label.toLowerCase()}` : l.label, amountBDT: l.amountBDT - left };
+      left -= l.amountBDT;
+    }
+    return null;
+  })();
 
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -144,7 +155,7 @@ export function ShareSaleModal({
     if (!buyer) return setErrors({ userId: "Choose who is buying." });
     if (!result) return;
     if (discountIssue) return setErrors({ discountBDT: discountIssue });
-    if (!amountOk) return setErrors({ amountBDT: `Must match whole payments — e.g. ${cumulative.slice(0, 3).map(formatBDT).join(", ")}.` });
+    if (!amountOk) return setErrors({ amountBDT: received < 1 ? "Enter the amount received." : `The whole sale comes to ${formatBDT(saleTotal)}.` });
     setBusy(true);
     setErrors({});
     const { ok, json } = await send("/api/admin/sales", "POST", {
@@ -153,7 +164,7 @@ export function ShareSaleModal({
       paymentPlan,
       discountBDT,
       discountNote: discountBDT ? discount.note.trim() || undefined : undefined,
-      payment: paidNow ? { count: n, amountBDT: due, method, reference, note, paidAt } : undefined,
+      payment: paidNow ? { amountBDT: received, method, reference, note, paidAt } : undefined,
     });
     setBusy(false);
     if (!ok) return setErrors(json.errors ?? { form: firstError(json) });
@@ -364,7 +375,7 @@ export function ShareSaleModal({
             {paidNow ? (
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr]">
-                  <Field label="This money covers" error={errors.count}>
+                  <Field label="Quick fill" error={errors.count}>
                     {(id) => (
                       <select
                         id={id}
@@ -380,7 +391,10 @@ export function ShareSaleModal({
                       </select>
                     )}
                   </Field>
-                  <Field label="Amount received (BDT)" error={errors.amountBDT ?? (!amountOk ? `Must be ${formatBDT(due)} for ${n} payment${n > 1 ? "s" : ""}` : undefined)}>
+                  <Field
+                    label="Amount received (BDT) — any amount"
+                    error={errors.amountBDT ?? (!amountOk ? (received < 1 ? "Enter the amount received." : `The whole sale comes to ${formatBDT(saleTotal)}.`) : undefined)}
+                  >
                     {(id) => (
                       <TextInput
                         id={id}
@@ -444,17 +458,17 @@ export function ShareSaleModal({
               <dl className="mt-2 grid grid-cols-3 gap-3 text-[0.8125rem]">
                 <div>
                   <dt className="text-white/55">Received</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums">{paidNow ? formatBDT(due) : "—"}</dd>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{paidNow ? formatBDT(received) : "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-white/55">Next payment</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums">
-                    {paidNow ? (parts[n] ? `${parts[n].label} · ${formatBDT(parts[n].amountBDT)}` : "Fully paid") : `${parts[0]?.label} · ${formatBDT(parts[0]?.amountBDT ?? 0)}`}
+                    {afterPay ? `${afterPay.label} · ${formatBDT(afterPay.amountBDT)}` : "Fully paid"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-white/55">Balance left</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums">{formatBDT(result.totalBDT - (paidNow ? due : 0))}</dd>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{formatBDT(Math.max(0, result.totalBDT - (paidNow ? received : 0)))}</dd>
                 </div>
               </dl>
             </div>

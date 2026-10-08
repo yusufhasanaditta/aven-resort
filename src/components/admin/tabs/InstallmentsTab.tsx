@@ -98,9 +98,9 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Overdue" value={formatBDTCompact(overdue.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${overdue.length} installments`} icon="bell" tone="red" onClick={() => setView("overdue")} />
-        <Stat label="Due in 7 days" value={formatBDTCompact(upcoming.filter((d) => d.days <= 7).reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.filter((d) => d.days <= 7).length} installments`} icon="calendar" tone="gold" onClick={() => setView("upcoming")} />
-        <Stat label="Due in 30 days" value={formatBDTCompact(upcoming.reduce((s, d) => s + d.s.amountBDT, 0))} sub={`${upcoming.length} installments`} icon="calendar" tone="sky" onClick={() => setView("upcoming")} />
+        <Stat label="Overdue" value={formatBDTCompact(overdue.reduce((s, d) => s + d.s.dueBDT, 0))} sub={`${overdue.length} installments`} icon="bell" tone="red" onClick={() => setView("overdue")} />
+        <Stat label="Due in 7 days" value={formatBDTCompact(upcoming.filter((d) => d.days <= 7).reduce((s, d) => s + d.s.dueBDT, 0))} sub={`${upcoming.filter((d) => d.days <= 7).length} installments`} icon="calendar" tone="gold" onClick={() => setView("upcoming")} />
+        <Stat label="Due in 30 days" value={formatBDTCompact(upcoming.reduce((s, d) => s + d.s.dueBDT, 0))} sub={`${upcoming.length} installments`} icon="calendar" tone="sky" onClick={() => setView("upcoming")} />
         <Stat label="Remaining balance" value={formatBDTCompact(live.reduce((s, h) => s + h.remainingBDT, 0))} sub={`${live.filter((h) => h.fullyPaid).length} of ${live.length} holdings fully paid`} icon="wallet" onClick={() => setView("holdings")} />
       </div>
 
@@ -175,7 +175,10 @@ export function InstallmentsTab({ focus, nav, onChanged }: { focus: TabFocus; na
                     <p className="text-[#14201B]">{formatDate(s.dueDate)}</p>
                     {days < 0 ? <Badge tone="red">{-days} days late</Badge> : <p className="text-xs text-[#8A948E]">{days === 0 ? "Today" : `In ${days} days`}</p>}
                   </td>
-                  <td className="py-3 text-right font-semibold tabular-nums text-[#14201B]">{formatBDT(s.amountBDT)}</td>
+                  <td className="py-3 text-right tabular-nums">
+                    <p className="font-semibold text-[#14201B]">{formatBDT(s.dueBDT)}</p>
+                    {s.paidBDT > 0 && <p className="text-[0.6875rem] text-[#6B756F]">{formatBDT(s.paidBDT)} of {formatBDT(s.amountBDT)} paid</p>}
+                  </td>
                   <td className="py-3 text-right tabular-nums text-[#6B756F]">{formatBDT(h.remainingBDT)}</td>
                   <td className="px-5 py-3">
                     <div className="flex justify-end gap-1.5">

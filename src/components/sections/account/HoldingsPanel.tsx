@@ -137,6 +137,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                 s.status === "SUCCESS" && "bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.5)]",
                 s.status === "PENDING" && "animate-pulse bg-gold-300",
                 s.status === "FAILED" && "bg-red-300/80",
+                s.status === "PARTIAL" && "bg-sky-300/70",
                 (s.status === "UPCOMING" || s.status === "CANCELLED") && "bg-white/10",
               )}
             />
@@ -178,10 +179,20 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                             ? "Due today"
                             : `${isNext ? "Next · " : ""}Due ${formatDate(s.dueDate)}`}
                     </span>
+                    {s.status === "PARTIAL" && (
+                      <span className="mt-1 block">
+                        <span className="block h-1 w-28 overflow-hidden rounded-full bg-white/10">
+                          <span className="block h-full rounded-full bg-sky-300" style={{ width: `${Math.round((s.paidBDT / s.amountBDT) * 100)}%` }} />
+                        </span>
+                        <span className="mt-0.5 block text-[0.6875rem] text-sky-200/80">
+                          {formatBDT(s.paidBDT)} paid · {formatBDT(s.dueBDT)} left
+                        </span>
+                      </span>
+                    )}
                   </span>
                   <span className="flex flex-col items-end gap-1 sm:flex-row-reverse sm:items-center sm:gap-4">
                     <span className="whitespace-nowrap font-numeral text-cream-50">{formatBDT(s.amountBDT)}</span>
-                    <StatusChip status={s.status === "UPCOMING" && d < 0 ? "OVERDUE" : s.status} />
+                    <StatusChip status={(s.status === "UPCOMING" || s.status === "FAILED" || s.status === "CANCELLED") && d < 0 ? "OVERDUE" : s.status} />
                   </span>
                 </li>
               );
@@ -207,7 +218,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                   holdingId={h.id}
                   tone="light"
                   className="w-full justify-center sm:w-auto"
-                  label={`${h.paymentPlan === "INSTALLMENT" && nextStep ? `Pay ${nextStep.part.toLowerCase()}` : "Pay now"} · ${formatBDT(h.nextDue?.amountBDT ?? 0)}`}
+                  label={`${nextStep && h.steps.length > 1 ? `Pay ${nextStep.paidBDT ? "rest of " : ""}${nextStep.part.toLowerCase()}` : "Pay now"} · ${formatBDT(h.nextDue?.amountBDT ?? 0)}`}
                 />
               </div>
             </>
