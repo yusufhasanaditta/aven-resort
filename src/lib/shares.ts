@@ -179,6 +179,18 @@ export function discountProblem(result: DiscountBase, discountBDT: number): stri
 }
 
 /**
+ * A quote for a sale with no automatic schedule: just the price. No down
+ * payment, no monthly installments — the shareholder pays any amount, any
+ * time, and the team adds installments by hand only if they agree some.
+ */
+export function flexibleQuote<T extends PlanLike>(result: CalculatorResult<T>): CalculatorResult<T> {
+  return { ...result, downPaymentBDT: null, monthlyCount: null, monthlyBDT: null, installments: null };
+}
+
+/** Stored on a holding with no installments yet (see parseSchedule). */
+export const NO_INSTALLMENTS = "[]";
+
+/**
  * A quote with an office discount taken off: the total drops by the discount
  * and the monthly installments are re-split over the lower balance, while the
  * down payment stays the same. Call `discountProblem` first.
@@ -233,20 +245,32 @@ export type ScheduleRow = {
   amountBDT: number;
   /** "Down payment", "3rd installment", or the team's own name for it. */
   label: string;
+  /**
+   * When the team added it (ISO). Only money recorded after that goes to it —
+   * what was paid before was for something else. Absent: all payments count.
+   */
+  added?: string;
 };
 
 export const MAX_SCHEDULE_ROWS = 240;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-/** The stored custom schedule, or null when there is none (or it can't be read). */
+/** The installments the team set (an empty list is a flexible holding with none), or null when it follows the plan. */
 export function parseSchedule(json?: string | null): ScheduleRow[] | null {
   if (!json) return null;
   try {
     const rows = JSON.parse(json) as unknown;
-    if (!Array.isArray(rows) || !rows.length) return null;
+    if (!Array.isArray(rows)) return null;
     const ok = rows.every(
-      (r) => r && typeof r.due === "string" && DAY.test(r.due) && Number.isInteger(r.amountBDT) && r.amountBDT > 0 && typeof r.label === "string",
+      (r) =>
+        r &&
+        typeof r.due === "string" &&
+        DAY.test(r.due) &&
+        Number.isInteger(r.amountBDT) &&
+        r.amountBDT > 0 &&
+        typeof r.label === "string" &&
+        (r.added === undefined || (typeof r.added === "string" && !Number.isNaN(Date.parse(r.added)))),
     );
     return ok ? (rows as ScheduleRow[]) : null;
   } catch {

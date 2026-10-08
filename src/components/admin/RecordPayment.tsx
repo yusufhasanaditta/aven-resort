@@ -38,11 +38,16 @@ function preview(unpaid: Step[], amount: number): Effect[] {
   return out;
 }
 
+/** "October 2026" for a YYYY-MM-DD day. */
+function monthName(day: string) {
+  return new Date(`${day}T06:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "Asia/Dhaka" });
+}
+
 /**
- * Records money received outside the gateway — any amount, from a ৳5,000
- * part payment to the whole balance. It becomes one payment with one money
- * receipt and fills the schedule in order: what's owed on the earliest
- * installment first, then the next.
+ * Records money received outside the gateway — any amount, from ৳5,000 to
+ * the whole balance — with what it's for in the team's words ("December",
+ * "Down payment"). It becomes one payment with one money receipt; it goes to
+ * any installments the team set first, then to the open balance.
  */
 export function RecordPaymentModal({
   holding,
@@ -68,7 +73,7 @@ export function RecordPaymentModal({
     if (unpaid[0]) list.push({ label: unpaid[0].paidBDT ? `Rest of ${unpaid[0].part.toLowerCase()}` : `Next: ${unpaid[0].part.toLowerCase()}`, amount: unpaid[0].dueBDT });
     if (overdue.length > 1) list.push({ label: `All overdue (${overdue.length})`, amount: upTo(overdue.length) });
     for (const k of [2, 3, 6]) if (unpaid.length > k) list.push({ label: `Next ${k} payments`, amount: upTo(k) });
-    if (unpaid.length > 1) list.push({ label: "Full balance", amount: remaining });
+    if (remaining > 0 && (unpaid.length !== 1 || unpaid[0].dueBDT !== remaining)) list.push({ label: "Full balance", amount: remaining });
     return list.filter((q, i, all) => all.findIndex((x) => x.amount === q.amount) === i);
   }, [unpaid, remaining]);
 
@@ -79,6 +84,7 @@ export function RecordPaymentModal({
   }, [initialStep, unpaid]);
 
   const [amountText, setAmountText] = useState(initial ? String(initial) : "");
+  const [label, setLabel] = useState("");
   const [method, setMethod] = useState("CASH");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
@@ -90,6 +96,8 @@ export function RecordPaymentModal({
   const amount = Number(amountText.replace(/[^0-9]/g, "")) || 0;
   const tooMuch = amount > remaining;
   const effects = useMemo(() => (tooMuch ? [] : preview(unpaid, amount)), [unpaid, amount, tooMuch]);
+  const toBalance = tooMuch ? 0 : amount - effects.reduce((s, e) => s + e.applied, 0);
+  const suggestions = [monthName(paidAt), ...(holding && holding.paidBDT === 0 ? ["Down payment"] : []), "Full payment"];
 
   async function submit() {
     if (!holding || !amount || tooMuch) return;
@@ -98,6 +106,7 @@ export function RecordPaymentModal({
     const { ok, json } = await send("/api/admin/payments", "POST", {
       holdingId: holding.id,
       amountBDT: amount,
+      label: label.trim() || undefined,
       method,
       reference: reference || undefined,
       note: note || undefined,
@@ -136,8 +145,8 @@ export function RecordPaymentModal({
         ) : (
           <>
             <Btn onClick={close}>Cancel</Btn>
-            <Btn variant="primary" onClick={submit} disabled={busy || !amount || tooMuch || !unpaid.length}>
-              {busy ? "Saving…" : unpaid.length ? `Record ${formatBDT(amount)}` : "Nothing due"}
+            <Btn variant="primary" onClick={submit} disabled={busy || !amount || tooMuch || remaining <= 0}>
+              {busy ? "Saving…" : remaining > 0 ? `Record ${formatBDT(amount)}` : "Nothing due"}
             </Btn>
           </>
         )
@@ -165,7 +174,7 @@ export function RecordPaymentModal({
                 <span className="font-medium text-[#14201B]">{formatBDT(remaining)} left</span>
               </p>
             </div>
-            {unpaid.length === 0 ? (
+            {remaining <= 0 ? (
               <p className="text-sm text-emerald-700">This holding is fully paid.</p>
             ) : (
               <>
@@ -202,7 +211,27 @@ export function RecordPaymentModal({
                   ))}
                 </div>
 
-                {effects.length > 0 && (
+                <Field label="For (shown on the receipt)" hint="Optional — e.g. the month it's for, or Down payment">
+                  {(id) => (
+                    <div>
+                      <TextInput id={id} maxLength={80} value={label} placeholder="e.g. December 2026" onChange={(e) => setLabel(e.target.value)} />
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {suggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setLabel(s)}
+                            className="rounded-md bg-[#F0F2EF] px-2 py-0.5 text-[0.6875rem] text-[#3D4A44] hover:bg-[#E4E8E2]"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Field>
+
+                {(effects.length > 0 || toBalance > 0) && (
                   <div className="rounded-xl border border-[#E3E7E1] p-3">
                     <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[#8A948E]">This payment will</p>
                     <ul className="mt-1.5 space-y-1 text-[0.8125rem]">
@@ -218,6 +247,16 @@ export function RecordPaymentModal({
                           <span className="tabular-nums text-[#3D4A44]">{formatBDT(e.applied)}</span>
                         </li>
                       ))}
+                      {toBalance > 0 && (
+                        <li className="flex items-center justify-between gap-3">
+                          <span className="flex items-center gap-2 text-[#14201B]">
+                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-forest-600 text-[0.5625rem] text-white">৳</span>
+                            Go to the open balance
+                            <span className="text-xs text-[#6B756F]">({formatBDT(remaining - amount)} left after this)</span>
+                          </span>
+                          <span className="tabular-nums text-[#3D4A44]">{formatBDT(toBalance)}</span>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { TierIcon } from "@/components/ui/TierIcon";
 import { CancelReservationButton, PayNextButton } from "@/components/sections/AccountActions";
 import { Glass, StatusChip, accentOnDark } from "./ui";
@@ -43,6 +44,9 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
   const nextStep = h.nextDue ? h.steps.find((s) => s.n === h.nextDue!.n) : undefined;
   const nextDays = h.nextDue ? daysUntil(h.nextDue.dueDate, now) : 0;
   const pct = h.totalAmountBDT ? Math.round((h.paidBDT / h.totalAmountBDT) * 100) : 0;
+  // Flexible: no automatic schedule — any amount, any time, plus whatever installments the team set.
+  const flexible = h.customSchedule;
+  const lastPaid = h.history[0];
 
   return (
     <Glass as="article" className="overflow-hidden p-0 sm:p-0">
@@ -71,7 +75,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         {h.discountBDT > 0 && (
           <p className="w-full rounded-xl bg-emerald-400/10 px-3.5 py-2 text-xs text-emerald-200">
             You received a <strong className="font-semibold">{formatBDT(h.discountBDT)}</strong> discount
-            {h.discountNote ? <> · {h.discountNote}</> : null} — your installments are worked out on the discounted price.
+            {h.discountNote ? <> · {h.discountNote}</> : null} — you pay the discounted price.
           </p>
         )}
       </div>
@@ -90,8 +94,23 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
         ))}
       </dl>
 
+      {/* Flexible tracker: what's paid and what's left */}
+      {h.status !== "CANCELLED" && flexible && (
+        <div className="grid grid-cols-2 gap-2.5 p-4 pb-0 sm:gap-3 sm:p-6 sm:pb-0 lg:grid-cols-4">
+          <TrackerStat label="Paid" value={formatBDT(h.paidBDT)} sub={`${pct}% of ${formatBDT(h.totalAmountBDT)}`} tone="emerald" />
+          <TrackerStat label="Balance" value={formatBDT(h.remainingBDT)} sub={h.remainingBDT ? "Pay any amount, any time" : "Nothing left to pay"} tone="gold" />
+          <TrackerStat label="Payments made" value={String(h.history.length)} sub={h.history.length ? "Each with a money receipt" : "None yet"} tone="sky" />
+          <TrackerStat
+            label={h.nextDue ? "Next installment" : "Last payment"}
+            value={h.nextDue ? formatBDT(h.nextDue.amountBDT) : lastPaid ? formatBDT(lastPaid.amountBDT) : "—"}
+            sub={h.nextDue ? `Due ${formatDate(h.nextDue.dueDate)}` : lastPaid ? formatDate(lastPaid.paidAt) : "No payments yet"}
+            tone={h.overdueCount ? "red" : "slate"}
+          />
+        </div>
+      )}
+
       {/* Installment tracker */}
-      {h.status !== "CANCELLED" && h.steps.length > 1 && (
+      {h.status !== "CANCELLED" && !flexible && h.steps.length > 1 && (
         <div className="grid grid-cols-2 gap-2.5 p-4 pb-0 sm:gap-3 sm:p-6 sm:pb-0 lg:grid-cols-4">
           <TrackerStat label="Paid" value={`${paidCount} of ${h.steps.length}`} sub={`${formatBDT(h.paidBDT)} · ${pct}%`} tone="emerald" />
           <TrackerStat
@@ -118,17 +137,25 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
       <div className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4 text-xs">
           <p className="text-cream-200/55">
-            {paidCount} of {h.steps.length} paid · {h.leftCount} left · {formatBDT(h.paidBDT)} of {formatBDT(h.totalAmountBDT)}
+            {flexible
+              ? `${formatBDT(h.paidBDT)} of ${formatBDT(h.totalAmountBDT)} paid · ${formatBDT(h.remainingBDT)} left`
+              : `${paidCount} of ${h.steps.length} paid · ${h.leftCount} left · ${formatBDT(h.paidBDT)} of ${formatBDT(h.totalAmountBDT)}`}
           </p>
-          {h.steps.length > 1 && (
+          {!flexible && h.steps.length > 1 && (
             <button type="button" onClick={() => setOpen((o) => !o)} className="shrink-0 font-medium text-gold-300 hover:underline">
               {open ? "Hide schedule" : "Show schedule"}
             </button>
           )}
         </div>
 
+        {flexible && (
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10" role="img" aria-label={`${pct}% paid`}>
+            <div className="h-full rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.5)]" style={{ width: `${Math.min(100, pct)}%` }} />
+          </div>
+        )}
+
         {/* Segmented progress */}
-        <div className="mt-3 flex gap-1" role="img" aria-label={`${paidCount} of ${h.steps.length} payments made`}>
+        <div className={cn("mt-3 flex gap-1", flexible && "hidden")} role="img" aria-label={`${paidCount} of ${h.steps.length} payments made`}>
           {h.steps.map((s) => (
             <span
               key={s.n}
@@ -144,7 +171,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
           ))}
         </div>
 
-        {open && (
+        {(open || flexible) && h.steps.length > 0 && (
           <ol className="mt-5 divide-y divide-white/6 rounded-2xl border border-white/6">
             {h.steps.map((s) => {
               const isNext = h.nextDue?.n === s.n;
@@ -197,7 +224,37 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                 </li>
               );
             })}
+            {flexible && h.openBalanceBDT > 0 && h.status !== "CANCELLED" && (
+              <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-3.5 py-3 text-[0.8125rem] sm:gap-x-4 sm:px-4">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/6 text-cream-200/60">৳</span>
+                <span className="min-w-0">
+                  <span className="block text-cream-100">Open balance</span>
+                  <span className="block text-[0.6875rem] text-cream-200/45">No due date — pay any amount, any time</span>
+                </span>
+                <span className="whitespace-nowrap font-numeral text-cream-50">{formatBDT(h.openBalanceBDT)}</span>
+              </li>
+            )}
           </ol>
+        )}
+
+        {/* Money received */}
+        {flexible && h.history.length > 0 && (
+          <div className="mt-5">
+            <p className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-cream-200/40">Payments received</p>
+            <ul className="mt-2 divide-y divide-white/6 rounded-2xl border border-white/6">
+              {h.history.map((pay) => (
+                <li key={pay.id}>
+                  <Link href={`/account/invoices/${pay.id}`} className="flex items-center justify-between gap-3 px-3.5 py-3 text-[0.8125rem] hover:bg-white/[0.03] sm:px-4">
+                    <span className="min-w-0">
+                      <span className="block truncate text-cream-100">{pay.label}</span>
+                      <span className="block text-[0.6875rem] text-cream-200/45">{formatDate(pay.paidAt)} · receipt →</span>
+                    </span>
+                    <span className="whitespace-nowrap font-numeral text-emerald-200">{formatBDT(pay.amountBDT)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -206,6 +263,12 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
           ) : h.fullyPaid ? (
             <p className="text-xs font-medium text-emerald-300">Fully paid — thank you.</p>
           ) : (
+            !h.nextDue ? (
+              <p className="w-full rounded-xl bg-white/[0.04] px-3.5 py-2.5 text-xs leading-relaxed text-cream-200/70">
+                Pay any amount, whenever it suits you — at our office, by bank transfer or bKash (details below). The Aven team records it and
+                sends you a money receipt.
+              </p>
+            ) : (
             <>
               <p className="text-xs text-cream-200/55">
                 {h.hasPending
@@ -222,6 +285,7 @@ function HoldingCard({ holding: h, now }: { holding: DashHolding; now: string })
                 />
               </div>
             </>
+            )
           )}
         </div>
       </div>

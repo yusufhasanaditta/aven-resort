@@ -192,13 +192,13 @@ export function BuyPanel({
           <PanelTitle eyebrow="Step 3" title="Payment plan" />
           <div className="mt-5 rounded-2xl border border-gold-300/60 bg-gold-400/10 p-4">
             <span className="block text-sm font-semibold text-cream-50">Installments</span>
-            <span className="mt-0.5 block text-[0.6875rem] text-cream-200/50">Down payment today, then monthly</span>
+            <span className="mt-0.5 block text-[0.6875rem] text-cream-200/50">Down payment today, then any amounts, any time</span>
           </div>
           {result.installments && (
             <p className="mt-4 rounded-xl bg-gold-400/8 px-3.5 py-2.5 text-xs leading-relaxed text-cream-100">
-              {result.plan.name} terms: <strong className="font-semibold">{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment today,
-              then <strong className="font-semibold">{result.monthlyCount} monthly installments</strong> of about{" "}
-              <strong className="font-semibold">{formatBDT(result.monthlyBDT ?? 0)}</strong>.
+              {result.plan.name} terms: <strong className="font-semibold">{formatBDT(result.downPaymentBDT ?? 0)}</strong> down payment today.
+              The rest — <strong className="font-semibold">{formatBDT(result.totalBDT - (result.downPaymentBDT ?? 0))}</strong> — you pay in any
+              amounts, whenever it suits you; no fixed monthly installments.
             </p>
           )}
         </Glass>
@@ -258,23 +258,6 @@ export function BuyPanel({
             </div>
           </dl>
 
-          {result.installments && (
-            <details className="mt-4 rounded-xl border border-white/8 px-4 py-3 text-xs text-cream-200/65">
-              <summary className="cursor-pointer font-medium text-cream-100">See all {result.installments.length} payments</summary>
-              <ul className="mt-3 max-h-44 space-y-1.5 overflow-y-auto pr-1">
-                {result.installments.map((l) => (
-                  <li key={l.index} className="flex justify-between">
-                    <span>{l.label}</span>
-                    <span className="font-numeral text-cream-100">{formatBDT(l.amountBDT)}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 flex justify-between border-t border-white/8 pt-2 font-semibold text-cream-100">
-                <span>Total</span>
-                <span className="font-numeral">{formatBDT(result.installments.reduce((s, l) => s + l.amountBDT, 0))}</span>
-              </p>
-            </details>
-          )}
 
           <button
             type="button"

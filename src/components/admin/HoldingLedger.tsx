@@ -6,6 +6,7 @@ import type { AdminHolding } from "@/lib/admin-types";
 import { daysUntil, formatDate, paymentPlanLabel } from "@/lib/account";
 import { DiscountField, type DiscountValue } from "./DiscountField";
 import { ScheduleEditor } from "./ScheduleEditor";
+import { METHOD_LABEL } from "./RecordPayment";
 import { formatBDT, maxDiscountBDT } from "@/lib/shares";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +64,7 @@ export function HoldingLedger({
           </p>
           <p className="text-xs text-[#6B756F]">
             Opened {formatDate(h.openedAt)} · {paymentPlanLabel(h)}
-            {h.customSchedule && <Badge tone="violet" className="ml-1.5 align-middle">Custom schedule</Badge>}
+
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -94,8 +95,17 @@ export function HoldingLedger({
       <div className="px-5 pt-4">
         <div className="flex items-center justify-between text-[0.6875rem] text-[#6B756F]">
           <span>{pct}% paid</span>
-          <span>{h.steps.filter((s) => s.status === "SUCCESS").length} of {h.steps.length} installments</span>
+          <span>
+            {h.steps.length
+              ? `${h.steps.filter((s) => s.status === "SUCCESS").length} of ${h.steps.length} installments`
+              : "No fixed installments — any amount, any time"}
+          </span>
         </div>
+        {!h.steps.length && (
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#E4E8E2]">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, pct)}%` }} />
+          </div>
+        )}
         <div className="mt-1.5 flex gap-1">
           {h.steps.map((s) => {
             const overdue = s.status !== "SUCCESS" && s.status !== "PENDING" && daysUntil(s.dueDate, now) < 0;
@@ -140,8 +150,48 @@ export function HoldingLedger({
               </tr>
             );
           })}
+          {h.openBalanceBDT > 0 && h.status !== "CANCELLED" && (
+            <tr>
+              <td className="w-10 py-2.5 pl-5 text-xs text-[#9AA39E]">—</td>
+              <td className="py-2.5">
+                <p className="text-[#14201B]">Open balance</p>
+                <p className="text-[0.6875rem] text-[#8A948E]">Not on an installment — paid in any amount, any time</p>
+              </td>
+              <td className="py-2.5 text-right tabular-nums text-[#14201B]">{formatBDT(h.openBalanceBDT)}</td>
+              <td className="py-2.5 pl-4">
+                <Badge tone="gray">Flexible</Badge>
+              </td>
+              <td className="py-2.5 pr-5" />
+            </tr>
+          )}
         </tbody>
       </table>
+
+      {h.history.length > 0 && (
+        <details className="group border-t border-[#EEF0EC] px-5 py-3" open={!h.steps.length}>
+          <summary className="cursor-pointer text-xs font-semibold text-[#3D4A44]">
+            Payments received ({h.history.length})
+          </summary>
+          <ul className="mt-2 divide-y divide-[#F0F2EF] text-[0.8125rem]">
+            {h.history.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <span className="block truncate text-[#14201B]">{p.label}</span>
+                  <span className="block text-[0.6875rem] text-[#8A948E]">
+                    {formatDate(p.paidAt)} · {METHOD_LABEL[p.method] ?? p.method}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className="font-semibold tabular-nums text-[#14201B]">{formatBDT(p.amountBDT)}</span>
+                  <a href={`/account/invoices/${p.id}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-forest-700 hover:underline">
+                    Receipt
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {editDiscount && (
         <div className="border-t border-[#EEF0EC] bg-[#FAFBF9] px-5 py-4">
@@ -177,7 +227,7 @@ export function HoldingLedger({
             <Btn size="sm" variant="ghost" onClick={() => setConfirmCancel(true)}>Cancel holding</Btn>
             {!h.fullyPaid && (
               <Btn size="sm" variant="ghost" icon="calendar" onClick={() => setEditSchedule(true)}>
-                Edit schedule
+                Installments
               </Btn>
             )}
             {priceOpen && !editDiscount && (

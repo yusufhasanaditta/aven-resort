@@ -190,6 +190,8 @@ model Payment {
   status          PaymentStatus @default(PENDING)
   gatewayResponse String?       @db.MediumText
   /// Bank reference, bKash number, cheque number… for manually recorded payments.
+  /// What the money was for, as the team wrote it: "December", "Down payment"…
+  label           String?       @db.VarChar(80)
   reference       String?
   note            String?       @db.Text
   /// Admin who recorded or confirmed the payment, when it didn't come through the gateway.

@@ -46,6 +46,7 @@ export async function notify(user: { id: string; email: string; name: string }, 
 
 /** "Paid 3 of 16 · 13 installments left · ৳12,00,000 remaining." */
 function progressLine(l: DashHolding) {
+  if (l.customSchedule) return `Paid so far: ${formatBDT(l.paidBDT)} of ${formatBDT(l.totalAmountBDT)} · ${formatBDT(l.remainingBDT)} remaining.`;
   const left = l.leftCount;
   return `Paid ${l.paidCount} of ${l.steps.length} · ${left} ${left === 1 ? "installment" : "installments"} left · ${formatBDT(l.remainingBDT)} remaining.`;
 }
@@ -71,7 +72,9 @@ export async function notifyPaymentReceived(paymentId: string) {
           ? next.paidBDT > 0
             ? `Next: ${formatBDT(l.nextDue.amountBDT)} still to pay on your ${next.part}, due ${formatDate(l.nextDue.dueDate)}.`
             : `Next: ${next.part} of ${formatBDT(l.nextDue.amountBDT)}, due ${formatDate(l.nextDue.dueDate)}.`
-          : "Your holding is now fully paid — thank you.",
+          : l.remainingBDT > 0
+            ? "You can pay the rest in any amounts, whenever it suits you."
+            : "Your holding is now fully paid — thank you.",
       ].join("\n"),
       href: `/account/invoices/${payment.id}`,
       holdingId: h.id,

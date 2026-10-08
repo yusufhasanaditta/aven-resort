@@ -302,6 +302,25 @@ function NextPayment({ data }: { data: DashboardData }) {
   const next = data.summary.nextDue;
   if (!next) {
     const pending = data.holdings.some((h) => h.hasPending);
+    // No installment set: what's owed is a balance they pay in any amount, any time.
+    const balance = data.holdings.filter((h) => h.status !== "CANCELLED").reduce((s, h) => s + h.remainingBDT, 0);
+    if (balance > 0 && !pending) {
+      return (
+        <Glass className="flex flex-col justify-between">
+          <div>
+            <PanelTitle eyebrow="Your balance" title={formatBDT(balance)} />
+            <p className="mt-1 text-xs text-cream-200/55">No fixed installments — pay any amount, any time</p>
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-cream-200/60">
+            Pay whatever suits you, whenever it suits you — at our office, by bank transfer or bKash. The Aven team records it and sends
+            you a money receipt, and your balance goes down.
+          </p>
+          <Link href="/account?tab=holdings" className="mt-5 text-xs font-semibold text-gold-300 hover:underline">
+            See payments and how to pay →
+          </Link>
+        </Glass>
+      );
+    }
     return (
       <Glass className="flex flex-col justify-between">
         <PanelTitle eyebrow="Next payment" title={pending ? "Payment processing" : "You're all paid up"} />

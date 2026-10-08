@@ -27,7 +27,7 @@ import type { AdminApplication, ApplicationStatus } from "@/lib/admin-types";
 import type { AdminNav, TabFocus } from "../AdminShell";
 import { formatDate } from "@/lib/account";
 import { DiscountField, NO_DISCOUNT, type DiscountValue } from "../DiscountField";
-import { calculate, discountProblem, formatBDT, maxDiscountBDT, withDiscount, type PlanLike } from "@/lib/shares";
+import { calculate, discountProblem, flexibleQuote, formatBDT, maxDiscountBDT, withDiscount, type PlanLike } from "@/lib/shares";
 
 type Filter = "OPEN" | ApplicationStatus | "ALL";
 
@@ -154,7 +154,7 @@ function ApplicationDrawer({
   // The chart price for this application, so the discount can be checked before approving.
   const { data: planData } = useAdminFetch<{ plans: PlanLike[] }>(confirm === "approve" ? "/api/plans" : null);
   const chart = useMemo(
-    () => (app && planData?.plans?.length ? calculate(planData.plans, app.units, app.paymentPlan) : null),
+    () => (app && planData?.plans?.length ? flexibleQuote(calculate(planData.plans, app.units, app.paymentPlan)) : null),
     [app, planData],
   );
   const discountIssue = chart && discount.amountBDT ? discountProblem(chart, discount.amountBDT) : null;

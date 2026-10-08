@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
-import { calculate, discountProblem, formatBDT, withDiscount } from "@/lib/shares";
+import { NO_INSTALLMENTS, calculate, discountProblem, flexibleQuote, formatBDT, withDiscount } from "@/lib/shares";
 import { convertLeadsFor } from "@/lib/crm";
 import { discountFields, registerSchema, zodErrors } from "@/lib/validation";
 import { nextShareNumbers, openAccount, sendWelcome } from "@/lib/member";
@@ -53,7 +53,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const plans = await prisma.membershipPlan.findMany();
-  const chart = calculate(plans, app.units, app.paymentPlan);
+  // No automatic schedule: price and balance only; the team adds installments by hand if agreed.
+  const chart = flexibleQuote(calculate(plans, app.units, app.paymentPlan));
   const problem = discountProblem(chart, discountBDT);
   if (problem) return NextResponse.json({ errors: { discountBDT: problem } }, { status: 422 });
   const quote = withDiscount(chart, discountBDT);
@@ -101,8 +102,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         units: quote.units,
         totalAmountBDT: quote.totalBDT,
         paymentPlan: app.paymentPlan,
-        installmentMonths: quote.installments ? quote.installments.length : null,
-        downPaymentBDT: quote.downPaymentBDT,
+        installmentMonths: null,
+        downPaymentBDT: null,
+        scheduleJson: NO_INSTALLMENTS,
         discountBDT,
         discountNote: discountBDT ? discountNote || null : null,
       },

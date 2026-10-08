@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
-import { formatDate, holdingLedger, scheduleProblems, shiftScheduleTotal } from "@/lib/account";
+import { formatDate, holdingLedger, scheduleProblems } from "@/lib/account";
 import { holdingInclude } from "@/lib/admin-serialize";
 import { notify } from "@/lib/notify";
 import { MAX_SCHEDULE_ROWS, discountProblem, formatBDT, parseSchedule, type ScheduleRow } from "@/lib/shares";
@@ -13,21 +13,23 @@ const scheduleRow = z.object({
   due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a due date."),
   amountBDT: z.coerce.number().int("Whole taka only.").min(1, "At least ৳1."),
   label: z.string().trim().min(1, "Give it a name.").max(60),
+  added: z.string().datetime().optional(),
 });
 
 const schema = z.union([
   z.object({ status: z.enum(["ACTIVE", "PENDING_PAYMENT", "CANCELLED"]) }),
   z.object({ discountBDT: discountAmount, discountNote: discountFields.discountNote }),
-  /** A schedule of the team's own, or null to go back to the plan's standard one. */
-  z.object({ schedule: z.array(scheduleRow).min(1).max(MAX_SCHEDULE_ROWS).nullable() }),
+  /** The installments the team set by hand (none is fine), or null to go back to the plan's standard ones. */
+  z.object({ schedule: z.array(scheduleRow).max(MAX_SCHEDULE_ROWS).nullable() }),
 ]);
 
 /**
  * Changes one holding:
  * - status   — cancel or reinstate; cancelling voids any payment in flight.
  * - discount — only before any money is in, since it changes the price.
- * - schedule — the team's own payment plan: how many payments, when, and how
- *   much each. Money already paid stays where it is.
+ * - schedule — installments the team agreed by hand: when, and how much
+ *   each. Any part of the price they don't cover stays an open balance.
+ *   Money already paid stays where it is.
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const guard = await adminGuard();
@@ -60,25 +62,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const fresh = holdingLedger(await prisma.shareHolding.findUniqueOrThrow({ where: { id }, include: holdingInclude }));
     const next = fresh.nextDue;
+    const count = fresh.steps.length;
     await notify(holding.user, {
       kind: "MESSAGE",
-      title: "Your payment schedule has been updated",
-      body: `The Aven team has updated the payment schedule for your ${holding.plan.name} membership (${holding.units} shares): ${
-        fresh.steps.length
-      } payment${fresh.steps.length > 1 ? "s" : ""} in all.${
-        next ? ` Next: ${formatBDT(next.amountBDT)}, due ${formatDate(next.dueDate)}.` : ""
-      } The full schedule is in your dashboard.`,
+      title: count ? "Your installments have been updated" : "Pay any amount, any time",
+      body: count
+        ? `The Aven team has set ${count} installment${count > 1 ? "s" : ""} for your ${holding.plan.name} membership (${holding.units} shares).${
+            next ? ` Next: ${formatBDT(next.amountBDT)}, due ${formatDate(next.dueDate)}.` : ""
+          } You can still pay any amount at any time. Details are in your dashboard.`
+        : `Your ${holding.plan.name} membership (${holding.units} shares) has no fixed installments: pay any amount, any time, until the ${formatBDT(fresh.remainingBDT)} balance is paid.`,
       href: "/account?tab=holdings",
       holdingId: id,
       dedupeKey: `schedule-${id}-${randomUUID().slice(0, 8)}`,
     }).catch(() => null);
     await logActivity(
       guard.name,
-      rows ? "Changed payment schedule" : "Reset payment schedule",
+      rows ? "Changed installments" : "Reset installments",
       who,
-      rows
-        ? `${what} · ${rows.length} payment${rows.length > 1 ? "s" : ""}, ${formatDate(fresh.steps[0].dueDate)} → ${formatDate(fresh.steps[fresh.steps.length - 1].dueDate)}`
-        : `${what} · back to the standard plan`,
+      !rows
+        ? `${what} · back to the standard plan`
+        : rows.length
+          ? `${what} · ${rows.length} installment${rows.length > 1 ? "s" : ""}, ${formatDate(fresh.steps[0].dueDate)} → ${formatDate(fresh.steps[rows.length - 1].dueDate)}`
+          : `${what} · no installments — any amount, any time`,
     );
     return NextResponse.json({ ok: true });
   }
@@ -96,14 +101,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const listPriceBDT = holding.totalAmountBDT + holding.discountBDT;
     const newTotal = listPriceBDT - discountBDT;
     const custom = parseSchedule(holding.scheduleJson);
-    let scheduleJson: string | undefined;
     if (custom) {
-      // A schedule of the team's own: the change comes off (or goes back on) its last payments.
-      const shifted = shiftScheduleTotal(custom, newTotal - holding.totalAmountBDT);
-      if (!shifted || discountBDT >= listPriceBDT) {
-        return NextResponse.json({ errors: { discountBDT: "That discount is more than this holding's schedule can take." } }, { status: 422 });
+      // Installments set by hand stay as agreed; the discount comes off the open balance.
+      const set = custom.reduce((s, r) => s + r.amountBDT, 0);
+      if (newTotal < 1 || newTotal < set) {
+        return NextResponse.json(
+          { errors: { discountBDT: `The installments already set come to ${formatBDT(set)} — lower or remove them first.` } },
+          { status: 422 },
+        );
       }
-      scheduleJson = JSON.stringify(shifted);
     } else {
       const steps = holding.paymentPlan === "INSTALLMENT" ? holding.installmentMonths ?? 1 : 1;
       const problem = discountProblem({ totalBDT: listPriceBDT, downPaymentBDT: holding.downPaymentBDT, installments: { length: steps } }, discountBDT);
@@ -112,7 +118,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     await prisma.shareHolding.update({
       where: { id },
-      data: { totalAmountBDT: newTotal, discountBDT, discountNote: discountBDT ? discountNote || null : null, ...(scheduleJson ? { scheduleJson } : {}) },
+      data: { totalAmountBDT: newTotal, discountBDT, discountNote: discountBDT ? discountNote || null : null },
     });
     await logActivity(
       guard.name,

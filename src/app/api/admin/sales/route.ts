@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { adminGuard, logActivity, readJson } from "@/lib/admin";
 import { shareSaleSchema, zodErrors } from "@/lib/validation";
 import { SaleError, allocateHolding, notifyAllocated, recordOfflinePayment } from "@/lib/sales";
-import { calculate, discountProblem, formatBDT, withDiscount } from "@/lib/shares";
+import { calculate, discountProblem, flexibleQuote, formatBDT, withDiscount } from "@/lib/shares";
 
 /**
  * A share sale closed at the office, in one step: the shares go into the
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const discount = { amountBDT: discountBDT, note: discountNote };
 
   // Check the money against the schedule first, so a typo never uses up share numbers.
-  const chart = calculate(await prisma.membershipPlan.findMany(), units, paymentPlan);
+  const chart = flexibleQuote(calculate(await prisma.membershipPlan.findMany(), units, paymentPlan));
   const problem = discountProblem(chart, discountBDT);
   if (problem) return NextResponse.json({ errors: { discountBDT: problem } }, { status: 422 });
   // Any amount can be paid now — part of the down payment, or several installments at once — but not more than the price.
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     paymentIds: settled ? [settled.payment.id] : [],
     receivedBDT: settled?.totalBDT ?? 0,
     covered: settled ? [settled.covered] : [],
-    next: settled ? settled.next : result.installments ? { label: result.installments[0].label, amountBDT: result.installments[0].amountBDT } : { label: "Full payment", amountBDT: result.totalBDT },
+    next: settled ? settled.next : null,
     remainingBDT: settled ? settled.remainingBDT : result.totalBDT,
   });
 }

@@ -5,7 +5,7 @@ import { AdminIcon } from "@/components/ui/AdminIcon";
 import { Avatar, Btn, Field, Modal, Segmented, TextArea, TextInput, firstError, send, useToast } from "./kit";
 import { METHOD_LABEL } from "./RecordPayment";
 import { DiscountField, NO_DISCOUNT, type DiscountValue } from "./DiscountField";
-import { calculate, discountProblem, formatBDT, maxDiscountBDT, stayDays, withDiscount, type PlanLike } from "@/lib/shares";
+import { calculate, discountProblem, flexibleQuote, formatBDT, maxDiscountBDT, stayDays, withDiscount, type PlanLike } from "@/lib/shares";
 import type { AdminCustomer } from "@/lib/admin-types";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +65,7 @@ export function ShareSaleModal({
   const [paidNow, setPaidNow] = useState(true);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discount, setDiscount] = useState<DiscountValue>(NO_DISCOUNT);
-  const [count, setCount] = useState(1);
+  const [payFor, setPayFor] = useState("Down payment");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<Method>("CASH");
   const [reference, setReference] = useState("");
@@ -86,47 +86,22 @@ export function ShareSaleModal({
     }
   }, [open, plans.length, preset, people]);
 
-  const chart = useMemo(() => (plans.length ? calculate(plans, units, paymentPlan) : null), [plans, units, paymentPlan]);
-  // The price after the office discount — what the schedule and the receipt use.
+  // Just the price — no automatic down payment or installments; they pay any amount.
+  const chart = useMemo(() => (plans.length ? flexibleQuote(calculate(plans, units, paymentPlan)) : null), [plans, units, paymentPlan]);
+  // The price after the office discount — what the balance and the receipt use.
   const discountIssue = chart && discount.amountBDT ? discountProblem(chart, discount.amountBDT) : null;
   const discountBDT = discountIssue ? 0 : discount.amountBDT;
   const result = useMemo(() => (chart ? withDiscount(chart, discountBDT) : null), [chart, discountBDT]);
-  const parts = useMemo(
-    () => (result ? (result.installments ?? [{ index: 1, label: "Full payment", amountBDT: result.totalBDT }]) : []),
-    [result],
-  );
-  // Running totals: what "down payment", "down payment + 1st installment"… come to.
-  const cumulative = useMemo(() => parts.map((_, i) => parts.slice(0, i + 1).reduce((s, l) => s + l.amountBDT, 0)), [parts]);
-  const n = Math.min(count, parts.length || 1);
-  const due = cumulative[n - 1] ?? 0;
-  const typed = Number(amount.replace(/[^0-9]/g, "")) || 0;
-  const received = amount ? typed : due;
+  const received = Number(amount.replace(/[^0-9]/g, "")) || 0;
   const saleTotal = result?.totalBDT ?? 0;
-  // Any amount from ৳1 to the whole price; it fills the schedule in order.
+  // Any amount from ৳1 to the whole price.
   const amountOk = !paidNow || (received >= 1 && received <= saleTotal);
-  // What's due next once today's money is in — the same in-order rule the ledger uses.
-  const afterPay = (() => {
-    let left = paidNow ? received : 0;
-    for (const l of parts) {
-      if (left < l.amountBDT) return { label: left > 0 ? `Rest of ${l.label.toLowerCase()}` : l.label, amountBDT: l.amountBDT - left };
-      left -= l.amountBDT;
-    }
-    return null;
-  })();
 
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!people) return [];
     return people.filter((p) => !needle || [p.name, p.email, p.phone, p.memberId ?? ""].some((v) => v.toLowerCase().includes(needle))).slice(0, 6);
   }, [people, q]);
-
-  function onAmount(v: string) {
-    setAmount(v);
-    // Typing an amount that matches a whole number of payments selects them.
-    const value = Number(v.replace(/[^0-9]/g, "")) || 0;
-    const i = cumulative.indexOf(value);
-    if (i >= 0) setCount(i + 1);
-  }
 
   function reset() {
     setBuyer(preset ?? null);
@@ -136,7 +111,8 @@ export function ShareSaleModal({
     setPaidNow(true);
     setDiscountOpen(false);
     setDiscount(NO_DISCOUNT);
-    setCount(1);
+    setPayFor("Down payment");
+   
     setAmount("");
     setMethod("CASH");
     setReference("");
@@ -164,7 +140,7 @@ export function ShareSaleModal({
       paymentPlan,
       discountBDT,
       discountNote: discountBDT ? discount.note.trim() || undefined : undefined,
-      payment: paidNow ? { amountBDT: received, method, reference, note, paidAt } : undefined,
+      payment: paidNow ? { amountBDT: received, label: payFor.trim() || undefined, method, reference, note, paidAt } : undefined,
     });
     setBusy(false);
     if (!ok) return setErrors(json.errors ?? { form: firstError(json) });
@@ -295,7 +271,7 @@ export function ShareSaleModal({
               <Field label="Number of shares" error={errors.units}>
                 {(id) => (
                   <div className="flex items-center gap-1.5">
-                    <Btn size="sm" aria-label="One share fewer" onClick={() => { setUnits((u) => Math.max(1, u - 1)); setCount(1); setAmount(""); }}>−</Btn>
+                    <Btn size="sm" aria-label="One share fewer" onClick={() => { setUnits((u) => Math.max(1, u - 1)); setAmount(""); }}>−</Btn>
                     <TextInput
                       id={id}
                       type="number"
@@ -303,9 +279,9 @@ export function ShareSaleModal({
                       max={2700}
                       className="w-20 text-center tabular-nums"
                       value={units}
-                      onChange={(e) => { setUnits(Math.max(1, Math.min(2700, Number(e.target.value) || 1))); setCount(1); setAmount(""); }}
+                      onChange={(e) => { setUnits(Math.max(1, Math.min(2700, Number(e.target.value) || 1))); setAmount(""); }}
                     />
-                    <Btn size="sm" aria-label="One share more" onClick={() => { setUnits((u) => Math.min(2700, u + 1)); setCount(1); setAmount(""); }}>+</Btn>
+                    <Btn size="sm" aria-label="One share more" onClick={() => { setUnits((u) => Math.min(2700, u + 1)); setAmount(""); }}>+</Btn>
                   </div>
                 )}
               </Field>
@@ -313,7 +289,7 @@ export function ShareSaleModal({
                 <p className="mb-1.5 text-xs font-medium text-[#3D4A44]">How they pay</p>
                 <Segmented<"INSTALLMENT" | "FULL">
                   value={paymentPlan}
-                  onChange={(v) => { setPaymentPlan(v); setCount(1); setAmount(""); }}
+                  onChange={(v) => { setPaymentPlan(v); setAmount(""); }}
                   options={[
                     { value: "INSTALLMENT", label: "Installments" },
                     { value: "FULL", label: "Pay in full" },
@@ -326,7 +302,7 @@ export function ShareSaleModal({
                 {[
                   { k: "Package", v: result.plan.name },
                   { k: discountBDT ? "Price after discount" : "Total price", v: formatBDT(result.totalBDT) },
-                  { k: paymentPlan === "INSTALLMENT" ? "Payments" : "Payment", v: paymentPlan === "INSTALLMENT" ? `${parts.length} (down + ${parts.length - 1})` : "1, in full" },
+                  { k: "Payments", v: "Any amount, any time" },
                   { k: "Free stay", v: `${stayDays(result.freeStayNights)} days / yr` },
                 ].map((c) => (
                   <div key={c.k} className="bg-[#FAFBF9] px-3 py-2.5">
@@ -343,12 +319,12 @@ export function ShareSaleModal({
                     listPriceBDT={chart.totalBDT}
                     maxBDT={maxDiscountBDT(chart)}
                     value={discount}
-                    onChange={(v) => { setDiscount(v); setCount(1); setAmount(""); }}
+                    onChange={(v) => { setDiscount(v); setAmount(""); }}
                     error={errors.discountBDT}
                   />
                   <button
                     type="button"
-                    onClick={() => { setDiscountOpen(false); setDiscount(NO_DISCOUNT); setCount(1); setAmount(""); }}
+                    onClick={() => { setDiscountOpen(false); setDiscount(NO_DISCOUNT); setAmount(""); }}
                     className="mt-2 text-xs font-medium text-[#6B756F] hover:text-red-600"
                   >
                     Remove discount
@@ -375,21 +351,8 @@ export function ShareSaleModal({
             {paidNow ? (
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr]">
-                  <Field label="Quick fill" error={errors.count}>
-                    {(id) => (
-                      <select
-                        id={id}
-                        value={n}
-                        onChange={(e) => { setCount(Number(e.target.value)); setAmount(""); }}
-                        className="h-9 w-full rounded-lg border border-[#DDE1DB] bg-white px-3 text-[0.8125rem] text-[#14201B] outline-none focus:border-forest-500"
-                      >
-                        {parts.map((l, i) => (
-                          <option key={l.index} value={i + 1}>
-                            {i === 0 ? l.label : i === parts.length - 1 ? `Everything (${i + 1} payments)` : `${parts[0].label} + ${i} installment${i > 1 ? "s" : ""}`} — {formatBDT(cumulative[i])}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                  <Field label="For (shown on the receipt)">
+                    {(id) => <TextInput id={id} maxLength={80} value={payFor} onChange={(e) => setPayFor(e.target.value)} placeholder="e.g. Down payment" />}
                   </Field>
                   <Field
                     label="Amount received (BDT) — any amount"
@@ -400,8 +363,9 @@ export function ShareSaleModal({
                         id={id}
                         inputMode="numeric"
                         className="font-semibold tabular-nums"
-                        value={amount || String(due)}
-                        onChange={(e) => onAmount(e.target.value)}
+                        placeholder="e.g. 50000"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
                       />
                     )}
                   </Field>
@@ -445,8 +409,8 @@ export function ShareSaleModal({
               </div>
             ) : (
               <p className="rounded-xl bg-[#F5F7F3] px-4 py-3 text-xs leading-relaxed text-[#3D4A44]">
-                The shares are reserved in their name and the first payment ({parts[0] ? `${parts[0].label}, ${formatBDT(parts[0].amountBDT)}` : "—"}) shows
-                as due on their dashboard. Record the money later from their profile or Installments &amp; dues.
+                The shares are reserved in their name with the full price as their balance. Record money whenever they pay — any amount — from
+                their profile or Installments &amp; dues. Add installments there only if you agree some with them.
               </p>
             )}
           </Section>
@@ -457,14 +421,12 @@ export function ShareSaleModal({
               <p className="text-[0.6875rem] uppercase tracking-wide text-white/55">After saving</p>
               <dl className="mt-2 grid grid-cols-3 gap-3 text-[0.8125rem]">
                 <div>
-                  <dt className="text-white/55">Received</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums">{paidNow ? formatBDT(received) : "—"}</dd>
+                  <dt className="text-white/55">Price</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{formatBDT(result.totalBDT)}</dd>
                 </div>
                 <div>
-                  <dt className="text-white/55">Next payment</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums">
-                    {afterPay ? `${afterPay.label} · ${formatBDT(afterPay.amountBDT)}` : "Fully paid"}
-                  </dd>
+                  <dt className="text-white/55">Received</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{paidNow && received ? formatBDT(received) : "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-white/55">Balance left</dt>
@@ -516,7 +478,7 @@ function SaleDone({ done }: { done: Done }) {
           ...(done.discountBDT ? [{ k: "Discount given", v: formatBDT(done.discountBDT) }] : []),
           { k: "Received", v: done.receivedBDT ? formatBDT(done.receivedBDT) : "Nothing yet" },
           { k: "Covers", v: done.covered.length ? done.covered.join(", ") : "—" },
-          { k: "Next payment", v: done.next ? `${done.next.label} · ${formatBDT(done.next.amountBDT)}` : "Fully paid" },
+          { k: "Next payment", v: done.next ? `${done.next.label} · ${formatBDT(done.next.amountBDT)}` : done.remainingBDT > 0 ? "Any amount, any time" : "Fully paid" },
           { k: "Balance left", v: formatBDT(done.remainingBDT) },
         ].map((r) => (
           <div key={r.k} className="min-w-0">

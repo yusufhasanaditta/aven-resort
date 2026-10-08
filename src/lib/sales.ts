@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { holdingInclude } from "@/lib/admin-serialize";
 import { holdingLedger, paymentLabels } from "@/lib/account";
-import { calculate, discountProblem, formatBDT, withDiscount, type CalculatorResult, type PlanLike } from "@/lib/shares";
+import { NO_INSTALLMENTS, calculate, discountProblem, flexibleQuote, formatBDT, withDiscount, type CalculatorResult, type PlanLike } from "@/lib/shares";
 import { nextShareNumbers } from "@/lib/member";
 import { notify, notifyPaymentReceived } from "@/lib/notify";
 import { convertLeadsFor } from "@/lib/crm";
@@ -30,14 +30,16 @@ export type SaleDiscount = { amountBDT: number; note?: string };
 
 /**
  * Puts shares in a shareholder's name at the chart price less any office
- * discount, with the next share numbers.
+ * discount, with the next share numbers. No automatic schedule: the holding
+ * is its price and balance, paid in any amount; installments are added by
+ * the team by hand if they agree any.
  */
 export async function allocateHolding(userId: string, units: number, paymentPlan: "FULL" | "INSTALLMENT", discount?: SaleDiscount) {
   const [user, plans] = await Promise.all([prisma.user.findUnique({ where: { id: userId } }), prisma.membershipPlan.findMany()]);
   if (!user) throw new SaleError("Shareholder not found.", 404);
   if (!plans.length) throw new SaleError("No membership plans are set up.");
 
-  const quote = calculate(plans, units, paymentPlan);
+  const quote = flexibleQuote(calculate(plans, units, paymentPlan));
   const discountBDT = discount?.amountBDT ?? 0;
   const problem = discountProblem(quote, discountBDT);
   if (problem) throw new SaleError(problem, 422, "discountBDT");
@@ -51,8 +53,9 @@ export async function allocateHolding(userId: string, units: number, paymentPlan
         units: result.units,
         totalAmountBDT: result.totalBDT,
         paymentPlan,
-        installmentMonths: result.installments ? result.installments.length : null,
-        downPaymentBDT: result.downPaymentBDT,
+        installmentMonths: null,
+        downPaymentBDT: null,
+        scheduleJson: NO_INSTALLMENTS,
         discountBDT,
         discountNote: discountBDT ? discount?.note || null : null,
       },
@@ -75,9 +78,7 @@ export async function notifyAllocated(
     title: `${result.units} ${result.plan.name} share${result.units > 1 ? "s" : ""} added to your account`,
     body: `The Aven team has added ${shares} (${result.plan.name}) in your name — ${formatBDT(result.totalBDT)}${
       discountBDT ? ` after a ${formatBDT(discountBDT)} discount` : ""
-    }${
-      !paidNow && result.installments ? `, starting with a ${formatBDT(result.installments[0].amountBDT)} down payment` : ""
-    }. Your payment schedule${paidNow ? " and money receipt are" : " is"} in your dashboard.`,
+    }. You can pay it in any amounts that suit you — every payment gets a money receipt. Your balance${paidNow ? " and receipt are" : " is"} in your dashboard.`,
     href: "/account?tab=holdings",
     holdingId,
     dedupeKey: `allocated-${holdingId}-${randomUUID().slice(0, 6)}`,
@@ -87,6 +88,8 @@ export async function notifyAllocated(
 export type OfflinePayment = {
   /** Any amount from 1 taka up to what's still owed on the holding. */
   amountBDT: number;
+  /** What it's for — "December", "Down payment" — shown on the receipt. */
+  label?: string;
   method: (typeof PAYMENT_METHODS)[number];
   reference?: string;
   note?: string;
@@ -108,7 +111,7 @@ export async function recordOfflinePayment(holdingId: string, p: OfflinePayment,
   if (holding.status === "CANCELLED") throw new SaleError("This holding is cancelled.");
 
   const before = holdingLedger(holding);
-  if (before.fullyPaid || !before.nextDue) throw new SaleError("This holding is already fully paid.");
+  if (before.fullyPaid) throw new SaleError("This holding is already fully paid.");
   if (!Number.isInteger(p.amountBDT) || p.amountBDT < 1) throw new SaleError("Enter the amount received.", 422, "amountBDT");
   if (p.amountBDT > before.remainingBDT) {
     throw new SaleError(`Only ${formatBDT(before.remainingBDT)} is left to pay on this holding.`, 422, "amountBDT");
@@ -126,7 +129,8 @@ export async function recordOfflinePayment(holdingId: string, p: OfflinePayment,
         amountBDT: p.amountBDT,
         method: p.method,
         tranId: `MAN-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 6).toUpperCase()}`,
-        installmentNo: before.nextDue!.n,
+        installmentNo: before.nextDue?.n ?? before.steps.length + 1,
+        label: p.label || null,
         status: "SUCCESS",
         reference: p.reference,
         note: p.note,
@@ -150,6 +154,6 @@ export async function recordOfflinePayment(holdingId: string, p: OfflinePayment,
     covered: paymentLabels(fresh)[payment.id] ?? "Payment",
     totalBDT: p.amountBDT,
     remainingBDT: after.remainingBDT,
-    next: next ? { label: next.paidBDT ? `Rest of ${next.part.toLowerCase()}` : next.part, amountBDT: next.dueBDT } : null,
+    next: next ? { label: next.paidBDT ? `Rest of ${next.part}` : next.part, amountBDT: next.dueBDT } : null,
   };
 }

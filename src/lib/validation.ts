@@ -172,6 +172,8 @@ export const contactRequestSchema = z.object({
 /** Money received offline — cash, bank transfer, bKash… — any amount; it is applied to the schedule in order. */
 export const offlinePaymentSchema = z.object({
   amountBDT: z.coerce.number().int("Whole taka only.").min(1, "Enter the amount received.").max(10_000_000_000),
+  /** What the money is for, in the team's words: "December", "Down payment"… */
+  label: optionalText(80),
   method: z.enum(PAYMENT_METHODS),
   reference: optionalText(120),
   note: optionalText(500),
